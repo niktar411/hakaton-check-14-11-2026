@@ -18,6 +18,11 @@ import (
 	"hackathon/internal/localaccounts"
 	"hackathon/internal/plannerblocks"
 	"hackathon/internal/questions"
+	"hackathon/internal/sam"
+	"hackathon/internal/sam/assistant"
+	"hackathon/internal/sam/compliance"
+	"hackathon/internal/sam/matching"
+	"hackathon/internal/sam/operator"
 )
 
 func APIConfig() huma.Config {
@@ -62,6 +67,8 @@ func (s *Service) Router() http.Handler {
 		localaccounts.RegisterPublic(api, s.accounts)
 		questions.RegisterPublic(api, s.questions)
 		plannerblocks.RegisterPublic(api, s.planner)
+		sam.RegisterPublic(api, s.sam)
+		compliance.RegisterPublic(api, s.samCompliance)
 	})
 	r.Post("/api/webhooks/gitlab", s.deployments.HandleGitLabWebhook)
 	r.Group(func(r chi.Router) {
@@ -71,6 +78,10 @@ func (s *Service) Router() http.Handler {
 		Register(api, s)
 		localaccounts.RegisterAdmin(api, s.accounts)
 		questions.RegisterAdmin(api, s.questions)
+		assistant.Register(api, s.samAssistant)
+		matching.Register(api, s.samMatching)
+		compliance.Register(api, s.samCompliance)
+		operator.Register(api, s.samOperator)
 		plannerblocks.RegisterTeam(api, s.planner)
 		plannerblocks.RegisterAdmin(api, s.planner)
 		codingtasks.Register(api, s.coding)
@@ -125,7 +136,13 @@ func WriteOpenAPI(ctx context.Context, path string) error {
 	localaccounts.RegisterAdmin(api, nil)
 	questions.RegisterPublic(api, nil)
 	questions.RegisterAdmin(api, nil)
+	assistant.Register(api, nil)
+	matching.Register(api, nil)
+	compliance.Register(api, nil)
+	operator.Register(api, nil)
 	plannerblocks.Register(api, nil)
+	sam.RegisterPublic(api, nil)
+	compliance.RegisterPublic(api, nil)
 	codingtasks.Register(api, nil)
 	deployments.Register(api, nil)
 	deployments.RegisterMember(api, nil)
