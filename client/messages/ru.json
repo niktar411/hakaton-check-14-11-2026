@@ -181,6 +181,7 @@
   "plannerStale": "Не удалось обновить данные. Показана последняя загруженная версия плана.",
   "plannerEmpty": "Блоки плана пока не опубликованы",
   "plannerDetails": "Подробности этапа",
+  "plannerBlockNumber": "№{number}",
   "plannerOpenDetails": "Открыть подробности",
   "plannerStartWork": "Выполняется",
   "plannerWorkStarted": "Блок отмечен как выполняющийся",
