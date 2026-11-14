@@ -9,11 +9,19 @@
 		<link rel="icon" type="image/png" sizes="192x192" href="/dragon-192.png" />
 		<link rel="apple-touch-icon" sizes="180x180" href="/dragon-180.png" />
 		<title>Драконы</title>
-		<script src="/theme-boot.js"></script>
+		<!-- Inlined theme boot: applies the saved theme before first paint and
+		     removes the render-blocking /theme-boot.js request. The CSP in
+		     client/snippets/security-headers.conf and the API server CSP allow
+		     this exact script by its sha256 hash — update both when editing. -->
+		<script>try{const s=localStorage.getItem("portal-theme");const t=s==="light"||s==="dark"?s:(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");document.documentElement.dataset.theme=t}catch{document.documentElement.dataset.theme="light"}</script>
 	</head>
 	<body>
-		<div id="root"></div>
+		<div id="root">
+			<!-- Static splash: first paint before the JS bundle arrives; the
+			     Solid render call replaces the #root contents on hydration. -->
+			<style>.boot-splash{position:fixed;inset:0;display:grid;place-items:center;font:14px system-ui,sans-serif;color:gray}</style>
+			<div class="boot-splash" data-boot>Загрузка…</div>
+		</div>
 		<script type="module" src="/src/app/main.tsx"></script>
 	</body>
 </html>
-

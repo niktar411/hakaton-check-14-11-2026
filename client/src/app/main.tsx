@@ -1,5 +1,6 @@
 import {
 	A,
+	lazy,
 	Route,
 	Router,
 	useLocation,
@@ -22,27 +23,43 @@ import { LoadingState } from "@/shared/ui/State";
 import { Toast } from "@/shared/ui/Toast";
 import { DragonMark } from "@/shared/ui/DragonMark";
 import { CookieBanner } from "@/shared/ui/CookieBanner";
-import { ConsentPage, CookiesPage, PolicyPage, TermsPage } from "@/features/legal/LegalPage";
 import { ThemeToggle } from "@/app/theme";
-import { TeamLoginPage } from "@/features/auth/TeamLoginPage";
-import ChatPage from "@/features/chat/ChatPage";
-import TeamDeploymentsPage from "@/features/deployments/TeamDeploymentsPage";
-import PlannerPage from "@/features/planner/PlannerPage";
 import TeamPage from "@/features/team/TeamPage";
-import CodingPage from "@/features/coding/CodingPage";
-import AdminLoginPage from "@/features/administration/AdminLoginPage";
-import AdministrationPage from "@/features/administration/AdministrationPage";
-import { SamLayout } from "@/features/sam/SamLayout";
-import SamDashboardPage from "@/features/sam/SamDashboardPage";
-import SamCatalogPage from "@/features/sam/SamCatalogPage";
-import SamLicensesPage from "@/features/sam/SamLicensesPage";
-import SamInventoryPage from "@/features/sam/SamInventoryPage";
-import SamCompliancePage from "@/features/sam/SamCompliancePage";
-import SamProductPage from "@/features/sam/SamProductPage";
-import SamHostPage from "@/features/sam/SamHostPage";
-import SamMatchingPage from "@/features/sam/SamMatchingPage";
-import SamAssistantPage from "@/features/sam/SamAssistantPage";
 import { SiteConfigProvider } from "@/app/site-config";
+
+// Route components are code-split: every screen except the public landing
+// is fetched on demand, so the first bundle stays small.
+const TeamLoginPage = lazy(() => import("@/features/auth/TeamLoginPage"));
+const ChatPage = lazy(() => import("@/features/chat/ChatPage"));
+const TeamDeploymentsPage = lazy(() => import("@/features/deployments/TeamDeploymentsPage"));
+const PlannerPage = lazy(() => import("@/features/planner/PlannerPage"));
+const CodingPage = lazy(() => import("@/features/coding/CodingPage"));
+const AdminLoginPage = lazy(() => import("@/features/administration/AdminLoginPage"));
+const AdministrationPage = lazy(() => import("@/features/administration/AdministrationPage"));
+const SamLayout = lazy(() =>
+	import("@/features/sam/SamLayout").then((m) => ({ default: m.SamLayout })),
+);
+const SamDashboardPage = lazy(() => import("@/features/sam/SamDashboardPage"));
+const SamCatalogPage = lazy(() => import("@/features/sam/SamCatalogPage"));
+const SamLicensesPage = lazy(() => import("@/features/sam/SamLicensesPage"));
+const SamInventoryPage = lazy(() => import("@/features/sam/SamInventoryPage"));
+const SamCompliancePage = lazy(() => import("@/features/sam/SamCompliancePage"));
+const SamProductPage = lazy(() => import("@/features/sam/SamProductPage"));
+const SamHostPage = lazy(() => import("@/features/sam/SamHostPage"));
+const SamMatchingPage = lazy(() => import("@/features/sam/SamMatchingPage"));
+const SamAssistantPage = lazy(() => import("@/features/sam/SamAssistantPage"));
+const TermsPage = lazy(() =>
+	import("@/features/legal/LegalPage").then((m) => ({ default: m.TermsPage })),
+);
+const PolicyPage = lazy(() =>
+	import("@/features/legal/LegalPage").then((m) => ({ default: m.PolicyPage })),
+);
+const ConsentPage = lazy(() =>
+	import("@/features/legal/LegalPage").then((m) => ({ default: m.ConsentPage })),
+);
+const CookiesPage = lazy(() =>
+	import("@/features/legal/LegalPage").then((m) => ({ default: m.CookiesPage })),
+);
 
 function PublicNavigation() {
 	return (
