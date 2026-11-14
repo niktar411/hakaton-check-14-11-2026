@@ -33,6 +33,17 @@ export function Footer(props: {
 			<p class={s.note}>
 				{props.team ? m.teamFooterNote() : m.publicFooterNote()}
 			</p>
+			<Show when={!props.team}>
+				<p class={s.credit}>
+					<a
+						href="https://game-icons.net/1x1/delapouite/dragon-head.html"
+						target="_blank"
+						rel="noopener noreferrer"
+					>
+						{m.teamDragonCredit()}
+					</a>
+				</p>
+			</Show>
 		</footer>
 	);
 }

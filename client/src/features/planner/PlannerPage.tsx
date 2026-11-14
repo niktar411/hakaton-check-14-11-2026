@@ -306,11 +306,16 @@ function PlannerNode(props: {
 			</Show>
 			<Show when={visible()}>
 				<div class={s.blockHeader}>
-					<h2>{block().title}</h2>
-				<span class={s.status} data-status={block().progress.state}>
-					{plannerStatus(block().progress.state)}
-				</span>
-			</div>
+					<h2>
+						<span class={s.blockNumber}>
+							{m.plannerBlockNumber({ number: String(block().id) })}
+						</span>
+						{block().title}
+					</h2>
+					<span class={s.status} data-status={block().progress.state}>
+						{plannerStatus(block().progress.state)}
+					</span>
+				</div>
 			<Show
 				when={props.team && "owner" in block()}
 				fallback={
@@ -586,24 +591,6 @@ export function PlannerBoard(props: {
 					<button
 						type="button"
 						class={s.zoomButton}
-						aria-label={m.plannerZoomOut()}
-						title={m.plannerZoomOut()}
-						onClick={() => zoomBy(0.86)}
-					>
-						−
-					</button>
-					<button
-						type="button"
-						class={s.zoomButton}
-						aria-label={m.plannerZoomIn()}
-						title={m.plannerZoomIn()}
-						onClick={() => zoomBy(1.16)}
-					>
-						+
-					</button>
-					<button
-						type="button"
-						class={s.zoomButton}
 						aria-label={m.plannerFit()}
 						title={m.plannerFit()}
 						onClick={() => fit(true)}
@@ -845,6 +832,9 @@ export default function PlannerPage() {
 						return (
 							<div class="grid min-w-0 gap-4">
 								<div class="flex flex-wrap items-center gap-3">
+									<span class={s.blockNumber}>
+										{m.plannerBlockNumber({ number: String(block().id) })}
+									</span>
 									<span class={s.status} data-status={block().progress.state}>
 										{plannerStatus(block().progress.state)}
 									</span>

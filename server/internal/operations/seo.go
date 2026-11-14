@@ -31,7 +31,7 @@ func (s *Service) publicPages() []publicPage {
 		{Path: "/sam/catalog", Title: "SAM: каталог", Description: "Каталог программных продуктов, лицензий и обнаруженных установок."},
 		{Path: "/sam/licenses", Title: "SAM: лицензии", Description: "Сроки действия лицензий и занятые места."},
 		{Path: "/sam/inventory", Title: "SAM: инвентаризация", Description: "Устройства, владельцы и обнаруженное программное обеспечение."},
-		{Path: "/sam/compliance", Title: "SAM: комплаенс", Description: "Нарушения правил использования программного обеспечения."},
+		{Path: "/sam/compliance", Title: "SAM: комплаенс", Description: "Баланс куплено/установлено, превышения, простой, запрещённое ПО и стоимость риска."},
 		{Path: "/sam/matching", Title: "SAM: сопоставление", Description: "Предложения сопоставить установки с каталогом продуктов."},
 		{Path: "/sam/assistant", Title: "SAM: ассистент", Description: "Рекомендации по текущим данным SAM без изменения записей."},
 		{Path: "/terms", Title: "Пользовательское соглашение", Description: "Условия использования демонстрационным стендом и ответственность сторон."},

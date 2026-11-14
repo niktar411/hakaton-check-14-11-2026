@@ -1,16 +1,17 @@
-import { createResource, For } from "solid-js";
+import { A } from "@solidjs/router";
+import { For } from "solid-js";
 import * as m from "@/paraglide/messages";
 import { api, unwrap } from "@/shared/api";
 import type { components } from "@/shared/api/schema";
 import { formatDate } from "@/shared/lib/format";
 import { SamFields, SamList, SamPageHeader } from "./SamPage";
 import s from "./SamPage.module.css";
-import { SamPageState } from "./SamPageState";
+import { createSamResource, SamPageState } from "./SamPageState";
 
 type Asset = components["schemas"]["Asset"];
 
 export default function SamInventoryPage() {
-	const [assets, { refetch }] = createResource(async () =>
+	const { resource: assets, refetch } = createSamResource<Asset[]>(async () =>
 		unwrap(await api.GET("/api/public/sam/inventory")) ?? [],
 	);
 	return (
@@ -31,7 +32,11 @@ export default function SamInventoryPage() {
 							{(asset) => (
 								<li class={s.row}>
 									<div>
-										<h2 class={s.rowTitle}>{asset.hostname}</h2>
+										<h2 class={s.rowTitle}>
+											<A class={s.inlineLink} href={`/sam/inventory/${encodeURIComponent(asset.hostname)}`}>
+												{asset.hostname}
+											</A>
+										</h2>
 										<p class={s.rowMeta}>{asset.platform}</p>
 									</div>
 									<SamFields

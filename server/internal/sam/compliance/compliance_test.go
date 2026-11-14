@@ -22,6 +22,26 @@ func (f *fakeStore) SamComplianceProducts(context.Context) ([]db.SamCompliancePr
 	return f.products, f.err
 }
 
+func (f *fakeStore) SamComplianceProduct(context.Context, int64) (db.SamComplianceProductRow, error) {
+	return db.SamComplianceProductRow{}, f.err
+}
+
+func (f *fakeStore) ListSamProductLicenses(context.Context, int64) ([]db.ListSamProductLicensesRow, error) {
+	return nil, f.err
+}
+
+func (f *fakeStore) ListSamProductHosts(context.Context, int64) ([]db.ListSamProductHostsRow, error) {
+	return nil, f.err
+}
+
+func (f *fakeStore) GetSamHost(context.Context, string) (db.GetSamHostRow, error) {
+	return db.GetSamHostRow{}, f.err
+}
+
+func (f *fakeStore) ListSamHostInstallations(context.Context, string) ([]db.ListSamHostInstallationsRow, error) {
+	return nil, f.err
+}
+
 func testRows() []db.SamComplianceProductsRow {
 	return []db.SamComplianceProductsRow{
 		{ID: 1, Name: "Microsoft Office", Status: "active", LicensedSeats: 100, InstalledDevices: 118, Installations: 118, AvgCostPerSeat: 1000},

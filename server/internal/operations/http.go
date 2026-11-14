@@ -68,6 +68,7 @@ func (s *Service) Router() http.Handler {
 		questions.RegisterPublic(api, s.questions)
 		plannerblocks.RegisterPublic(api, s.planner)
 		sam.RegisterPublic(api, s.sam)
+		compliance.RegisterPublic(api, s.samCompliance)
 	})
 	r.Post("/api/webhooks/gitlab", s.deployments.HandleGitLabWebhook)
 	r.Group(func(r chi.Router) {
@@ -141,6 +142,7 @@ func WriteOpenAPI(ctx context.Context, path string) error {
 	operator.Register(api, nil)
 	plannerblocks.Register(api, nil)
 	sam.RegisterPublic(api, nil)
+	compliance.RegisterPublic(api, nil)
 	codingtasks.Register(api, nil)
 	deployments.Register(api, nil)
 	deployments.RegisterMember(api, nil)
