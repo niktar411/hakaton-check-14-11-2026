@@ -1,4 +1,4 @@
-import { createEffect, onCleanup, type JSX } from "solid-js";
+import { createEffect, onCleanup, Show, type JSX } from "solid-js";
 import * as m from "@/paraglide/messages";
 import { Button } from "@/shared/ui/Button";
 import s from "./Dialog.module.css";
@@ -8,6 +8,7 @@ export function Dialog(props: {
 	title: string;
 	onClose: () => void;
 	children: JSX.Element;
+	hideHeader?: boolean;
 }) {
 	let dialog: HTMLDialogElement | undefined;
 	createEffect(() => {
@@ -26,12 +27,14 @@ export function Dialog(props: {
 			class={s.dialog}
 			data-elevated
 		>
-			<div class="mb-4 flex items-start justify-between gap-4">
-				<h2 class="text-xl font-bold">{props.title}</h2>
-				<Button aria-label={m.close()} onClick={props.onClose}>
-					{m.close()}
-				</Button>
-			</div>
+			<Show when={!props.hideHeader}>
+				<div class="mb-4 flex items-start justify-between gap-4">
+					<h2 class="text-xl font-bold">{props.title}</h2>
+					<Button aria-label={m.close()} onClick={props.onClose}>
+						{m.close()}
+					</Button>
+				</div>
+			</Show>
 			{props.children}
 		</dialog>
 	);
