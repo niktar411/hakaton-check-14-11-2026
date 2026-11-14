@@ -175,11 +175,12 @@
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	min-height: 44px;
-	padding: var(--space-2) var(--space-5);
+	min-height: 58px;
+	padding: var(--space-3) 26px;
 	border: 1px solid transparent;
 	border-radius: var(--radius-sm);
 	font-weight: 600;
+	font-size: var(--text-lg);
 	text-decoration: none;
 	transition:
 		transform var(--dur) var(--ease),
@@ -370,7 +371,7 @@
 
 .assistantGrid {
 	display: grid;
-	grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+	grid-template-columns: minmax(0, 1fr);
 	align-items: start;
 	gap: var(--space-8);
 }
@@ -465,6 +466,8 @@
 
 .assistantCard {
 	position: relative;
+	width: 100%;
+	min-width: 0;
 	padding: var(--space-5);
 	overflow: hidden;
 	border: 1px solid var(--border);

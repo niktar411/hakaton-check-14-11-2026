@@ -93,8 +93,8 @@ export default function TeamPage() {
 					</Show>
 					<p class={s.summary}>{m.teamHeroSummary()}</p>
 					<div class={s.actions}>
-						<a class={s.primaryAction} href="#plan">
-							{m.teamHeroCtaPlan()}
+						<a class={s.primaryAction} href="/sam">
+							{m.samNavigation()}
 						</a>
 						<a class={s.secondaryAction} href="#assistant">
 							{m.teamHeroCtaAssistant()}
@@ -113,6 +113,33 @@ export default function TeamPage() {
 				</div>
 
 				<DragonScene class={s.dragonScene} />
+			</section>
+
+			<section
+				id="assistant"
+				class={s.section}
+				aria-labelledby="team-assistant-title"
+			>
+				<div class={s.assistantGrid}>
+					<div class={s.assistantCopy}>
+						<p class={s.sectionLabel}>{m.teamAiLabel()}</p>
+						<h2 id="team-assistant-title">{m.teamAiTitle()}</h2>
+						<p class={s.sectionText}>{m.teamAiDescription()}</p>
+						<ul class={s.assistantPoints}>
+							<For each={assistantPoints}>
+								{(point) => <li>{point()}</li>}
+							</For>
+						</ul>
+						<span class={s.assistantOrb} aria-hidden="true">
+							<span class={s.assistantOrbCore} />
+							<span class={s.assistantOrbRing} />
+							<span class={s.assistantOrbRing} />
+						</span>
+					</div>
+					<div class={s.assistantCard}>
+						<PublicAssistant />
+					</div>
+				</div>
 			</section>
 
 			<section id="plan" class={s.section} aria-labelledby="team-plan-title">
@@ -238,35 +265,6 @@ export default function TeamPage() {
 						</For>
 					</ul>
 				</Show>
-			</section>
-
-			<section
-				id="assistant"
-				class={s.section}
-				aria-labelledby="team-assistant-title"
-			>
-				<div class={s.assistantGrid}>
-					<div class={s.assistantCopy}>
-						<p class={s.sectionLabel}>
-							{m.teamAiLabel()}
-						</p>
-						<h2 id="team-assistant-title">{m.teamAiTitle()}</h2>
-						<p class={s.sectionText}>{m.teamAiDescription()}</p>
-						<ul class={s.assistantPoints}>
-							<For each={assistantPoints}>
-								{(point) => <li>{point()}</li>}
-							</For>
-						</ul>
-						<span class={s.assistantOrb} aria-hidden="true">
-							<span class={s.assistantOrbCore} />
-							<span class={s.assistantOrbRing} />
-							<span class={s.assistantOrbRing} />
-						</span>
-					</div>
-					<div class={s.assistantCard}>
-						<PublicAssistant />
-					</div>
-				</div>
 			</section>
 
 			<Dialog
