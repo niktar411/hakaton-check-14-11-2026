@@ -737,6 +737,91 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/sam/matching/candidates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Очередь кандидатов сопоставления */
+        get: operations["sam-matching-candidates"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sam/matching/candidates/{id}/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Подтвердить сопоставление и создать алиас */
+        post: operations["sam-matching-confirm"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sam/matching/candidates/{id}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Отклонить кандидата сопоставления */
+        post: operations["sam-matching-reject"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sam/matching/run": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Построить очередь сопоставления несопоставленных установок */
+        post: operations["sam-matching-run"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sam/matching/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Счётчики очереди сопоставления */
+        get: operations["sam-matching-summary"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1463,6 +1548,82 @@ export interface components {
             title: string;
             /** Format: date-time */
             updatedAt: string;
+        };
+        SamMatchingCandidate: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/SamMatchingCandidate.json
+             */
+            readonly $schema?: string;
+            /** Format: date-time */
+            createdAt: string;
+            deviceName: string;
+            /** Format: int64 */
+            id: number;
+            /** Format: int64 */
+            installationId: number;
+            /** Format: date-time */
+            lastSeenAt: string;
+            method: string;
+            /** Format: int64 */
+            productId: number;
+            productName: string;
+            rawName: string;
+            /** Format: date-time */
+            resolvedAt?: string;
+            resolvedBy?: string;
+            /** Format: float */
+            score: number;
+            status: string;
+        };
+        SamMatchingRunInputBody: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/SamMatchingRunInputBody.json
+             */
+            readonly $schema?: string;
+            /** Format: int32 */
+            limit: number;
+        };
+        SamMatchingRunResult: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/SamMatchingRunResult.json
+             */
+            readonly $schema?: string;
+            /** Format: int64 */
+            candidates: number;
+            /** Format: int32 */
+            limit: number;
+            /** Format: int64 */
+            matched: number;
+            /** Format: int64 */
+            pending: number;
+            /** Format: int64 */
+            scanned: number;
+            /** Format: int64 */
+            skipped: number;
+            /** Format: int64 */
+            unmatched: number;
+        };
+        SamMatchingSummary: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/SamMatchingSummary.json
+             */
+            readonly $schema?: string;
+            /** Format: int64 */
+            confirmed: number;
+            /** Format: int64 */
+            pending: number;
+            /** Format: int64 */
+            rejected: number;
+            /** Format: int64 */
+            unmatched: number;
         };
         SetEnabledInputBody: {
             /**
@@ -3085,6 +3246,163 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SamAssistantHistory"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "sam-matching-candidates": {
+        parameters: {
+            query?: {
+                status?: string;
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SamMatchingCandidate"][] | null;
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "sam-matching-confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SamMatchingCandidate"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "sam-matching-reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SamMatchingCandidate"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "sam-matching-run": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SamMatchingRunInputBody"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SamMatchingRunResult"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "sam-matching-summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SamMatchingSummary"];
                 };
             };
             /** @description Error */

@@ -174,6 +174,19 @@ type SamLicense struct {
 	UpdatedAt   pgtype.Timestamptz `json:"updated_at"`
 }
 
+type SamMatchCandidate struct {
+	ID             int64              `json:"id"`
+	InstallationID int64              `json:"installation_id"`
+	ProductID      int64              `json:"product_id"`
+	RawName        string             `json:"raw_name"`
+	Score          float32            `json:"score"`
+	Method         string             `json:"method"`
+	Status         string             `json:"status"`
+	CreatedAt      pgtype.Timestamptz `json:"created_at"`
+	ResolvedAt     pgtype.Timestamptz `json:"resolved_at"`
+	ResolvedBy     pgtype.Text        `json:"resolved_by"`
+}
+
 type SamProduct struct {
 	ID        int64              `json:"id"`
 	Name      string             `json:"name"`
@@ -192,6 +205,7 @@ type SamProductAlias struct {
 	NormalizedAlias string             `json:"normalized_alias"`
 	CreatedBy       string             `json:"created_by"`
 	CreatedAt       pgtype.Timestamptz `json:"created_at"`
+	Confidence      float32            `json:"confidence"`
 }
 
 type SamRiskOverview struct {

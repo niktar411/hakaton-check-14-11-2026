@@ -26,6 +26,7 @@ import (
 	"hackathon/internal/questions"
 	"hackathon/internal/sam/assistant"
 	"hackathon/internal/sam/guard"
+	"hackathon/internal/sam/matching"
 )
 
 type Service struct {
@@ -42,6 +43,7 @@ type Service struct {
 	questions    *questions.Service
 	planner      *plannerblocks.Service
 	samAssistant *assistant.Service
+	samMatching  *matching.Service
 	coding       *codingtasks.Service
 	deployments  *deployments.Service
 	gitLab       *gitlab.Client
@@ -60,6 +62,7 @@ func NewService(pool *pgxpool.Pool, c Config) *Service {
 	s.planner = plannerblocks.NewService(pool, gitLab, plannerblocks.Config{AdminUser: c.AdminUser, AdminIP: c.AdminIP})
 	modelGuard := guard.NewLimiter(2, 1)
 	s.samAssistant = assistant.NewService(pool, s.model, modelGuard)
+	s.samMatching = matching.NewService(pool)
 	workerHTTP := &http.Client{Timeout: 3 * time.Minute, CheckRedirect: noRedirect}
 	httpWorker, err := codingtasks.NewHTTPWorker(c.WorkerURL, c.WorkerToken, workerHTTP)
 	var worker codingtasks.Worker
