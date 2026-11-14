@@ -308,6 +308,28 @@ func (q *Queries) SamFindInstallations(ctx context.Context, arg SamFindInstallat
 	return items, nil
 }
 
+const samInstallationCount = `-- name: SamInstallationCount :one
+SELECT count(*)::bigint AS count
+FROM sam_installations i
+WHERE i.status = 'installed'
+  AND (NOT $1::boolean OR i.product_id IS NULL)
+  AND ($2::bigint = 0 OR i.product_id = $2::bigint)
+  AND ($3::text = '' OR i.raw_name ILIKE '%' || $3::text || '%')
+`
+
+type SamInstallationCountParams struct {
+	Unmatched bool   `json:"unmatched"`
+	ProductID int64  `json:"product_id"`
+	Query     string `json:"query"`
+}
+
+func (q *Queries) SamInstallationCount(ctx context.Context, arg SamInstallationCountParams) (int64, error) {
+	row := q.db.QueryRow(ctx, samInstallationCount, arg.Unmatched, arg.ProductID, arg.Query)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const samLicenseSummary = `-- name: SamLicenseSummary :many
 SELECT l.license_type,
        count(*)::bigint AS licenses,
@@ -488,6 +510,35 @@ func (q *Queries) SamProductBalances(ctx context.Context, arg SamProductBalances
 		return nil, err
 	}
 	return items, nil
+}
+
+const samProductCount = `-- name: SamProductCount :one
+SELECT count(*)::bigint AS count
+FROM sam_products p
+WHERE ($1::text = '' OR p.status = $1::text)
+  AND (
+      $2::text = ''
+      OR p.name ILIKE '%' || $2::text || '%'
+      OR p.vendor ILIKE '%' || $2::text || '%'
+      OR EXISTS (
+          SELECT 1 FROM sam_product_aliases a
+          WHERE a.product_id = p.id
+            AND (a.alias ILIKE '%' || $2::text || '%'
+                 OR a.normalized_alias LIKE '%' || lower($2::text) || '%')
+      )
+  )
+`
+
+type SamProductCountParams struct {
+	Status string `json:"status"`
+	Query  string `json:"query"`
+}
+
+func (q *Queries) SamProductCount(ctx context.Context, arg SamProductCountParams) (int64, error) {
+	row := q.db.QueryRow(ctx, samProductCount, arg.Status, arg.Query)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
 }
 
 const samTopRisks = `-- name: SamTopRisks :many

@@ -686,6 +686,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/sam/assistant/chat": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Вопрос аналитику SAM по данным инвентаризации */
+        post: operations["sam-assistant-chat"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sam/assistant/conversations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** История диалогов аналитика SAM */
+        get: operations["sam-assistant-conversations"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sam/assistant/conversations/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Один диалог аналитика SAM */
+        get: operations["sam-assistant-conversation"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1359,6 +1410,59 @@ export interface components {
             release?: string;
             /** @enum {string} */
             target: "production" | "coding" | "review" | "test";
+        };
+        SamAssistantAnswer: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/SamAssistantAnswer.json
+             */
+            readonly $schema?: string;
+            answer: string;
+            fallback: boolean;
+            /** Format: int64 */
+            id: number;
+            sources: string[] | null;
+        };
+        SamAssistantChatInputBody: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/SamAssistantChatInputBody.json
+             */
+            readonly $schema?: string;
+            /** Format: int64 */
+            id: number;
+            prompt: string;
+            requestId: string;
+        };
+        SamAssistantHistory: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/SamAssistantHistory.json
+             */
+            readonly $schema?: string;
+            /** Format: int64 */
+            id: number;
+            messages: components["schemas"]["SamAssistantMessage"][] | null;
+        };
+        SamAssistantMessage: {
+            content: string;
+            /** Format: date-time */
+            createdAt: string;
+            role: string;
+        };
+        SamAssistantSummary: {
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: int64 */
+            id: number;
+            /** Format: int64 */
+            messageCount: number;
+            title: string;
+            /** Format: date-time */
+            updatedAt: string;
         };
         SetEnabledInputBody: {
             /**
@@ -2885,6 +2989,102 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SiteConfig"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "sam-assistant-chat": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SamAssistantChatInputBody"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SamAssistantAnswer"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "sam-assistant-conversations": {
+        parameters: {
+            query?: {
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SamAssistantSummary"][] | null;
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "sam-assistant-conversation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SamAssistantHistory"];
                 };
             };
             /** @description Error */

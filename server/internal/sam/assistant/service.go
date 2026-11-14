@@ -8,7 +8,6 @@ import (
 	"log/slog"
 	"regexp"
 	"strings"
-	"time"
 
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/jackc/pgx/v5"
@@ -61,6 +60,8 @@ type Store interface {
 	SamLicenseSummary(ctx context.Context) ([]db.SamLicenseSummaryRow, error)
 	SamTopRisks(ctx context.Context, limit int32) ([]db.SamRiskOverview, error)
 	SamUnmatchedNames(ctx context.Context, limit int32) ([]db.SamUnmatchedNamesRow, error)
+	SamProductCount(ctx context.Context, arg db.SamProductCountParams) (int64, error)
+	SamInstallationCount(ctx context.Context, arg db.SamInstallationCountParams) (int64, error)
 	SamOverview(ctx context.Context) (db.SamOverviewRow, error)
 }
 
@@ -113,27 +114,27 @@ type toolEnvelope struct {
 // Chat runs a bounded, read-only tool loop. If the model is unavailable, does
 // not call a tool, or returns no final text, a deterministic keyword router
 // answers one of the common analyst questions from the same sqlc queries.
-func (s *Service) Chat(ctx context.Context, actor string, id int64, prompt, requestID string) (Answer, error) {
+func (s *Service) Chat(ctx context.Context, actor string, id int64, prompt, requestID string) (SamAssistantAnswer, error) {
 	actor = strings.TrimSpace(actor)
 	prompt = strings.TrimSpace(prompt)
 	if actor == "" {
-		return Answer{}, huma.Error401Unauthorized("auth.required")
+		return SamAssistantAnswer{}, huma.Error401Unauthorized("auth.required")
 	}
 	if runes := []rune(prompt); len(runes) == 0 || len(runes) > 16000 {
-		return Answer{}, huma.Error422UnprocessableEntity("assistant.prompt_invalid")
+		return SamAssistantAnswer{}, huma.Error422UnprocessableEntity("assistant.prompt_invalid")
 	}
 	if !requestIDPattern.MatchString(requestID) {
-		return Answer{}, huma.Error422UnprocessableEntity("assistant.request_invalid")
+		return SamAssistantAnswer{}, huma.Error422UnprocessableEntity("assistant.request_invalid")
 	}
 	release, err := s.limiter.Acquire(actor)
 	if err != nil {
-		return Answer{}, err
+		return SamAssistantAnswer{}, err
 	}
 	defer release()
 
 	history, err := s.history(ctx, actor, id)
 	if err != nil {
-		return Answer{}, err
+		return SamAssistantAnswer{}, err
 	}
 
 	answer, sources, fallback, modelErr := s.modelAnswer(ctx, actor, id, history, prompt)
@@ -143,18 +144,18 @@ func (s *Service) Chat(ctx context.Context, actor string, id int64, prompt, requ
 	if fallback || strings.TrimSpace(answer) == "" {
 		answer, sources, err = s.fallback(ctx, prompt)
 		if err != nil {
-			return Answer{}, err
+			return SamAssistantAnswer{}, err
 		}
 		fallback = true
 	}
 	if strings.TrimSpace(answer) == "" {
-		return Answer{}, huma.Error502BadGateway("model.empty_response")
+		return SamAssistantAnswer{}, huma.Error502BadGateway("model.empty_response")
 	}
 	conversationID, err := s.persist(ctx, actor, id, prompt, answer, sources)
 	if err != nil {
-		return Answer{}, err
+		return SamAssistantAnswer{}, err
 	}
-	return Answer{ID: conversationID, Answer: answer, Sources: sources, Fallback: fallback}, nil
+	return SamAssistantAnswer{ID: conversationID, Answer: answer, Sources: sources, Fallback: fallback}, nil
 }
 
 func (s *Service) history(ctx context.Context, actor string, id int64) ([]db.SamAiMessage, error) {
@@ -286,7 +287,7 @@ func (s *Service) persist(ctx context.Context, actor string, id int64, prompt, a
 	return conversationID, nil
 }
 
-func (s *Service) Conversations(ctx context.Context, actor string, limit, offset int32) ([]Summary, error) {
+func (s *Service) Conversations(ctx context.Context, actor string, limit, offset int32) ([]SamAssistantSummary, error) {
 	if strings.TrimSpace(actor) == "" {
 		return nil, huma.Error401Unauthorized("auth.required")
 	}
@@ -300,9 +301,9 @@ func (s *Service) Conversations(ctx context.Context, actor string, limit, offset
 	if err != nil {
 		return nil, storageError(ctx, "list SAM assistant conversations", err)
 	}
-	result := make([]Summary, 0, len(rows))
+	result := make([]SamAssistantSummary, 0, len(rows))
 	for _, row := range rows {
-		result = append(result, Summary{
+		result = append(result, SamAssistantSummary{
 			ID:           row.ID,
 			Title:        clipRunes(strings.TrimSpace(row.Title), 100),
 			MessageCount: row.MessageCount,
@@ -313,26 +314,26 @@ func (s *Service) Conversations(ctx context.Context, actor string, limit, offset
 	return result, nil
 }
 
-func (s *Service) Conversation(ctx context.Context, actor string, id int64) (History, error) {
+func (s *Service) Conversation(ctx context.Context, actor string, id int64) (SamAssistantHistory, error) {
 	conversation, err := s.store.GetSamAIConversation(ctx, db.GetSamAIConversationParams{ID: id, Actor: actor, Mode: modeAssistant})
 	if errors.Is(err, pgx.ErrNoRows) {
-		return History{}, huma.Error404NotFound("assistant.not_found")
+		return SamAssistantHistory{}, huma.Error404NotFound("assistant.not_found")
 	}
 	if err != nil {
-		return History{}, storageError(ctx, "load SAM assistant conversation", err)
+		return SamAssistantHistory{}, storageError(ctx, "load SAM assistant conversation", err)
 	}
 	rows, err := s.store.ListSamAIMessages(ctx, id)
 	if err != nil {
-		return History{}, storageError(ctx, "list SAM assistant messages", err)
+		return SamAssistantHistory{}, storageError(ctx, "list SAM assistant messages", err)
 	}
-	messages := make([]Message, 0, len(rows))
+	messages := make([]SamAssistantMessage, 0, len(rows))
 	for _, row := range rows {
 		if row.Role != "user" && row.Role != "assistant" {
 			continue
 		}
-		messages = append(messages, Message{Role: row.Role, Content: row.Content, CreatedAt: row.CreatedAt.Time})
+		messages = append(messages, SamAssistantMessage{Role: row.Role, Content: row.Content, CreatedAt: row.CreatedAt.Time})
 	}
-	return History{ID: conversation.ID, Messages: messages}, nil
+	return SamAssistantHistory{ID: conversation.ID, Messages: messages}, nil
 }
 
 func storageError(ctx context.Context, operation string, err error) error {
@@ -358,5 +359,3 @@ func clampLimit(value, fallback, maximum int) int32 {
 	}
 	return int32(value)
 }
-
-func now() time.Time { return time.Now().UTC() }

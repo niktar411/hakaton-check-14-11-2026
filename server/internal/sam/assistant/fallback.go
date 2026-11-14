@@ -134,14 +134,16 @@ func (s *Service) fallback(ctx context.Context, prompt string) (string, []string
 		if len(rows) == 0 {
 			return "Несопоставленных установок нет.\nИсточник: sam_installations (unmatched_names).", []string{"sam_installations (unmatched_names)"}, nil
 		}
-		var total int64
+		total, err := s.store.SamInstallationCount(ctx, db.SamInstallationCountParams{Unmatched: true})
+		if err != nil {
+			return "", nil, storageError(ctx, "count SAM unmatched installations", err)
+		}
 		var answer strings.Builder
 		answer.WriteString("Несопоставленные имена установок:\n")
 		for _, row := range rows {
-			total += row.Installations
 			fmt.Fprintf(&answer, "- %s — %d установок на %d устройствах.\n", row.RawName, row.Installations, row.Devices)
 		}
-		fmt.Fprintf(&answer, "Всего в выборке: %d установок.\nИсточник: sam_installations (unmatched_names).", total)
+		fmt.Fprintf(&answer, "Всего несопоставленных установок: %d.\nИсточник: sam_installations (unmatched_names).", total)
 		return answer.String(), []string{"sam_installations (unmatched_names)"}, nil
 	case containsAny(normalized, "лиценз", "license", "мест", "баланс", "стоимост", "затрат", "истек", "expires"):
 		term := extractTerm(prompt)
@@ -194,14 +196,20 @@ func (s *Service) fallback(ctx context.Context, prompt string) (string, []string
 			if len(products) > 0 {
 				productID = products[0].ID
 				term = products[0].Name
+			} else {
+				term = ""
 			}
 		}
 		rows, err := s.store.SamFindInstallations(ctx, db.SamFindInstallationsParams{ProductID: productID, Query: "", Limit: 20})
 		if err != nil {
 			return "", nil, storageError(ctx, "find SAM installations", err)
 		}
+		total, err := s.store.SamInstallationCount(ctx, db.SamInstallationCountParams{ProductID: productID})
+		if err != nil {
+			return "", nil, storageError(ctx, "count SAM installations", err)
+		}
 		var answer strings.Builder
-		fmt.Fprintf(&answer, "Обезличенные установки%s: %d.\n", productSuffix(term), len(rows))
+		fmt.Fprintf(&answer, "Обезличенные установки%s: %d.\n", productSuffix(term), total)
 		for _, row := range rows {
 			fmt.Fprintf(&answer, "- %s, версия %s, статус %s.\n", row.RawName, row.Version, row.Status)
 		}
@@ -215,8 +223,12 @@ func (s *Service) fallback(ctx context.Context, prompt string) (string, []string
 			if err != nil {
 				return "", nil, storageError(ctx, "list SAM products", err)
 			}
+			total, err := s.store.SamProductCount(ctx, db.SamProductCountParams{Status: status})
+			if err != nil {
+				return "", nil, storageError(ctx, "count SAM products", err)
+			}
 			var answer strings.Builder
-			fmt.Fprintf(&answer, "Продуктов%s: %d.\n", statusSuffix(status), len(rows))
+			fmt.Fprintf(&answer, "Продуктов%s: %d.\n", statusSuffix(status), total)
 			for _, row := range rows {
 				fmt.Fprintf(&answer, "- %s (%s), статус %s.\n", row.Name, row.Vendor, row.Status)
 			}
@@ -227,8 +239,12 @@ func (s *Service) fallback(ctx context.Context, prompt string) (string, []string
 		if err != nil {
 			return "", nil, storageError(ctx, "search SAM products", err)
 		}
+		total, err := s.store.SamProductCount(ctx, db.SamProductCountParams{Query: term})
+		if err != nil {
+			return "", nil, storageError(ctx, "count SAM products", err)
+		}
 		var answer strings.Builder
-		fmt.Fprintf(&answer, "Найдено продуктов по запросу «%s»: %d.\n", term, len(rows))
+		fmt.Fprintf(&answer, "Найдено продуктов по запросу «%s»: %d.\n", term, total)
 		for _, row := range rows {
 			fmt.Fprintf(&answer, "- %s (%s), статус %s.\n", row.Name, row.Vendor, row.Status)
 		}

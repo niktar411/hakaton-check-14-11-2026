@@ -110,6 +110,14 @@ func (f *fakeStore) SamOverview(context.Context) (db.SamOverviewRow, error) {
 	return f.overview, nil
 }
 
+func (f *fakeStore) SamProductCount(context.Context, db.SamProductCountParams) (int64, error) {
+	return int64(len(f.products)), nil
+}
+
+func (f *fakeStore) SamInstallationCount(context.Context, db.SamInstallationCountParams) (int64, error) {
+	return int64(len(f.installations)), nil
+}
+
 func testService(store *fakeStore, model *fakeModel) *Service {
 	return newService(store, model, guard.NewLimiter(2, 1), func(ctx context.Context, fn func(Store) error) error {
 		return fn(store)

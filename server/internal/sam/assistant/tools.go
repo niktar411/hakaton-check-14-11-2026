@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/jackc/pgx/v5/pgtype"
 	db "hackathon/internal/db/sqlc"
@@ -302,6 +303,8 @@ func valueString(value any) string {
 			return ""
 		}
 		return typed.Time.UTC().Format("2006-01-02T15:04:05Z")
+	case time.Time:
+		return typed.UTC().Format("2006-01-02T15:04:05Z")
 	case pgtype.Text:
 		if !typed.Valid {
 			return ""

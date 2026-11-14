@@ -108,6 +108,30 @@ GROUP BY raw_name
 ORDER BY installations DESC, raw_name
 LIMIT sqlc.arg('limit')::int;
 
+-- name: SamProductCount :one
+SELECT count(*)::bigint AS count
+FROM sam_products p
+WHERE (sqlc.arg('status')::text = '' OR p.status = sqlc.arg('status')::text)
+  AND (
+      sqlc.arg('query')::text = ''
+      OR p.name ILIKE '%' || sqlc.arg('query')::text || '%'
+      OR p.vendor ILIKE '%' || sqlc.arg('query')::text || '%'
+      OR EXISTS (
+          SELECT 1 FROM sam_product_aliases a
+          WHERE a.product_id = p.id
+            AND (a.alias ILIKE '%' || sqlc.arg('query')::text || '%'
+                 OR a.normalized_alias LIKE '%' || lower(sqlc.arg('query')::text) || '%')
+      )
+  );
+
+-- name: SamInstallationCount :one
+SELECT count(*)::bigint AS count
+FROM sam_installations i
+WHERE i.status = 'installed'
+  AND (NOT sqlc.arg('unmatched')::boolean OR i.product_id IS NULL)
+  AND (sqlc.arg('product_id')::bigint = 0 OR i.product_id = sqlc.arg('product_id')::bigint)
+  AND (sqlc.arg('query')::text = '' OR i.raw_name ILIKE '%' || sqlc.arg('query')::text || '%');
+
 -- name: SamOverview :one
 SELECT
     (SELECT count(*) FROM sam_products)::bigint AS products,

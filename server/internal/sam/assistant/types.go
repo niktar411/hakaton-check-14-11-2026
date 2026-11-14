@@ -9,20 +9,20 @@ import (
 	"hackathon/internal/identity"
 )
 
-type Answer struct {
+type SamAssistantAnswer struct {
 	ID       int64    `json:"id"`
 	Answer   string   `json:"answer"`
 	Sources  []string `json:"sources"`
 	Fallback bool     `json:"fallback"`
 }
 
-type Message struct {
+type SamAssistantMessage struct {
 	Role      string    `json:"role"`
 	Content   string    `json:"content"`
 	CreatedAt time.Time `json:"createdAt"`
 }
 
-type Summary struct {
+type SamAssistantSummary struct {
 	ID           int64     `json:"id"`
 	Title        string    `json:"title"`
 	MessageCount int64     `json:"messageCount"`
@@ -30,12 +30,12 @@ type Summary struct {
 	UpdatedAt    time.Time `json:"updatedAt"`
 }
 
-type History struct {
-	ID       int64     `json:"id"`
-	Messages []Message `json:"messages"`
+type SamAssistantHistory struct {
+	ID       int64                 `json:"id"`
+	Messages []SamAssistantMessage `json:"messages"`
 }
 
-type chatInput struct {
+type samAssistantChatInput struct {
 	Body struct {
 		ID        int64  `json:"id" minimum:"0"`
 		Prompt    string `json:"prompt" minLength:"1" maxLength:"16000"`
@@ -43,20 +43,20 @@ type chatInput struct {
 	}
 }
 
-type chatOutput struct{ Body Answer }
+type samAssistantChatOutput struct{ Body SamAssistantAnswer }
 
-type conversationsInput struct {
+type samAssistantConversationsInput struct {
 	Limit  int32 `query:"limit" minimum:"1" maximum:"100" default:"50"`
 	Offset int32 `query:"offset" minimum:"0" default:"0"`
 }
 
-type conversationsOutput struct{ Body []Summary }
+type samAssistantConversationsOutput struct{ Body []SamAssistantSummary }
 
-type historyInput struct {
+type samAssistantHistoryInput struct {
 	ID int64 `path:"id" minimum:"1"`
 }
 
-type historyOutput struct{ Body History }
+type samAssistantHistoryOutput struct{ Body SamAssistantHistory }
 
 func Register(api huma.API, s *Service) {
 	huma.Register(api, huma.Operation{
@@ -66,7 +66,7 @@ func Register(api huma.API, s *Service) {
 		Summary:      "Вопрос аналитику SAM по данным инвентаризации",
 		Tags:         []string{"SAM assistant"},
 		MaxBodyBytes: 70000,
-	}, func(ctx context.Context, in *chatInput) (*chatOutput, error) {
+	}, func(ctx context.Context, in *samAssistantChatInput) (*samAssistantChatOutput, error) {
 		principal, err := identity.FromContext(ctx)
 		if err != nil {
 			return nil, err
@@ -75,7 +75,7 @@ func Register(api huma.API, s *Service) {
 		if err != nil {
 			return nil, err
 		}
-		return &chatOutput{Body: answer}, nil
+		return &samAssistantChatOutput{Body: answer}, nil
 	})
 
 	huma.Register(api, huma.Operation{
@@ -84,7 +84,7 @@ func Register(api huma.API, s *Service) {
 		Path:        "/api/sam/assistant/conversations",
 		Summary:     "История диалогов аналитика SAM",
 		Tags:        []string{"SAM assistant"},
-	}, func(ctx context.Context, in *conversationsInput) (*conversationsOutput, error) {
+	}, func(ctx context.Context, in *samAssistantConversationsInput) (*samAssistantConversationsOutput, error) {
 		principal, err := identity.FromContext(ctx)
 		if err != nil {
 			return nil, err
@@ -93,7 +93,7 @@ func Register(api huma.API, s *Service) {
 		if err != nil {
 			return nil, err
 		}
-		return &conversationsOutput{Body: items}, nil
+		return &samAssistantConversationsOutput{Body: items}, nil
 	})
 
 	huma.Register(api, huma.Operation{
@@ -102,7 +102,7 @@ func Register(api huma.API, s *Service) {
 		Path:        "/api/sam/assistant/conversations/{id}",
 		Summary:     "Один диалог аналитика SAM",
 		Tags:        []string{"SAM assistant"},
-	}, func(ctx context.Context, in *historyInput) (*historyOutput, error) {
+	}, func(ctx context.Context, in *samAssistantHistoryInput) (*samAssistantHistoryOutput, error) {
 		principal, err := identity.FromContext(ctx)
 		if err != nil {
 			return nil, err
@@ -111,6 +111,6 @@ func Register(api huma.API, s *Service) {
 		if err != nil {
 			return nil, err
 		}
-		return &historyOutput{Body: history}, nil
+		return &samAssistantHistoryOutput{Body: history}, nil
 	})
 }
