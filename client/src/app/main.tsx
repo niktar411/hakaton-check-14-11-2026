@@ -218,7 +218,7 @@ function App(props: { children?: JSX.Element }) {
 						}
 					>
 						<div class={shellClass()}>
-							<a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:p-2 focus:bg-surface focus:text-text">
+							<a href="#main-content" class="focus:bg-surface focus:text-text sr-only focus:not-sr-only focus:absolute focus:z-50 focus:p-2">
 								{m.skipToContent()}
 							</a>
 							<header
