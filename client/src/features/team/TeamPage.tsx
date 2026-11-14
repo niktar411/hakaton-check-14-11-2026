@@ -12,6 +12,7 @@ import { api, unwrap } from "@/shared/api";
 import type { components } from "@/shared/api/schema";
 import { formatDate } from "@/shared/lib/format";
 import { Dialog } from "@/shared/ui/Dialog";
+import { DragonMark } from "@/shared/ui/DragonMark";
 import { EmptyState, ErrorState, LoadingState } from "@/shared/ui/State";
 import { PublicAssistant } from "@/features/questions/PublicAssistant";
 import {
@@ -207,33 +208,20 @@ export default function TeamPage() {
 										type="button"
 										class={s.memberCardButton}
 										aria-haspopup="dialog"
+										aria-label={`${member.name}: ${m.teamMemberDetails()}`}
 										onClick={() => setSelectedMember(member)}
 									>
-										<span class={s.memberNumber} aria-hidden="true">
-											{String(index() + 1).padStart(2, "0")}
+										<span class={s.memberPhoto} aria-hidden="true">
+											<DragonMark class={s.memberWatermark} />
+											<span class={s.memberInitials}>
+												{initials(member.name)}
+											</span>
 										</span>
-										<span class={s.avatar} aria-hidden="true">
-											{initials(member.name)}
-										</span>
-										<h3>{member.name}</h3>
-										<p class={s.memberRole}>{member.role}</p>
-										<span class={s.memberDetails} aria-hidden="true">
-											{m.teamMemberDetails()}
+										<span class={s.memberCardBody}>
+											<span class={s.memberName}>{member.name}</span>
+											<span class={s.memberRole}>{member.role}</span>
 										</span>
 									</button>
-									<Show when={member.telegram}>
-										{(url) => (
-											<a
-												class={s.memberLink}
-												href={url()}
-												target="_blank"
-												rel="noopener noreferrer"
-												aria-label={`${m.teamTelegram()}: ${member.name}`}
-											>
-												{m.teamTelegram()}
-											</a>
-										)}
-									</Show>
 								</li>
 							)}
 						</For>
