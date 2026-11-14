@@ -84,6 +84,34 @@ func seedAssistantData(t *testing.T, pool *pgxpool.Pool) {
 	}
 }
 
+func TestDatabaseBannedProducts(t *testing.T) {
+	pool := setupAssistantDatabase(t)
+	ctx := context.Background()
+	var radmin int64
+	if err := pool.QueryRow(ctx, `INSERT INTO sam_products(name,vendor,status) VALUES ('Radmin','Famatech','banned') RETURNING id`).Scan(&radmin); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := pool.Exec(ctx, `INSERT INTO sam_installations(product_id,raw_name,device_name,status)
+		SELECT $1, 'Radmin', 'pc-radmin-' || g, 'installed' FROM generate_series(1,2) g`, radmin); err != nil {
+		t.Fatal(err)
+	}
+	service := NewService(pool, &fakeModel{ready: false}, guard.NewLimiter(2, 1))
+	answer, err := service.Chat(ctx, "niktar411", 0, "Какой запрещённый софт установлен?", "9999999999999999")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(answer.Answer, "Продуктов со статусом banned: 1") || !strings.Contains(answer.Answer, "Radmin") {
+		t.Fatalf("unexpected banned answer: %q", answer.Answer)
+	}
+	risks, err := service.Chat(ctx, "niktar411", 0, "Какие риски?", "9999999999999998")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(risks.Answer, "Установки запрещённых продуктов: 2") {
+		t.Fatalf("banned risk missing: %q", risks.Answer)
+	}
+}
+
 func TestDatabaseFallbackAnswersWithExactNumbers(t *testing.T) {
 	pool := setupAssistantDatabase(t)
 	service := NewService(pool, &fakeModel{ready: false}, guard.NewLimiter(2, 1))

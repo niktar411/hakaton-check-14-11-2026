@@ -175,8 +175,8 @@ func (s *Service) executeTool(ctx context.Context, name, raw string) (toolEnvelo
 			return toolEnvelope{}, err
 		}
 		status := strings.ToLower(strings.TrimSpace(args.Status))
-		if status != "" && status != "active" && status != "inactive" && status != "archived" {
-			return toolEnvelope{}, fmt.Errorf("status must be active, inactive or archived")
+		if status != "" && status != "active" && status != "inactive" && status != "archived" && status != "banned" {
+			return toolEnvelope{}, fmt.Errorf("status must be active, inactive, archived or banned")
 		}
 		rows, err := s.store.ListSamProducts(ctx, dbListProductsParams(status, clampLimit(args.Limit, 20, maxToolRows)))
 		if err != nil {

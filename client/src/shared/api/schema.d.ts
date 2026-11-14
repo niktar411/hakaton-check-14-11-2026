@@ -737,6 +737,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/sam/compliance/products": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Баланс куплено/установлено по продуктам */
+        get: operations["sam-compliance-products"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sam/compliance/risks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Финансовые и юридические риски SAM */
+        get: operations["sam-compliance-risks"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sam/compliance/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** KPI комплаенса SAM */
+        get: operations["sam-compliance-summary"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/sam/matching/candidates": {
         parameters: {
             query?: never;
@@ -1548,6 +1599,90 @@ export interface components {
             title: string;
             /** Format: date-time */
             updatedAt: string;
+        };
+        SamComplianceProduct: {
+            /** Format: int64 */
+            annualCost: number;
+            /** Format: int64 */
+            avgCostPerSeat: number;
+            /** Format: int64 */
+            bannedInstallations: number;
+            category: string;
+            /** Format: int64 */
+            expiredSeats: number;
+            /** Format: int64 */
+            id: number;
+            /** Format: int64 */
+            idleSeats: number;
+            /** Format: int64 */
+            installations: number;
+            /** Format: int64 */
+            installedDevices: number;
+            /** Format: int64 */
+            licensedSeats: number;
+            name: string;
+            /** Format: int64 */
+            overusedSeats: number;
+            recommendation: string;
+            /** Format: int64 */
+            riskCost: number;
+            riskLevel: string;
+            status: string;
+            vendor: string;
+        };
+        SamComplianceRisk: {
+            /** Format: int64 */
+            affected: number;
+            code: string;
+            /** Format: int64 */
+            cost: number;
+            /** Format: int64 */
+            productId?: number;
+            productName?: string;
+            recommendation: string;
+            severity: string;
+        };
+        SamComplianceSummary: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/SamComplianceSummary.json
+             */
+            readonly $schema?: string;
+            /** Format: int64 */
+            activeProducts: number;
+            /** Format: int64 */
+            annualCost: number;
+            /** Format: int64 */
+            bannedInstallations: number;
+            /** Format: int64 */
+            bannedProducts: number;
+            /** Format: int64 */
+            costAtRisk: number;
+            /** Format: int64 */
+            devices: number;
+            /** Format: int64 */
+            expiredCost: number;
+            /** Format: int64 */
+            expiredSeats: number;
+            /** Format: int64 */
+            idleCost: number;
+            /** Format: int64 */
+            idleSeats: number;
+            /** Format: int64 */
+            installations: number;
+            /** Format: int64 */
+            licensedSeats: number;
+            /** Format: int64 */
+            overuseCost: number;
+            /** Format: int64 */
+            overusedSeats: number;
+            /** Format: int64 */
+            products: number;
+            recommendations: string[] | null;
+            riskLevel: string;
+            /** Format: int64 */
+            unmatchedInstallations: number;
         };
         SamMatchingCandidate: {
             /**
@@ -3246,6 +3381,93 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SamAssistantHistory"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "sam-compliance-products": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SamComplianceProduct"][] | null;
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "sam-compliance-risks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SamComplianceRisk"][] | null;
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "sam-compliance-summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SamComplianceSummary"];
                 };
             };
             /** @description Error */

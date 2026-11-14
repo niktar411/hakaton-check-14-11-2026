@@ -25,31 +25,33 @@ import (
 	"hackathon/internal/plannerblocks"
 	"hackathon/internal/questions"
 	"hackathon/internal/sam/assistant"
+	"hackathon/internal/sam/compliance"
 	"hackathon/internal/sam/guard"
 	"hackathon/internal/sam/matching"
 )
 
 type Service struct {
-	db           *db.Queries
-	pool         *pgxpool.Pool
-	config       Config
-	http         *http.Client
-	modelHTTP    *http.Client
-	model        *llm.Service
-	chatSlots    chan struct{}
-	mu           sync.Mutex
-	activeUsers  map[string]bool
-	accounts     *localaccounts.Service
-	questions    *questions.Service
-	planner      *plannerblocks.Service
-	samAssistant *assistant.Service
-	samMatching  *matching.Service
-	coding       *codingtasks.Service
-	deployments  *deployments.Service
-	gitLab       *gitlab.Client
-	projectMu    sync.Mutex
-	projectAt    time.Time
-	projectText  string
+	db            *db.Queries
+	pool          *pgxpool.Pool
+	config        Config
+	http          *http.Client
+	modelHTTP     *http.Client
+	model         *llm.Service
+	chatSlots     chan struct{}
+	mu            sync.Mutex
+	activeUsers   map[string]bool
+	accounts      *localaccounts.Service
+	questions     *questions.Service
+	planner       *plannerblocks.Service
+	samAssistant  *assistant.Service
+	samMatching   *matching.Service
+	samCompliance *compliance.Service
+	coding        *codingtasks.Service
+	deployments   *deployments.Service
+	gitLab        *gitlab.Client
+	projectMu     sync.Mutex
+	projectAt     time.Time
+	projectText   string
 }
 
 func NewService(pool *pgxpool.Pool, c Config) *Service {
@@ -63,6 +65,7 @@ func NewService(pool *pgxpool.Pool, c Config) *Service {
 	modelGuard := guard.NewLimiter(2, 1)
 	s.samAssistant = assistant.NewService(pool, s.model, modelGuard)
 	s.samMatching = matching.NewService(pool)
+	s.samCompliance = compliance.NewService(pool)
 	workerHTTP := &http.Client{Timeout: 3 * time.Minute, CheckRedirect: noRedirect}
 	httpWorker, err := codingtasks.NewHTTPWorker(c.WorkerURL, c.WorkerToken, workerHTTP)
 	var worker codingtasks.Worker

@@ -97,6 +97,10 @@ func extractTerm(prompt string) string {
 func statusFilter(prompt string) string {
 	normalized := normalizePrompt(prompt)
 	switch {
+	case containsAny(normalized, "запрещ", "бан", "banned"):
+		return "banned"
+	case containsAny(normalized, "устарев"):
+		return "inactive"
 	case containsAny(normalized, "архив"):
 		return "archived"
 	case containsAny(normalized, "неактив"):
@@ -145,6 +149,24 @@ func (s *Service) fallback(ctx context.Context, prompt string) (string, []string
 		}
 		fmt.Fprintf(&answer, "Всего несопоставленных установок: %d.\nИсточник: sam_installations (unmatched_names).", total)
 		return answer.String(), []string{"sam_installations (unmatched_names)"}, nil
+	case statusFilter(prompt) != "" && containsAny(normalized, "софт", "продукт", "программ", "приложен") &&
+		!containsAny(normalized, "лиценз", "мест"):
+		status := statusFilter(prompt)
+		total, err := s.store.SamProductCount(ctx, db.SamProductCountParams{Status: status})
+		if err != nil {
+			return "", nil, storageError(ctx, "count SAM products", err)
+		}
+		rows, err := s.store.ListSamProducts(ctx, db.ListSamProductsParams{Status: status, Limit: 20})
+		if err != nil {
+			return "", nil, storageError(ctx, "list SAM products", err)
+		}
+		var answer strings.Builder
+		fmt.Fprintf(&answer, "Продуктов со статусом %s: %d.\n", status, total)
+		for _, row := range rows {
+			fmt.Fprintf(&answer, "- %s (%s).\n", row.Name, row.Vendor)
+		}
+		answer.WriteString("Источник: sam_products (list_products).")
+		return answer.String(), []string{"sam_products (list_products)"}, nil
 	case containsAny(normalized, "лиценз", "license", "мест", "баланс", "стоимост", "затрат", "истек", "expires"):
 		term := extractTerm(prompt)
 		if term != "" {

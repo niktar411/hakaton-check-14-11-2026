@@ -19,6 +19,7 @@ import (
 	"hackathon/internal/plannerblocks"
 	"hackathon/internal/questions"
 	"hackathon/internal/sam/assistant"
+	"hackathon/internal/sam/compliance"
 	"hackathon/internal/sam/matching"
 )
 
@@ -75,6 +76,7 @@ func (s *Service) Router() http.Handler {
 		questions.RegisterAdmin(api, s.questions)
 		assistant.Register(api, s.samAssistant)
 		matching.Register(api, s.samMatching)
+		compliance.Register(api, s.samCompliance)
 		plannerblocks.RegisterTeam(api, s.planner)
 		plannerblocks.RegisterAdmin(api, s.planner)
 		codingtasks.Register(api, s.coding)
@@ -131,6 +133,7 @@ func WriteOpenAPI(ctx context.Context, path string) error {
 	questions.RegisterAdmin(api, nil)
 	assistant.Register(api, nil)
 	matching.Register(api, nil)
+	compliance.Register(api, nil)
 	plannerblocks.Register(api, nil)
 	codingtasks.Register(api, nil)
 	deployments.Register(api, nil)
