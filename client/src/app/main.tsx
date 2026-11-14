@@ -24,6 +24,16 @@ import SamMatchingPage from "@/features/sam/SamMatchingPage";
 import SamAssistantPage from "@/features/sam/SamAssistantPage";
 import { SiteConfigProvider } from "@/app/site-config";
 
+function isSamPath(pathname: string) {
+	return pathname === "/sam" || pathname.startsWith("/sam/");
+}
+
+// Set the theme before the first render so a direct /sam visit does not flash
+// the light palette while Solid mounts.
+document.documentElement.dataset.theme = isSamPath(window.location.pathname)
+	? "dark"
+	: "light";
+
 function PublicNavigation(props: { publicUrl?: string }) {
 	return (
 		<nav class="flex flex-wrap gap-x-5 gap-y-2" aria-label={m.mainNavigation()}>
@@ -47,6 +57,7 @@ function App(props: { children?: JSX.Element }) {
 		adminArea() ||
 		location.pathname === "/coding" ||
 		location.pathname.startsWith("/coding/");
+	const samArea = () => isSamPath(location.pathname);
 	createEffect(() => {
 		const robots = document.querySelector('meta[name="robots"]');
 		if (robots) {
@@ -55,6 +66,9 @@ function App(props: { children?: JSX.Element }) {
 				privateArea() ? "noindex,nofollow" : "index,follow",
 			);
 		}
+	});
+	createEffect(() => {
+		document.documentElement.dataset.theme = samArea() ? "dark" : "light";
 	});
 	return (
 		<SiteConfigProvider

@@ -441,6 +441,18 @@ test("risk rows lead to product and host details", async ({ page }) => {
 	).toBeVisible();
 });
 
+test("SAM section uses the dark theme and the rest stays light", async ({
+	page,
+}) => {
+	await mockCompliance(page);
+	await page.goto("/sam");
+	await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+	await page.goto("/sam/compliance");
+	await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+	await page.goto("/");
+	await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+});
+
 test("every SAM page exposes loading, empty, error and success", async ({
 	page,
 }) => {
@@ -494,6 +506,7 @@ test("SAM pages fit 375px and 1280px without horizontal scrolling", async ({
 			await expect(
 				page.getByRole("navigation", { name: "Разделы SAM" }),
 			).toBeVisible();
+			await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
 			expect(
 				await page.evaluate(
 					() =>
