@@ -13,6 +13,8 @@
     "new:component": "bun scripts/new/index.ts component",
     "new:route": "bun scripts/new/index.ts route",
     "new:migration": "bun scripts/new/index.ts migration",
+    "demo:sam:source": "bun scripts/sam/xlsx-to-csv.ts --kind inventory --in demo/sam/source/INSTALLED_SOFTWARE.xlsx --out demo/sam/source/installed_software.csv && bun scripts/sam/xlsx-to-csv.ts --kind software --in demo/sam/source/SOFTWARE.xlsx --out demo/sam/source/software.csv && bun scripts/sam/xlsx-to-csv.ts --kind licenses --in demo/sam/source/LICENSES.xlsx --out demo/sam/source/licenses.csv",
+    "demo:sam": "bun scripts/sam/prepare-real.ts",
     "hooks:install": "git config core.hooksPath .githooks",
     "build:client": "vite build --config client/vite.config.ts",
     "typecheck:client": "tsc --noEmit -p client/tsconfig.json",
@@ -33,6 +35,8 @@
   },
   "dependencies": {
     "@solidjs/router": "^1.0.1",
+    "dompurify": "^3.4.17",
+    "marked": "^18.2.0",
     "openapi-fetch": "^0.17.0",
     "solid-js": "^1.9.18"
   }

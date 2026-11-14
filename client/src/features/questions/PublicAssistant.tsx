@@ -1,16 +1,17 @@
-import { createSignal, For, Show } from "solid-js";
+import { createSignal, createUniqueId, For, Show } from "solid-js";
 import * as m from "@/paraglide/messages";
-import { api, requestId, unwrap } from "@/shared/api";
+import { api, ApiError, requestId, unwrap } from "@/shared/api";
 import type { components } from "@/shared/api/schema";
-
-type QuestionResult = components["schemas"]["Answer"];
 import { Button } from "@/shared/ui/Button";
 import { ErrorState, LoadingState } from "@/shared/ui/State";
 import { useToast } from "@/shared/ui/Toast";
-import s from "./QuestionsPage.module.css";
+import s from "./PublicAssistant.module.css";
 
-export default function QuestionsPage() {
+type QuestionResult = components["schemas"]["Answer"];
+
+export function PublicAssistant() {
 	const toast = useToast();
+	const fieldId = createUniqueId();
 	const [question, setQuestion] = createSignal("");
 	const [result, setResult] = createSignal<QuestionResult>();
 	const [pending, setPending] = createSignal(false);
@@ -30,28 +31,28 @@ export default function QuestionsPage() {
 				}),
 			);
 			setResult(response);
-		} catch {
+		} catch (error) {
 			setResult(undefined);
 			setFailed(true);
-			toast.show(m.questionFailed());
+			toast.show(
+				error instanceof ApiError && error.code === "questions.injection_blocked"
+					? m.questionInjectionBlocked()
+					: m.questionFailed(),
+			);
 		} finally {
 			setPending(false);
 		}
 	}
 
 	return (
-		<main class={s.page}>
-			<header class={s.header}>
-				<h1>{m.questionsPageTitle()}</h1>
-				<p>{m.questionsIntro()}</p>
-			</header>
+		<div class={s.assistant}>
 			<form class={s.form} onSubmit={submit}>
-				<label for="public-question">{m.questionLabel()}</label>
+				<label for={fieldId}>{m.questionLabel()}</label>
 				<textarea
-					id="public-question"
+					id={fieldId}
 					required
 					maxlength={4000}
-					rows={5}
+					rows={4}
 					value={question()}
 					onInput={(event) => setQuestion(event.currentTarget.value)}
 					placeholder={m.questionPlaceholder()}
@@ -101,6 +102,6 @@ export default function QuestionsPage() {
 			<Show when={!result() && !pending() && !failed()}>
 				<p class={s.hint}>{m.questionsEmptyHint()}</p>
 			</Show>
-		</main>
+		</div>
 	);
 }

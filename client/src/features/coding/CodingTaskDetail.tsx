@@ -1,4 +1,4 @@
-import { createResource, createSignal, For, Show } from "solid-js";
+import { createEffect, createResource, createSignal, For, onCleanup, Show } from "solid-js";
 import * as m from "@/paraglide/messages";
 import { api, type ApiResult, csrfHeaders, unwrap } from "@/shared/api";
 import type { components } from "@/shared/api/schema";
@@ -10,6 +10,28 @@ import s from "./CodingPage.module.css";
 
 type CodingTask = components["schemas"]["CodingTask"];
 type CodingMessage = components["schemas"]["CodingMessage"];
+
+type DetailTab = "dev" | "read" | "changes" | "checks";
+type ToolAudit = {
+	operation?: string;
+	input?: {
+		path?: string;
+		query?: string;
+		check?: string;
+		content?: string;
+		plannerBlockId?: number;
+		title?: string;
+	};
+	output?: { ok?: boolean; content?: string; error?: string };
+};
+
+function parseToolAudit(message: CodingMessage): ToolAudit {
+	try {
+		return JSON.parse(message.content) as ToolAudit;
+	} catch {
+		return { operation: message.toolName };
+	}
+}
 
 export function codingStatus(phase: string) {
 	switch (phase) {
@@ -43,6 +65,13 @@ export default function CodingTaskDetail(props: {
 	const [reworkRequest, setReworkRequest] = createSignal("");
 	const [showRework, setShowRework] = createSignal(false);
 	const [pending, setPending] = createSignal("");
+	const [tab, setTab] = createSignal<DetailTab>("dev");
+
+	createEffect(() => {
+		if (task()?.phase !== "running") return;
+		const timer = window.setInterval(() => void refetch(), 4000);
+		onCleanup(() => window.clearInterval(timer));
+	});
 
 	async function run(name: string, operation: Promise<ApiResult<CodingTask>>) {
 		if (pending()) return undefined;
@@ -105,10 +134,22 @@ export default function CodingTaskDetail(props: {
 
 	const regularMessages = () => (task()?.messages ?? []).filter((message) => message.role !== "tool");
 	const toolMessages = () => (task()?.messages ?? []).filter((message) => message.role === "tool");
-	const messageRole = (message: CodingMessage) => message.role === "user" ? m.you() : message.role === "assistant" ? m.assistant() : m.systemMessage();
+	const readingMessages = () =>
+		toolMessages().filter((message) =>
+			["list_files", "read_file", "search_code"].includes(message.toolName ?? ""),
+		);
+	const changeMessages = () =>
+		toolMessages().filter((message) =>
+			["write_file", "create_merge_request", "start_planner_block", "workspace"].includes(message.toolName ?? ""),
+		);
+	const checkMessages = () => toolMessages().filter((message) => message.toolName === "run_check");
+	const messageRole = (message: CodingMessage) =>
+		message.role === "user" ? m.you() : message.role === "assistant" ? m.assistant() : m.systemMessage();
+	const toolTarget = (audit: ToolAudit) =>
+		audit.input?.path || audit.input?.query || audit.input?.check || (audit.input?.plannerBlockId ? `#${audit.input.plannerBlockId}` : "");
 
 	return (
-		<section class={s.detail} aria-live="polite">
+		<section class={s.detail}>
 			<Show when={!task.loading} fallback={<LoadingState />}>
 				<Show when={!task.error} fallback={<ErrorState onRetry={() => void refetch()} />}>
 					<Show when={task()}>
@@ -124,19 +165,6 @@ export default function CodingTaskDetail(props: {
 									<section class={s.subsection}><h3>{m.currentClarification()}</h3><p class={s.request}>{data().clarification}</p></section>
 								</Show>
 								<p class={s.freshHint}>{m.codingFreshClarificationHint()}</p>
-
-								<section class={s.subsection}>
-									<h3>{m.codingMessages()}</h3>
-									<For each={regularMessages()} fallback={<EmptyState message={m.codingMessagesEmpty()} />}>
-										{(message) => (
-											<article class={s.message}>
-												<strong>{messageRole(message)}</strong>
-												<p>{message.content}</p>
-												<time>{formatDate(message.createdAt)}</time>
-											</article>
-										)}
-									</For>
-								</section>
 
 								<Show when={data().phase === "clarifying" || data().phase === "awaiting_confirmation"}>
 									<form class={s.actionForm} onSubmit={submitAnswer}>
@@ -159,34 +187,112 @@ export default function CodingTaskDetail(props: {
 									</form>
 								</Show>
 
-								<section class={s.subsection}>
-									<h3>{m.toolActivity()}</h3>
-									<For each={toolMessages()} fallback={<EmptyState message={m.toolActivityEmpty()} />}>
-										{(activity) => (
-											<article class={s.activity}>
-												<strong>{activity.toolName || m.toolActivity()}</strong>
-												<Show when={activity.toolName === "run_check"}><span>{m.checkStatus()}</span></Show>
-												<p>{activity.content}</p>
-												<time>{formatDate(activity.createdAt)}</time>
-											</article>
-										)}
-									</For>
-								</section>
+								<nav class={s.detailTabs} aria-label={m.codingTabs()}>
+									<button type="button" data-active={tab() === "dev"} aria-pressed={tab() === "dev"} onClick={() => setTab("dev")}>
+										{m.codingTabDev()} <span>{regularMessages().length}</span>
+									</button>
+									<button type="button" data-active={tab() === "read"} aria-pressed={tab() === "read"} onClick={() => setTab("read")}>
+										{m.codingTabRead()} <span>{readingMessages().length}</span>
+									</button>
+									<button type="button" data-active={tab() === "changes"} aria-pressed={tab() === "changes"} onClick={() => setTab("changes")}>
+										{m.codingTabChanges()} <span>{changeMessages().length}</span>
+									</button>
+									<button type="button" data-active={tab() === "checks"} aria-pressed={tab() === "checks"} onClick={() => setTab("checks")}>
+										{m.codingTabChecks()} <span>{checkMessages().length}</span>
+									</button>
+								</nav>
 
-								<section class={s.subsection}>
-									<h3>{m.mergeRequestStatus()}</h3>
-									<Show when={data().mergeRequestIid} fallback={<EmptyState message={m.mergeRequestEmpty()} />}>
-										{(iid) => (
-											<div>
-												<Show when={data().mergeRequestUrl} fallback={<span>!{iid()}</span>}>
-													{(url) => <a href={url()} target="_blank" rel="noopener noreferrer">!{iid()}</a>}
-												</Show>
-												<p>{codingStatus(data().phase)}</p>
-												<Show when={data().branch}><p>{data().branch}</p></Show>
-											</div>
-										)}
-									</Show>
-								</section>
+								<Show when={tab() === "dev"}>
+									<section class={s.tabPanel} aria-live="polite">
+										<For each={regularMessages()} fallback={<EmptyState message={m.codingMessagesEmpty()} />}>
+											{(message) => (
+												<article class={s.message}>
+													<strong>{messageRole(message)}</strong>
+													<p>{message.content}</p>
+													<time>{formatDate(message.createdAt)}</time>
+												</article>
+											)}
+										</For>
+									</section>
+								</Show>
+
+								<Show when={tab() === "read"}>
+									<section class={s.tabPanel}>
+										<For each={readingMessages()} fallback={<EmptyState message={m.codingReadEmpty()} />}>
+											{(message) => {
+												const audit = parseToolAudit(message);
+												return (
+													<article class={s.fileCard}>
+														<header class={s.fileHeader}>
+															<strong>{audit.operation || message.toolName}</strong>
+															<Show when={toolTarget(audit)}><span class={s.filePath}>{toolTarget(audit)}</span></Show>
+														</header>
+														<pre class={s.fileContent}>{audit.output?.content || message.content}</pre>
+														<time>{formatDate(message.createdAt)}</time>
+													</article>
+												);
+											}}
+										</For>
+									</section>
+								</Show>
+
+								<Show when={tab() === "changes"}>
+									<section class={s.tabPanel}>
+										<For each={changeMessages()} fallback={<EmptyState message={m.codingChangesEmpty()} />}>
+											{(message) => {
+												const audit = parseToolAudit(message);
+												return (
+													<article class={s.fileCard}>
+														<header class={s.fileHeader}>
+															<strong>{audit.operation || message.toolName}</strong>
+															<Show when={toolTarget(audit)}><span class={s.filePath}>{toolTarget(audit)}</span></Show>
+														</header>
+														<Show when={audit.input?.content}><pre class={s.fileContent}>{audit.input?.content}</pre></Show>
+														<Show when={audit.output?.content}><pre class={s.fileContent}>{audit.output?.content}</pre></Show>
+														<Show when={audit.output?.ok === false}><p class={s.checkFailed} role="alert">{audit.output?.error || m.codingCheckFailed()}</p></Show>
+														<time>{formatDate(message.createdAt)}</time>
+													</article>
+												);
+											}}
+										</For>
+										<section class={s.subsection}>
+											<h3>{m.mergeRequestStatus()}</h3>
+											<Show when={data().mergeRequestIid} fallback={<EmptyState message={m.mergeRequestEmpty()} />}>
+												{(iid) => (
+													<div>
+														<Show when={data().mergeRequestUrl} fallback={<span>!{iid()}</span>}>
+															{(url) => <a href={url()} target="_blank" rel="noopener noreferrer">!{iid()}</a>}
+														</Show>
+														<p>{codingStatus(data().phase)}</p>
+														<Show when={data().branch}><p>{data().branch}</p></Show>
+													</div>
+												)}
+											</Show>
+										</section>
+									</section>
+								</Show>
+
+								<Show when={tab() === "checks"}>
+									<section class={s.tabPanel}>
+										<For each={checkMessages()} fallback={<EmptyState message={m.codingChecksEmpty()} />}>
+											{(message) => {
+												const audit = parseToolAudit(message);
+												return (
+													<article class={s.fileCard}>
+														<header class={s.fileHeader}>
+															<strong>{audit.input?.check || message.toolName}</strong>
+														</header>
+														<p class={audit.output?.ok ? s.checkOk : s.checkFailed} role="status">
+															{audit.output?.ok ? m.codingCheckOk() : m.codingCheckFailed()}
+														</p>
+														<pre class={s.fileContent}>{audit.output?.content || audit.output?.error || message.content}</pre>
+														<time>{formatDate(message.createdAt)}</time>
+													</article>
+												);
+											}}
+										</For>
+									</section>
+								</Show>
 
 								<div class={s.rework}>
 									<Button onClick={() => setShowRework((value) => !value)}>{m.requestRework()}</Button>

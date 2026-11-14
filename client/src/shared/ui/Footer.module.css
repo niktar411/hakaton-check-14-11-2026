@@ -8,6 +8,10 @@
 	border-top: 1px solid var(--border);
 }
 
+.root[data-borderless='true'] {
+	border-top: 0;
+}
+
 .links {
 	display: flex;
 	flex-wrap: wrap;
@@ -16,6 +20,17 @@
 
 .links a {
 	overflow-wrap: anywhere;
+}
+
+.contacts {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--space-3) var(--space-5);
+	font-size: var(--text-sm);
+}
+
+.contacts a {
+	color: var(--text-muted);
 }
 
 .note {

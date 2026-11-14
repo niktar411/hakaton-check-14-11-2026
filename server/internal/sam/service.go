@@ -16,7 +16,7 @@ const pageLimit int32 = 100
 // an interface lets the mapping and suggestion logic be tested without a database.
 type Store interface {
 	SamDashboard(ctx context.Context) (db.SamDashboardRow, error)
-	ListSamProducts(ctx context.Context, arg db.ListSamProductsParams) ([]db.ListSamProductsRow, error)
+	SamPublicProducts(ctx context.Context, arg db.SamPublicProductsParams) ([]db.SamPublicProductsRow, error)
 	ListSamLicenses(ctx context.Context, arg db.ListSamLicensesParams) ([]db.ListSamLicensesRow, error)
 	ListSamAssets(ctx context.Context, arg db.ListSamAssetsParams) ([]db.ListSamAssetsRow, error)
 	ListSamFindings(ctx context.Context, arg db.ListSamFindingsParams) ([]db.ListSamFindingsRow, error)
@@ -55,7 +55,7 @@ func (s *Service) Dashboard(ctx context.Context) (Overview, error) {
 }
 
 func (s *Service) Products(ctx context.Context) ([]Product, error) {
-	rows, err := s.store.ListSamProducts(ctx, db.ListSamProductsParams{Limit: pageLimit})
+	rows, err := s.store.SamPublicProducts(ctx, db.SamPublicProductsParams{Limit: pageLimit})
 	if err != nil {
 		return nil, fmt.Errorf("list SAM products: %w", err)
 	}
@@ -66,6 +66,12 @@ func (s *Service) Products(ctx context.Context) ([]Product, error) {
 			Name:              row.Name,
 			Vendor:            row.Vendor,
 			Category:          row.Category,
+			SectionCode:       row.SectionCode,
+			ClassCode:         row.ClassCode,
+			LicenseMetric:     row.LicenseMetric,
+			RegistryRf:        row.RegistryRf,
+			RegistryEntry:     row.RegistryEntry,
+			IsTrackable:       row.IsTrackable,
 			LicenseCount:      row.LicenseCount,
 			InstallationCount: row.InstallationCount,
 			UpdatedAt:         row.UpdatedAt.Time,
@@ -88,6 +94,7 @@ func (s *Service) Licenses(ctx context.Context) ([]License, error) {
 			Kind:       row.Kind,
 			SeatsTotal: row.SeatsTotal,
 			SeatsUsed:  row.SeatsUsed,
+			Contract:   row.Contract,
 			ValidUntil: optionalDate(row.ValidUntil),
 			Status:     row.Status,
 		}

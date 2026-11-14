@@ -3,8 +3,10 @@ import { createEffect, createResource, createSignal, For, Show } from "solid-js"
 import * as m from "@/paraglide/messages";
 import { api, identity, isAuthError, unwrap } from "@/shared/api";
 import { AccountsPanel } from "@/features/administration/AccountsPanel";
+import { ChatContextPanel } from "@/features/administration/ChatContextPanel";
 import { ChatViewerPanel } from "@/features/administration/ChatViewerPanel";
 import { CodingTasksAdminPanel } from "@/features/administration/CodingTasksAdminPanel";
+import { DemoPanel } from "@/features/administration/DemoPanel";
 import { DeploymentsPanel } from "@/features/administration/DeploymentsPanel";
 import { FaqPanel } from "@/features/administration/FaqPanel";
 import { MergeRequestsPanel } from "@/features/administration/MergeRequestsPanel";
@@ -17,8 +19,10 @@ import s from "./AdministrationPage.module.css";
 
 type Tab =
 	| "overview"
+	| "demo"
 	| "accounts"
 	| "chats"
+	| "aiContext"
 	| "coding"
 	| "faq"
 	| "model"
@@ -29,8 +33,10 @@ type Tab =
 
 const tabs: { id: Tab; label: () => string }[] = [
 	{ id: "overview", label: () => m.adminOverview() },
+	{ id: "demo", label: () => m.adminDemo() },
 	{ id: "accounts", label: () => m.adminAccounts() },
 	{ id: "chats", label: () => m.adminChats() },
+	{ id: "aiContext", label: () => m.adminAiContext() },
 	{ id: "coding", label: () => m.codingTasks() },
 	{ id: "faq", label: () => m.adminFaq() },
 	{ id: "model", label: () => m.adminModelKey() },
@@ -108,11 +114,17 @@ export default function AdministrationPage() {
 							</Show>
 						</Show>
 					</Show>
+					<Show when={active() === "demo"}>
+						<DemoPanel />
+					</Show>
 					<Show when={active() === "accounts"}>
 						<AccountsPanel csrf={session()?.csrf} />
 					</Show>
 					<Show when={active() === "chats"}>
 						<ChatViewerPanel />
+					</Show>
+					<Show when={active() === "aiContext"}>
+						<ChatContextPanel csrf={session()?.csrf} />
 					</Show>
 					<Show when={active() === "coding"}>
 						<CodingTasksAdminPanel />

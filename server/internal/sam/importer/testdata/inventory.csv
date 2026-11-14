@@ -1,0 +1,7 @@
+Имя устройства;Наименование ПО;Издатель;Версия;Архитектура;Редакция;Обновление;Дата установки;Источник
+PC-001;Microsoft Visual C++ 2015-2022 Redistributable (x64);Microsoft Corporation;14.38.33130;x64;;;2026-01-10;Intune
+PC-002;7-Zip;Igor Pavlov;23.01;x86_64;;;2026-02-01;Intune
+PC-003;Google Chrome;Google LLC;120.0.6099.130;amd64;;;2026-02-02;Intune
+PC-004;Office 2019;Microsoft Corporation;;x64;;;2026-02-03;Intune
+PC-005;Security Update for Windows (KB5034441);Microsoft Corporation;1.0;x64;;KB5034441;2026-02-04;Intune
+pc-001;MICROSOFT VISUAL C++ 2015-2022 REDISTRIBUTABLE (X64);Microsoft Corporation;14.38.33130;amd64;;;2026-01-10;Intune

@@ -537,7 +537,7 @@ add_header Referrer-Policy "strict-origin-when-cross-origin" always;
 add_header X-Frame-Options "DENY" always;
 add_header Cross-Origin-Opener-Policy "same-origin" always;
 add_header Cross-Origin-Resource-Policy "same-origin" always;
-add_header Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()" always;
+add_header Permissions-Policy "camera=(), microphone=(self), geolocation=(), payment=(), usb=(), interest-cohort=()" always;
 add_header Content-Security-Policy "default-src 'self'; script-src 'self' 'sha256-<хеш инлайн-скрипта темы>'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; media-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests" always;
 add_header Alt-Svc 'h3=":443"; ma=86400' always;
 ```

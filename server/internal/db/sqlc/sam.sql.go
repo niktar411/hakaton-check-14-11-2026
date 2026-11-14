@@ -11,15 +11,207 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const addSamAIMessage = `-- name: AddSamAIMessage :exec
+INSERT INTO sam_ai_messages(conversation_id, role, content, tool_name)
+VALUES ($1, $2, $3, $4)
+`
+
+type AddSamAIMessageParams struct {
+	ConversationID int64  `json:"conversation_id"`
+	Role           string `json:"role"`
+	Content        string `json:"content"`
+	ToolName       string `json:"tool_name"`
+}
+
+func (q *Queries) AddSamAIMessage(ctx context.Context, arg AddSamAIMessageParams) error {
+	_, err := q.db.Exec(ctx, addSamAIMessage,
+		arg.ConversationID,
+		arg.Role,
+		arg.Content,
+		arg.ToolName,
+	)
+	return err
+}
+
+const createSamAIConversation = `-- name: CreateSamAIConversation :one
+INSERT INTO sam_ai_conversations(actor, mode)
+VALUES ($1, $2)
+RETURNING id, actor, mode, created_at, updated_at
+`
+
+type CreateSamAIConversationParams struct {
+	Actor string `json:"actor"`
+	Mode  string `json:"mode"`
+}
+
+func (q *Queries) CreateSamAIConversation(ctx context.Context, arg CreateSamAIConversationParams) (SamAiConversation, error) {
+	row := q.db.QueryRow(ctx, createSamAIConversation, arg.Actor, arg.Mode)
+	var i SamAiConversation
+	err := row.Scan(
+		&i.ID,
+		&i.Actor,
+		&i.Mode,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const deleteEmptySamAIConversations = `-- name: DeleteEmptySamAIConversations :exec
+DELETE FROM sam_ai_conversations
+WHERE actor = $1 AND mode = $2
+  AND created_at < now() - interval '10 minutes'
+  AND NOT EXISTS (SELECT 1 FROM sam_ai_messages WHERE sam_ai_messages.conversation_id = sam_ai_conversations.id)
+`
+
+type DeleteEmptySamAIConversationsParams struct {
+	Actor string `json:"actor"`
+	Mode  string `json:"mode"`
+}
+
+func (q *Queries) DeleteEmptySamAIConversations(ctx context.Context, arg DeleteEmptySamAIConversationsParams) error {
+	_, err := q.db.Exec(ctx, deleteEmptySamAIConversations, arg.Actor, arg.Mode)
+	return err
+}
+
+const getSamAIConversation = `-- name: GetSamAIConversation :one
+SELECT id, actor, mode, created_at, updated_at
+FROM sam_ai_conversations
+WHERE id = $1 AND actor = $2 AND mode = $3
+`
+
+type GetSamAIConversationParams struct {
+	ID    int64  `json:"id"`
+	Actor string `json:"actor"`
+	Mode  string `json:"mode"`
+}
+
+func (q *Queries) GetSamAIConversation(ctx context.Context, arg GetSamAIConversationParams) (SamAiConversation, error) {
+	row := q.db.QueryRow(ctx, getSamAIConversation, arg.ID, arg.Actor, arg.Mode)
+	var i SamAiConversation
+	err := row.Scan(
+		&i.ID,
+		&i.Actor,
+		&i.Mode,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const listSamAIConversations = `-- name: ListSamAIConversations :many
+SELECT c.id, c.actor, c.mode, c.created_at, c.updated_at,
+       coalesce((
+           SELECT m.content FROM sam_ai_messages m
+           WHERE m.conversation_id = c.id AND m.role = 'user'
+           ORDER BY m.id LIMIT 1
+       ), '')::text AS title,
+       (
+           SELECT count(*) FROM sam_ai_messages m
+           WHERE m.conversation_id = c.id
+       )::bigint AS message_count
+FROM sam_ai_conversations c
+WHERE c.actor = $1 AND c.mode = $2
+ORDER BY c.updated_at DESC, c.id DESC
+LIMIT $3 OFFSET $4
+`
+
+type ListSamAIConversationsParams struct {
+	Actor  string `json:"actor"`
+	Mode   string `json:"mode"`
+	Limit  int32  `json:"limit"`
+	Offset int32  `json:"offset"`
+}
+
+type ListSamAIConversationsRow struct {
+	ID           int64              `json:"id"`
+	Actor        string             `json:"actor"`
+	Mode         string             `json:"mode"`
+	CreatedAt    pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt    pgtype.Timestamptz `json:"updated_at"`
+	Title        string             `json:"title"`
+	MessageCount int64              `json:"message_count"`
+}
+
+func (q *Queries) ListSamAIConversations(ctx context.Context, arg ListSamAIConversationsParams) ([]ListSamAIConversationsRow, error) {
+	rows, err := q.db.Query(ctx, listSamAIConversations,
+		arg.Actor,
+		arg.Mode,
+		arg.Limit,
+		arg.Offset,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListSamAIConversationsRow{}
+	for rows.Next() {
+		var i ListSamAIConversationsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Actor,
+			&i.Mode,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.Title,
+			&i.MessageCount,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listSamAIMessages = `-- name: ListSamAIMessages :many
+SELECT id, conversation_id, role, content, tool_name, created_at
+FROM sam_ai_messages
+WHERE conversation_id = $1
+ORDER BY id
+LIMIT 200
+`
+
+func (q *Queries) ListSamAIMessages(ctx context.Context, conversationID int64) ([]SamAiMessage, error) {
+	rows, err := q.db.Query(ctx, listSamAIMessages, conversationID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []SamAiMessage{}
+	for rows.Next() {
+		var i SamAiMessage
+		if err := rows.Scan(
+			&i.ID,
+			&i.ConversationID,
+			&i.Role,
+			&i.Content,
+			&i.ToolName,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listSamAssets = `-- name: ListSamAssets :many
-SELECT a.id,
-       a.hostname,
-       a.platform,
-       a.owner,
-       a.last_seen_at,
-       (SELECT count(*) FROM sam_installations i WHERE i.asset_id = a.id)::bigint AS software_count
-FROM sam_assets a
-ORDER BY lower(a.hostname), a.id
+SELECT min(i.id)::bigint AS id,
+       i.device_name AS hostname,
+       ''::text AS platform,
+       ''::text AS owner,
+       max(i.last_seen_at)::timestamptz AS last_seen_at,
+       count(*)::bigint AS software_count
+FROM sam_installations i
+WHERE i.status = 'installed'
+GROUP BY i.device_name
+ORDER BY lower(i.device_name), min(i.id)
 LIMIT $1 OFFSET $2
 `
 
@@ -65,25 +257,19 @@ func (q *Queries) ListSamAssets(ctx context.Context, arg ListSamAssetsParams) ([
 }
 
 const listSamFindings = `-- name: ListSamFindings :many
-SELECT f.id,
-       f.code,
-       f.severity,
-       f.status,
-       f.details,
-       f.detected_at,
-       coalesce(p.name, '') AS product_name,
-       coalesce(a.hostname, '') AS asset_hostname
-FROM sam_findings f
-LEFT JOIN sam_products p ON p.id = f.product_id
-LEFT JOIN sam_assets a ON a.id = f.asset_id
-ORDER BY CASE f.severity
-             WHEN 'critical' THEN 0
-             WHEN 'high' THEN 1
-             WHEN 'medium' THEN 2
-             ELSE 3
-         END,
-         f.detected_at DESC,
-         f.id DESC
+SELECT row_number() OVER (ORDER BY risk)::bigint AS id,
+       risk AS code,
+       severity,
+       'open'::text AS status,
+       detail AS details,
+       now()::timestamptz AS detected_at,
+       ''::text AS product_name,
+       ''::text AS asset_hostname
+FROM sam_risk_overview
+WHERE affected > 0
+ORDER BY CASE severity WHEN 'high' THEN 0 WHEN 'medium' THEN 1 ELSE 2 END,
+         affected DESC,
+         risk
 LIMIT $1 OFFSET $2
 `
 
@@ -136,19 +322,23 @@ const listSamLicenses = `-- name: ListSamLicenses :many
 SELECT l.id,
        p.name AS product_name,
        p.vendor AS product_vendor,
-       l.kind,
-       l.seats_total,
-       l.seats_used,
-       l.valid_until,
+       CASE l.license_type WHEN 'open_source' THEN 'trial' ELSE l.license_type END::text AS kind,
+       l.seats::int AS seats_total,
+       (SELECT count(DISTINCT coalesce(nullif(i.device_name, ''), 'installation:' || i.id))::int
+        FROM sam_installations i
+        WHERE i.product_id = p.id AND i.status = 'installed') AS seats_used,
+       l.contract,
+       l.expires_at AS valid_until,
        CASE
-           WHEN l.valid_until IS NULL THEN 'active'
-           WHEN l.valid_until < current_date THEN 'expired'
-           WHEN l.valid_until <= current_date + 30 THEN 'expiring'
+           WHEN l.status <> 'active' THEN 'expired'
+           WHEN l.expires_at IS NULL THEN 'active'
+           WHEN l.expires_at < current_date THEN 'expired'
+           WHEN l.expires_at <= current_date + 30 THEN 'expiring'
            ELSE 'active'
        END::text AS status
 FROM sam_licenses l
 JOIN sam_products p ON p.id = l.product_id
-ORDER BY l.valid_until NULLS LAST, lower(p.name), l.id
+ORDER BY l.expires_at NULLS LAST, lower(p.name), l.id
 LIMIT $1 OFFSET $2
 `
 
@@ -164,6 +354,7 @@ type ListSamLicensesRow struct {
 	Kind          string      `json:"kind"`
 	SeatsTotal    int32       `json:"seats_total"`
 	SeatsUsed     int32       `json:"seats_used"`
+	Contract      string      `json:"contract"`
 	ValidUntil    pgtype.Date `json:"valid_until"`
 	Status        string      `json:"status"`
 }
@@ -184,6 +375,7 @@ func (q *Queries) ListSamLicenses(ctx context.Context, arg ListSamLicensesParams
 			&i.Kind,
 			&i.SeatsTotal,
 			&i.SeatsUsed,
+			&i.Contract,
 			&i.ValidUntil,
 			&i.Status,
 		); err != nil {
@@ -198,19 +390,18 @@ func (q *Queries) ListSamLicenses(ctx context.Context, arg ListSamLicensesParams
 }
 
 const listSamMatches = `-- name: ListSamMatches :many
-SELECT m.id,
-       i.detected_name,
+SELECT c.id,
+       i.raw_name AS detected_name,
        i.version,
-       a.hostname AS asset_hostname,
-       coalesce(p.name, '') AS product_name,
-       m.confidence,
-       m.status,
-       m.created_at
-FROM sam_matches m
-JOIN sam_installations i ON i.id = m.installation_id
-JOIN sam_assets a ON a.id = i.asset_id
-LEFT JOIN sam_products p ON p.id = m.product_id
-ORDER BY m.created_at DESC, m.id DESC
+       i.device_name AS asset_hostname,
+       p.name AS product_name,
+       c.score::double precision AS confidence,
+       CASE c.status WHEN 'pending' THEN 'suggested' ELSE c.status END::text AS status,
+       c.created_at
+FROM sam_match_candidates c
+JOIN sam_installations i ON i.id = c.installation_id
+JOIN sam_products p ON p.id = c.product_id
+ORDER BY c.created_at DESC, c.id DESC
 LIMIT $1 OFFSET $2
 `
 
@@ -260,50 +451,43 @@ func (q *Queries) ListSamMatches(ctx context.Context, arg ListSamMatchesParams) 
 }
 
 const listSamProducts = `-- name: ListSamProducts :many
-SELECT p.id,
-       p.name,
-       p.vendor,
-       p.category,
-       p.updated_at,
-       (SELECT count(*) FROM sam_licenses l WHERE l.product_id = p.id)::bigint AS license_count,
-       (SELECT count(*) FROM sam_installations i WHERE i.product_id = p.id)::bigint AS installation_count
-FROM sam_products p
-ORDER BY lower(p.name), p.id
-LIMIT $1 OFFSET $2
+SELECT id, name, vendor, version, category, status, created_at, updated_at, vendor_id, section_code, class_code, license_metric, registry_rf, registry_entry, is_trackable
+FROM sam_products
+WHERE $1::text = '' OR status = $1::text
+ORDER BY name, id
+LIMIT $2::int
 `
 
 type ListSamProductsParams struct {
-	Limit  int32 `json:"limit"`
-	Offset int32 `json:"offset"`
+	Status string `json:"status"`
+	Limit  int32  `json:"limit"`
 }
 
-type ListSamProductsRow struct {
-	ID                int64              `json:"id"`
-	Name              string             `json:"name"`
-	Vendor            string             `json:"vendor"`
-	Category          string             `json:"category"`
-	UpdatedAt         pgtype.Timestamptz `json:"updated_at"`
-	LicenseCount      int64              `json:"license_count"`
-	InstallationCount int64              `json:"installation_count"`
-}
-
-func (q *Queries) ListSamProducts(ctx context.Context, arg ListSamProductsParams) ([]ListSamProductsRow, error) {
-	rows, err := q.db.Query(ctx, listSamProducts, arg.Limit, arg.Offset)
+func (q *Queries) ListSamProducts(ctx context.Context, arg ListSamProductsParams) ([]SamProduct, error) {
+	rows, err := q.db.Query(ctx, listSamProducts, arg.Status, arg.Limit)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []ListSamProductsRow{}
+	items := []SamProduct{}
 	for rows.Next() {
-		var i ListSamProductsRow
+		var i SamProduct
 		if err := rows.Scan(
 			&i.ID,
 			&i.Name,
 			&i.Vendor,
+			&i.Version,
 			&i.Category,
+			&i.Status,
+			&i.CreatedAt,
 			&i.UpdatedAt,
-			&i.LicenseCount,
-			&i.InstallationCount,
+			&i.VendorID,
+			&i.SectionCode,
+			&i.ClassCode,
+			&i.LicenseMetric,
+			&i.RegistryRf,
+			&i.RegistryEntry,
+			&i.IsTrackable,
 		); err != nil {
 			return nil, err
 		}
@@ -318,17 +502,23 @@ func (q *Queries) ListSamProducts(ctx context.Context, arg ListSamProductsParams
 const samDashboard = `-- name: SamDashboard :one
 SELECT
     (SELECT count(*) FROM sam_products)::bigint AS products,
-    (SELECT count(*) FROM sam_assets)::bigint AS assets,
+    (SELECT count(DISTINCT coalesce(nullif(device_name, ''), 'installation:' || id))
+     FROM sam_installations WHERE status = 'installed')::bigint AS assets,
     (SELECT count(*) FROM sam_licenses)::bigint AS licenses,
-    (SELECT coalesce(sum(seats_total), 0) FROM sam_licenses)::bigint AS seats_total,
-    (SELECT coalesce(sum(seats_used), 0) FROM sam_licenses)::bigint AS seats_used,
-    (SELECT count(*) FROM sam_findings WHERE status <> 'resolved')::bigint AS open_findings,
-    (SELECT count(*) FROM sam_matches WHERE status = 'suggested')::bigint AS pending_matches,
+    (SELECT coalesce(sum(seats), 0) FROM sam_licenses WHERE status = 'active')::bigint AS seats_total,
+    (SELECT coalesce(sum(used), 0) FROM (
+        SELECT count(DISTINCT coalesce(nullif(i.device_name, ''), 'installation:' || i.id)) AS used
+        FROM sam_installations i
+        WHERE i.status = 'installed' AND i.product_id IS NOT NULL
+        GROUP BY i.product_id
+    ) usage)::bigint AS seats_used,
+    (SELECT count(*) FROM sam_risk_overview WHERE affected > 0)::bigint AS open_findings,
+    (SELECT count(*) FROM sam_match_candidates WHERE status = 'pending')::bigint AS pending_matches,
     (SELECT count(*) FROM sam_licenses
-        WHERE valid_until IS NOT NULL
-          AND valid_until >= current_date
-          AND valid_until <= current_date + 30)::bigint AS expiring_licenses,
-    (SELECT count(*) FROM sam_installations WHERE product_id IS NULL)::bigint AS unlicensed_installations
+     WHERE status = 'active' AND expires_at IS NOT NULL
+       AND expires_at >= current_date AND expires_at <= current_date + 30)::bigint AS expiring_licenses,
+    (SELECT count(*) FROM sam_installations
+     WHERE status = 'installed' AND product_id IS NULL)::bigint AS unlicensed_installations
 `
 
 type SamDashboardRow struct {
@@ -358,4 +548,517 @@ func (q *Queries) SamDashboard(ctx context.Context) (SamDashboardRow, error) {
 		&i.UnlicensedInstallations,
 	)
 	return i, err
+}
+
+const samFindInstallations = `-- name: SamFindInstallations :many
+SELECT i.id,
+       i.raw_name,
+       i.version,
+       i.status,
+       i.last_seen_at,
+       coalesce(p.name, '')::text AS product_name
+FROM sam_installations i
+LEFT JOIN sam_products p ON p.id = i.product_id
+WHERE i.status = 'installed'
+  AND (NOT $1::boolean OR i.product_id IS NULL)
+  AND ($2::bigint = 0 OR i.product_id = $2::bigint)
+  AND ($3::text = '' OR i.raw_name ILIKE '%' || $3::text || '%')
+ORDER BY i.last_seen_at DESC, i.id
+LIMIT $4::int
+`
+
+type SamFindInstallationsParams struct {
+	Unmatched bool   `json:"unmatched"`
+	ProductID int64  `json:"product_id"`
+	Query     string `json:"query"`
+	Limit     int32  `json:"limit"`
+}
+
+type SamFindInstallationsRow struct {
+	ID          int64              `json:"id"`
+	RawName     string             `json:"raw_name"`
+	Version     string             `json:"version"`
+	Status      string             `json:"status"`
+	LastSeenAt  pgtype.Timestamptz `json:"last_seen_at"`
+	ProductName string             `json:"product_name"`
+}
+
+func (q *Queries) SamFindInstallations(ctx context.Context, arg SamFindInstallationsParams) ([]SamFindInstallationsRow, error) {
+	rows, err := q.db.Query(ctx, samFindInstallations,
+		arg.Unmatched,
+		arg.ProductID,
+		arg.Query,
+		arg.Limit,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []SamFindInstallationsRow{}
+	for rows.Next() {
+		var i SamFindInstallationsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.RawName,
+			&i.Version,
+			&i.Status,
+			&i.LastSeenAt,
+			&i.ProductName,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const samInstallationCount = `-- name: SamInstallationCount :one
+SELECT count(*)::bigint AS count
+FROM sam_installations i
+WHERE i.status = 'installed'
+  AND (NOT $1::boolean OR i.product_id IS NULL)
+  AND ($2::bigint = 0 OR i.product_id = $2::bigint)
+  AND ($3::text = '' OR i.raw_name ILIKE '%' || $3::text || '%')
+`
+
+type SamInstallationCountParams struct {
+	Unmatched bool   `json:"unmatched"`
+	ProductID int64  `json:"product_id"`
+	Query     string `json:"query"`
+}
+
+func (q *Queries) SamInstallationCount(ctx context.Context, arg SamInstallationCountParams) (int64, error) {
+	row := q.db.QueryRow(ctx, samInstallationCount, arg.Unmatched, arg.ProductID, arg.Query)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
+const samLicenseSummary = `-- name: SamLicenseSummary :many
+SELECT l.license_type,
+       count(*)::bigint AS licenses,
+       coalesce(sum(l.seats), 0)::bigint AS seats,
+       count(*) FILTER (WHERE l.expires_at IS NOT NULL AND l.expires_at < current_date)::bigint AS expired,
+       count(DISTINCT l.product_id)::bigint AS products,
+       coalesce(sum(l.seats * l.cost_per_seat), 0)::bigint AS annual_cost
+FROM sam_licenses l
+WHERE l.status = 'active'
+GROUP BY l.license_type
+ORDER BY l.license_type
+`
+
+type SamLicenseSummaryRow struct {
+	LicenseType string `json:"license_type"`
+	Licenses    int64  `json:"licenses"`
+	Seats       int64  `json:"seats"`
+	Expired     int64  `json:"expired"`
+	Products    int64  `json:"products"`
+	AnnualCost  int64  `json:"annual_cost"`
+}
+
+func (q *Queries) SamLicenseSummary(ctx context.Context) ([]SamLicenseSummaryRow, error) {
+	rows, err := q.db.Query(ctx, samLicenseSummary)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []SamLicenseSummaryRow{}
+	for rows.Next() {
+		var i SamLicenseSummaryRow
+		if err := rows.Scan(
+			&i.LicenseType,
+			&i.Licenses,
+			&i.Seats,
+			&i.Expired,
+			&i.Products,
+			&i.AnnualCost,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const samOverview = `-- name: SamOverview :one
+SELECT
+    (SELECT count(*) FROM sam_products)::bigint AS products,
+    (SELECT count(*) FROM sam_products WHERE status = 'active')::bigint AS active_products,
+    (SELECT count(*) FROM sam_installations WHERE status = 'installed')::bigint AS installations,
+    (SELECT count(*) FROM sam_installations WHERE product_id IS NULL AND status = 'installed')::bigint AS unmatched_installations,
+    (SELECT count(*) FROM sam_licenses WHERE status = 'active')::bigint AS active_licenses,
+    (SELECT coalesce(sum(seats), 0) FROM sam_licenses WHERE status = 'active')::bigint AS licensed_seats,
+    (SELECT count(*) FROM sam_licenses WHERE status = 'active' AND expires_at IS NOT NULL AND expires_at < current_date)::bigint AS expired_licenses
+`
+
+type SamOverviewRow struct {
+	Products               int64 `json:"products"`
+	ActiveProducts         int64 `json:"active_products"`
+	Installations          int64 `json:"installations"`
+	UnmatchedInstallations int64 `json:"unmatched_installations"`
+	ActiveLicenses         int64 `json:"active_licenses"`
+	LicensedSeats          int64 `json:"licensed_seats"`
+	ExpiredLicenses        int64 `json:"expired_licenses"`
+}
+
+func (q *Queries) SamOverview(ctx context.Context) (SamOverviewRow, error) {
+	row := q.db.QueryRow(ctx, samOverview)
+	var i SamOverviewRow
+	err := row.Scan(
+		&i.Products,
+		&i.ActiveProducts,
+		&i.Installations,
+		&i.UnmatchedInstallations,
+		&i.ActiveLicenses,
+		&i.LicensedSeats,
+		&i.ExpiredLicenses,
+	)
+	return i, err
+}
+
+const samProductBalances = `-- name: SamProductBalances :many
+SELECT p.id,
+       p.name,
+       p.vendor,
+       p.version,
+       p.category,
+       p.status,
+       coalesce(licensed.seats, 0)::bigint AS licensed_seats,
+       coalesce(licensed.expired_seats, 0)::bigint AS expired_seats,
+       (
+           SELECT count(*) FROM sam_installations i
+           WHERE i.product_id = p.id AND i.status = 'installed'
+       )::bigint AS installed,
+       greatest(
+           coalesce(licensed.seats, 0) - (
+               SELECT count(*) FROM sam_installations i
+               WHERE i.product_id = p.id AND i.status = 'installed'
+           ),
+           0
+       )::bigint AS available_seats,
+       licensed.nearest_expiry
+FROM sam_products p
+LEFT JOIN LATERAL (
+    SELECT coalesce(sum(l.seats) FILTER (
+               WHERE l.status = 'active' AND (l.expires_at IS NULL OR l.expires_at >= current_date)
+           ), 0)::bigint AS seats,
+           coalesce(sum(l.seats) FILTER (
+               WHERE l.status = 'active' AND l.expires_at < current_date
+           ), 0)::bigint AS expired_seats,
+           min(l.expires_at) FILTER (
+               WHERE l.status = 'active' AND (l.expires_at IS NULL OR l.expires_at >= current_date)
+           ) AS nearest_expiry
+    FROM sam_licenses l
+    WHERE l.product_id = p.id
+) licensed ON true
+WHERE p.name ILIKE '%' || $1::text || '%'
+   OR p.vendor ILIKE '%' || $1::text || '%'
+   OR EXISTS (
+       SELECT 1 FROM sam_product_aliases a
+       WHERE a.product_id = p.id
+         AND (a.alias ILIKE '%' || $1::text || '%' OR a.normalized_alias LIKE '%' || lower($1::text) || '%')
+   )
+ORDER BY p.name, p.id
+LIMIT $2::int
+`
+
+type SamProductBalancesParams struct {
+	Query string `json:"query"`
+	Limit int32  `json:"limit"`
+}
+
+type SamProductBalancesRow struct {
+	ID             int64       `json:"id"`
+	Name           string      `json:"name"`
+	Vendor         string      `json:"vendor"`
+	Version        string      `json:"version"`
+	Category       string      `json:"category"`
+	Status         string      `json:"status"`
+	LicensedSeats  int64       `json:"licensed_seats"`
+	ExpiredSeats   int64       `json:"expired_seats"`
+	Installed      int64       `json:"installed"`
+	AvailableSeats int64       `json:"available_seats"`
+	NearestExpiry  interface{} `json:"nearest_expiry"`
+}
+
+func (q *Queries) SamProductBalances(ctx context.Context, arg SamProductBalancesParams) ([]SamProductBalancesRow, error) {
+	rows, err := q.db.Query(ctx, samProductBalances, arg.Query, arg.Limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []SamProductBalancesRow{}
+	for rows.Next() {
+		var i SamProductBalancesRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Vendor,
+			&i.Version,
+			&i.Category,
+			&i.Status,
+			&i.LicensedSeats,
+			&i.ExpiredSeats,
+			&i.Installed,
+			&i.AvailableSeats,
+			&i.NearestExpiry,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const samProductCount = `-- name: SamProductCount :one
+SELECT count(*)::bigint AS count
+FROM sam_products p
+WHERE ($1::text = '' OR p.status = $1::text)
+  AND (
+      $2::text = ''
+      OR p.name ILIKE '%' || $2::text || '%'
+      OR p.vendor ILIKE '%' || $2::text || '%'
+      OR EXISTS (
+          SELECT 1 FROM sam_product_aliases a
+          WHERE a.product_id = p.id
+            AND (a.alias ILIKE '%' || $2::text || '%'
+                 OR a.normalized_alias LIKE '%' || lower($2::text) || '%')
+      )
+  )
+`
+
+type SamProductCountParams struct {
+	Status string `json:"status"`
+	Query  string `json:"query"`
+}
+
+func (q *Queries) SamProductCount(ctx context.Context, arg SamProductCountParams) (int64, error) {
+	row := q.db.QueryRow(ctx, samProductCount, arg.Status, arg.Query)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
+const samPublicProducts = `-- name: SamPublicProducts :many
+SELECT p.id,
+       p.name,
+       p.vendor,
+       p.category,
+       p.section_code,
+       p.class_code,
+       p.license_metric,
+       p.registry_rf,
+       p.registry_entry,
+       p.is_trackable,
+       p.updated_at,
+       (SELECT count(*) FROM sam_licenses l WHERE l.product_id = p.id)::bigint AS license_count,
+       (SELECT count(*) FROM sam_installations i
+        WHERE i.product_id = p.id AND i.status = 'installed')::bigint AS installation_count
+FROM sam_products p
+ORDER BY lower(p.name), p.id
+LIMIT $1 OFFSET $2
+`
+
+type SamPublicProductsParams struct {
+	Limit  int32 `json:"limit"`
+	Offset int32 `json:"offset"`
+}
+
+type SamPublicProductsRow struct {
+	ID                int64              `json:"id"`
+	Name              string             `json:"name"`
+	Vendor            string             `json:"vendor"`
+	Category          string             `json:"category"`
+	SectionCode       string             `json:"section_code"`
+	ClassCode         string             `json:"class_code"`
+	LicenseMetric     string             `json:"license_metric"`
+	RegistryRf        bool               `json:"registry_rf"`
+	RegistryEntry     string             `json:"registry_entry"`
+	IsTrackable       bool               `json:"is_trackable"`
+	UpdatedAt         pgtype.Timestamptz `json:"updated_at"`
+	LicenseCount      int64              `json:"license_count"`
+	InstallationCount int64              `json:"installation_count"`
+}
+
+func (q *Queries) SamPublicProducts(ctx context.Context, arg SamPublicProductsParams) ([]SamPublicProductsRow, error) {
+	rows, err := q.db.Query(ctx, samPublicProducts, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []SamPublicProductsRow{}
+	for rows.Next() {
+		var i SamPublicProductsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Vendor,
+			&i.Category,
+			&i.SectionCode,
+			&i.ClassCode,
+			&i.LicenseMetric,
+			&i.RegistryRf,
+			&i.RegistryEntry,
+			&i.IsTrackable,
+			&i.UpdatedAt,
+			&i.LicenseCount,
+			&i.InstallationCount,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const samTopRisks = `-- name: SamTopRisks :many
+SELECT risk, severity, affected, detail
+FROM sam_risk_overview
+ORDER BY CASE severity WHEN 'high' THEN 0 WHEN 'medium' THEN 1 ELSE 2 END, affected DESC, risk
+LIMIT $1::int
+`
+
+func (q *Queries) SamTopRisks(ctx context.Context, limit int32) ([]SamRiskOverview, error) {
+	rows, err := q.db.Query(ctx, samTopRisks, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []SamRiskOverview{}
+	for rows.Next() {
+		var i SamRiskOverview
+		if err := rows.Scan(
+			&i.Risk,
+			&i.Severity,
+			&i.Affected,
+			&i.Detail,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const samUnmatchedNames = `-- name: SamUnmatchedNames :many
+SELECT raw_name,
+       count(*)::bigint AS installations,
+       count(DISTINCT device_name)::bigint AS devices,
+       max(last_seen_at) AS last_seen
+FROM sam_installations
+WHERE product_id IS NULL AND status = 'installed'
+GROUP BY raw_name
+ORDER BY installations DESC, raw_name
+LIMIT $1::int
+`
+
+type SamUnmatchedNamesRow struct {
+	RawName       string      `json:"raw_name"`
+	Installations int64       `json:"installations"`
+	Devices       int64       `json:"devices"`
+	LastSeen      interface{} `json:"last_seen"`
+}
+
+func (q *Queries) SamUnmatchedNames(ctx context.Context, limit int32) ([]SamUnmatchedNamesRow, error) {
+	rows, err := q.db.Query(ctx, samUnmatchedNames, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []SamUnmatchedNamesRow{}
+	for rows.Next() {
+		var i SamUnmatchedNamesRow
+		if err := rows.Scan(
+			&i.RawName,
+			&i.Installations,
+			&i.Devices,
+			&i.LastSeen,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const searchSamProducts = `-- name: SearchSamProducts :many
+SELECT p.id, p.name, p.vendor, p.version, p.category, p.status, p.created_at, p.updated_at, p.vendor_id, p.section_code, p.class_code, p.license_metric, p.registry_rf, p.registry_entry, p.is_trackable
+FROM sam_products p
+WHERE p.name ILIKE '%' || $1::text || '%'
+   OR p.vendor ILIKE '%' || $1::text || '%'
+   OR EXISTS (
+       SELECT 1 FROM sam_product_aliases a
+       WHERE a.product_id = p.id
+         AND (a.alias ILIKE '%' || $1::text || '%' OR a.normalized_alias LIKE '%' || lower($1::text) || '%')
+   )
+ORDER BY p.name, p.id
+LIMIT $2::int
+`
+
+type SearchSamProductsParams struct {
+	Query string `json:"query"`
+	Limit int32  `json:"limit"`
+}
+
+func (q *Queries) SearchSamProducts(ctx context.Context, arg SearchSamProductsParams) ([]SamProduct, error) {
+	rows, err := q.db.Query(ctx, searchSamProducts, arg.Query, arg.Limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []SamProduct{}
+	for rows.Next() {
+		var i SamProduct
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Vendor,
+			&i.Version,
+			&i.Category,
+			&i.Status,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.VendorID,
+			&i.SectionCode,
+			&i.ClassCode,
+			&i.LicenseMetric,
+			&i.RegistryRf,
+			&i.RegistryEntry,
+			&i.IsTrackable,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const touchSamAIConversation = `-- name: TouchSamAIConversation :exec
+UPDATE sam_ai_conversations SET updated_at = now() WHERE id = $1
+`
+
+func (q *Queries) TouchSamAIConversation(ctx context.Context, id int64) error {
+	_, err := q.db.Exec(ctx, touchSamAIConversation, id)
+	return err
 }

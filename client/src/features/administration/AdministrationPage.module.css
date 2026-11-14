@@ -64,7 +64,7 @@
 
 .tabs button[data-active='true'] {
 	border-color: var(--primary);
-	background: var(--accent-50);
+	background: var(--blue-50);
 }
 
 .grid,
@@ -144,7 +144,8 @@
 }
 
 .form textarea,
-.yaml {
+.yaml,
+.prompt {
 	width: 100%;
 	box-sizing: border-box;
 	padding: var(--space-3);
@@ -165,6 +166,14 @@
 	overflow: auto;
 	white-space: pre-wrap;
 	overflow-wrap: anywhere;
+}
+
+.prompt {
+	max-height: 360px;
+	overflow: auto;
+	white-space: pre-wrap;
+	overflow-wrap: anywhere;
+	font-size: var(--text-xs);
 }
 
 .workspace {
@@ -189,7 +198,7 @@
 
 .choiceButton[data-active='true'] {
 	border-color: var(--primary);
-	background: var(--accent-50);
+	background: var(--blue-50);
 }
 
 .choices {
