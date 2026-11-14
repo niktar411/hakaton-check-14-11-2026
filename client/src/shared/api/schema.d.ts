@@ -1620,8 +1620,6 @@ export interface components {
             username: string;
         };
         License: {
-            /** @description Contract or order number */
-            contract: string;
             /** Format: int64 */
             id: number;
             /** @enum {string} */
@@ -1903,23 +1901,13 @@ export interface components {
         };
         Product: {
             category: string;
-            classCode: string;
             /** Format: int64 */
             id: number;
             /** Format: int64 */
             installationCount: number;
-            /** @description Counted in compliance calculations */
-            isTrackable: boolean;
             /** Format: int64 */
             licenseCount: number;
-            /** @enum {string} */
-            licenseMetric: "device" | "user" | "installation" | "none";
             name: string;
-            /** @description Registry entry number */
-            registryEntry: string;
-            /** @description Listed in the Russian software registry */
-            registryRf: boolean;
-            sectionCode: string;
             /** Format: date-time */
             updatedAt: string;
             vendor: string;

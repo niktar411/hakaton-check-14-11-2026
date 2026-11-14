@@ -82,7 +82,7 @@ func fallbackStatus(prompt string) string {
 	case strings.Contains(prompt, "запрещ"):
 		return "banned"
 	case strings.Contains(prompt, "неактив"):
-		return "outdated"
+		return "inactive"
 	case strings.Contains(prompt, "архив"):
 		return "archived"
 	default:

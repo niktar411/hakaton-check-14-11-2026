@@ -1327,10 +1327,6 @@
       "License": {
         "additionalProperties": false,
         "properties": {
-          "contract": {
-            "description": "Contract or order number",
-            "type": "string"
-          },
           "id": {
             "format": "int64",
             "type": "integer"
@@ -1380,7 +1376,6 @@
           "kind",
           "seatsTotal",
           "seatsUsed",
-          "contract",
           "validUntil",
           "status"
         ],
@@ -2070,9 +2065,6 @@
           "category": {
             "type": "string"
           },
-          "classCode": {
-            "type": "string"
-          },
           "id": {
             "format": "int64",
             "type": "integer"
@@ -2081,35 +2073,11 @@
             "format": "int64",
             "type": "integer"
           },
-          "isTrackable": {
-            "description": "Counted in compliance calculations",
-            "type": "boolean"
-          },
           "licenseCount": {
             "format": "int64",
             "type": "integer"
           },
-          "licenseMetric": {
-            "enum": [
-              "device",
-              "user",
-              "installation",
-              "none"
-            ],
-            "type": "string"
-          },
           "name": {
-            "type": "string"
-          },
-          "registryEntry": {
-            "description": "Registry entry number",
-            "type": "string"
-          },
-          "registryRf": {
-            "description": "Listed in the Russian software registry",
-            "type": "boolean"
-          },
-          "sectionCode": {
             "type": "string"
           },
           "updatedAt": {
@@ -2125,12 +2093,6 @@
           "name",
           "vendor",
           "category",
-          "sectionCode",
-          "classCode",
-          "licenseMetric",
-          "registryRf",
-          "registryEntry",
-          "isTrackable",
           "licenseCount",
           "installationCount",
           "updatedAt"

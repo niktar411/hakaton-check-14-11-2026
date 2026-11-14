@@ -207,6 +207,9 @@ function App(props: { children?: JSX.Element }) {
 						}
 					>
 						<div class={shellClass()}>
+							<a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:p-2 focus:bg-surface focus:text-text">
+								{m.skipToContent()}
+							</a>
 							<header
 								class={
 									teamArea()
@@ -231,7 +234,7 @@ function App(props: { children?: JSX.Element }) {
 									</Show>
 								</div>
 							</header>
-							<div class="flex flex-1 flex-col">{props.children}</div>
+							<main id="main-content" class="flex flex-1 flex-col">{props.children}</main>
 							<Show when={!plannerHost()}>
 								<Footer
 									team={plannerHost()}
