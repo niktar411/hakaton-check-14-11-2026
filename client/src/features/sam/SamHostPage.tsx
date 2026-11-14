@@ -9,14 +9,14 @@ import s from "./SamPage.module.css";
 import { createSamResource, SamPageState } from "./SamPageState";
 import { hostLicenseStatusLabel, hostLicenseStatusTone } from "./labels";
 
-type Detail = components["schemas"]["HostDetail"];
+type Detail = components["schemas"]["SamComplianceHostDetail"];
 
 export default function SamHostPage() {
 	const params = useParams();
 	const { resource: detail, refetch } = createSamResource<Detail>(async () =>
 		unwrap(
-			await api.GET("/api/public/sam/compliance/hosts/{id}", {
-				params: { path: { id: Number(params.id) } },
+			await api.GET("/api/public/sam/compliance/hosts/{hostname}", {
+				params: { path: { hostname: params.id ?? "" } },
 			}),
 		),
 	);
@@ -30,11 +30,7 @@ export default function SamHostPage() {
 		),
 	);
 	const title = () => detail()?.hostname ?? m.samHostPageTitle();
-	const lead = () => {
-		const host = detail();
-		if (!host) return m.samHostPageLead();
-		return [host.platform, host.owner || m.samNotSpecified()].join(" · ");
-	};
+	const lead = () => m.samHostPageLead();
 	return (
 		<>
 			<SamPageHeader title={title()} lead={lead()} />

@@ -167,6 +167,102 @@
 	border-top: 1px solid var(--border);
 }
 
+.detailTabs {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--space-2);
+	padding-bottom: var(--space-3);
+	border-bottom: 1px solid var(--border);
+}
+
+.detailTabs button {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-2);
+	padding: var(--space-2) var(--space-3);
+	border: 1px solid var(--border);
+	border-radius: var(--radius-xs);
+	background: var(--surface);
+	color: var(--text);
+	font: inherit;
+	cursor: pointer;
+}
+
+.detailTabs button span {
+	color: var(--text-muted);
+	font-size: var(--text-xs);
+}
+
+.detailTabs button[data-active='true'] {
+	border-color: var(--primary);
+	background: var(--blue-50);
+}
+
+.tabPanel {
+	display: flex;
+	min-width: 0;
+	flex-direction: column;
+	gap: var(--space-3);
+}
+
+.fileCard {
+	display: grid;
+	min-width: 0;
+	gap: var(--space-2);
+	padding: var(--space-3);
+	border: 1px solid var(--border);
+	border-radius: var(--radius-sm);
+	background: var(--surface-2);
+}
+
+.fileHeader {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: var(--space-2);
+	min-width: 0;
+}
+
+.filePath {
+	min-width: 0;
+	color: var(--text-muted);
+	font-size: var(--text-sm);
+	overflow-wrap: anywhere;
+}
+
+.fileContent {
+	max-height: 360px;
+	margin: 0;
+	overflow: auto;
+	padding: var(--space-3);
+	border-radius: var(--radius-sm);
+	background: var(--surface);
+	color: var(--text);
+	font-size: var(--text-xs);
+	white-space: pre-wrap;
+	overflow-wrap: anywhere;
+}
+
+.fileCard time {
+	color: var(--text-muted);
+	font-size: var(--text-xs);
+}
+
+.checkOk,
+.checkFailed {
+	margin: 0;
+	font-size: var(--text-sm);
+}
+
+.checkOk {
+	color: var(--success);
+}
+
+.checkFailed {
+	color: var(--danger);
+}
+
 .message,
 .activity {
 	display: grid;

@@ -6,15 +6,14 @@
 
 ## Схема
 
-Миграция `server/migrations/00005_add_sam_compliance.sql` расширяет уже
-существующие таблицы SAM, не создавая вторую параллельную модель:
+Используется общая схема SAM из `main`:
 
 - `sam_products.status` — `active`, `inactive`, `archived`, `banned`;
-- `sam_licenses.cost_per_seat` — годовая цена места в рублях;
-- `sam_licenses.currency` — пока только `RUB`.
+- `sam_installations.device_name` — хост, на котором найдена установка;
+- `sam_licenses.seats`, `cost_per_seat`, `expires_at`, `status`.
 
-Установка лицензии считается по уникальному `sam_installations.asset_id`.
-Несколько версий одного продукта на одном хосте занимают одно место.
+Установка лицензии считается по уникальному `device_name`. Несколько версий
+одного продукта на одном хосте занимают одно место.
 
 ## Формулы
 
@@ -54,7 +53,7 @@
 | GET | `/api/public/sam/compliance/products` | баланс и риск по каждому продукту |
 | GET | `/api/public/sam/compliance/risks` | риски, отсортированные по важности и стоимости |
 | GET | `/api/public/sam/compliance/products/{id}` | продукт, его лицензии и затронутые хосты |
-| GET | `/api/public/sam/compliance/hosts/{id}` | хост, установленное ПО и состояние лицензий |
+| GET | `/api/public/sam/compliance/hosts/{hostname}` | хост, установленное ПО и состояние лицензий |
 
 `summary.statuses` всегда содержит четыре статуса каталога, чтобы график не
 менял набор колонок. `summary.categories` агрегирует продукты по категории.
@@ -76,7 +75,7 @@
 которые уже вернул сервер.
 
 Карточка продукта (`/sam/catalog/{id}`) показывает лицензии и хосты, карточка
-хоста (`/sam/inventory/{id}`) — установленное ПО и состояние лицензий. Это
+хоста (`/sam/inventory/{hostname}`) — установленное ПО и состояние лицензий. Это
 даёт переход «риск → продукт → хост → установка».
 
 Каждый экран использует общий `SamPageState`: скелетон загрузки, пустое

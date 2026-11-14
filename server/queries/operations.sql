@@ -14,6 +14,13 @@ DELETE FROM oauth_states WHERE id=$1 AND expires_at>now() RETURNING verifier;
 INSERT INTO conversations(username,phase) VALUES ($1,'clarifying') RETURNING *;
 -- name: GetConversation :one
 SELECT * FROM conversations WHERE id=$1 AND username=$2;
+-- name: DeleteConversation :exec
+DELETE FROM conversations WHERE id=$1 AND username=$2;
+-- name: DeleteEmptyConversations :exec
+DELETE FROM conversations
+WHERE username=$1
+  AND created_at < now() - interval '10 minutes'
+  AND NOT EXISTS (SELECT 1 FROM messages WHERE messages.conversation_id=conversations.id);
 -- name: SetConversationReady :exec
 UPDATE conversations SET phase='ready' WHERE id=$1 AND username=$2;
 -- name: AddMessage :exec

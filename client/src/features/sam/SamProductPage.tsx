@@ -20,7 +20,7 @@ import {
 	riskLevelTone,
 } from "./labels";
 
-type Detail = components["schemas"]["ComplianceProductDetail"];
+type Detail = components["schemas"]["SamComplianceProductDetail"];
 
 export default function SamProductPage() {
 	const params = useParams();
@@ -166,13 +166,11 @@ export default function SamProductPage() {
 										{(host) => (
 											<li class={s.row}>
 												<div>
-													<A class={s.inlineLink} href={`/sam/inventory/${host.assetId}`}>
+													<A class={s.inlineLink} href={`/sam/inventory/${encodeURIComponent(host.hostname)}`}>
 														{host.hostname}
 													</A>
 													<p class={s.rowMeta}>
-														{host.platform}
-														{host.owner ? ` · ${host.owner}` : ""}
-														{host.version ? ` · ${host.version}` : ""}
+														{host.version || m.samNotSpecified()}
 													</p>
 												</div>
 												<SamBadge

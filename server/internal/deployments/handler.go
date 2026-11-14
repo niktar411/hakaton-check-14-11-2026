@@ -24,7 +24,6 @@ func Register(api huma.API, svc *Service) {
 		}
 		return &deploymentListOutput{Body: items}, nil
 	})
-
 	huma.Register(api, huma.Operation{
 		OperationID:  "merge-approved-merge-request",
 		Method:       http.MethodPost,
@@ -53,6 +52,43 @@ func Register(api huma.API, svc *Service) {
 			return nil, err
 		}
 		result, err := svc.Run(ctx, principal, in.Action, in.Body.Target, in.Body.Release)
+		if err != nil {
+			return nil, err
+		}
+		return &runDeploymentOutput{Body: result}, nil
+	})
+}
+
+// RegisterMember exposes the second-server operations to any authenticated
+// team member. Production remains behind the administrative routes.
+func RegisterMember(api huma.API, svc *Service) {
+	huma.Register(api, huma.Operation{
+		OperationID: "list-member-deployments",
+		Method:      http.MethodGet,
+		Path:        "/api/deployments",
+		Summary:     "List deployment operations for team members",
+		Tags:        []string{"Deployments"},
+	}, func(ctx context.Context, in *deploymentListInput) (*deploymentListOutput, error) {
+		items, err := svc.ListMember(ctx, in.Limit, in.Offset)
+		if err != nil {
+			return nil, err
+		}
+		return &deploymentListOutput{Body: items}, nil
+	})
+
+	huma.Register(api, huma.Operation{
+		OperationID:  "run-member-deployment-operation",
+		Method:       http.MethodPost,
+		Path:         "/api/deployments/{action}",
+		Summary:      "Run a second-server operation as a team member",
+		Tags:         []string{"Deployments"},
+		MaxBodyBytes: 4096,
+	}, func(ctx context.Context, in *runDeploymentInput) (*runDeploymentOutput, error) {
+		principal, err := identity.FromContext(ctx)
+		if err != nil {
+			return nil, err
+		}
+		result, err := svc.RunMember(ctx, principal, in.Action, in.Body.Target, in.Body.Release)
 		if err != nil {
 			return nil, err
 		}

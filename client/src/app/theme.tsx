@@ -1,58 +1,33 @@
-import { createSignal } from "solid-js";
+import { createSignal, onMount } from "solid-js";
 import * as m from "@/paraglide/messages";
 import { Button } from "@/shared/ui/Button";
 
-export type Theme = "light" | "dark";
-
+type Theme = "light" | "dark";
 const STORAGE_KEY = "portal-theme";
 
-function storedTheme(): Theme | null {
-	try {
-		const value = localStorage.getItem(STORAGE_KEY);
-		return value === "light" || value === "dark" ? value : null;
-	} catch {
-		return null;
-	}
-}
-
-function preferredTheme(): Theme {
-	if (typeof window === "undefined") return "light";
-	const stored = storedTheme();
-	if (stored) return stored;
+function readTheme(): Theme {
+	const stored = localStorage.getItem(STORAGE_KEY);
+	if (stored === "light" || stored === "dark") return stored;
 	return window.matchMedia("(prefers-color-scheme: dark)").matches
 		? "dark"
 		: "light";
 }
 
-function applyTheme(theme: Theme, persist: boolean) {
+function applyTheme(theme: Theme) {
 	document.documentElement.dataset.theme = theme;
-	if (!persist) return;
-	try {
-		localStorage.setItem(STORAGE_KEY, theme);
-	} catch {
-		// Storage can be disabled; the theme still works for this page.
-	}
-}
-
-/** Applies the saved or system theme before Solid renders the first pixel. */
-export function initTheme() {
-	if (typeof window === "undefined") return;
-	applyTheme(preferredTheme(), false);
+	localStorage.setItem(STORAGE_KEY, theme);
 }
 
 export function ThemeToggle() {
-	const [theme, setTheme] = createSignal<Theme>(preferredTheme());
+	const [theme, setTheme] = createSignal<Theme>(readTheme());
+	onMount(() => applyTheme(theme()));
 	const toggle = () => {
 		const next = theme() === "dark" ? "light" : "dark";
 		setTheme(next);
-		applyTheme(next, true);
+		applyTheme(next);
 	};
 	return (
-		<Button
-			aria-label={m.themeToggle()}
-			aria-pressed={theme() === "dark"}
-			onClick={toggle}
-		>
+		<Button aria-label={m.themeToggle()} onClick={toggle}>
 			{theme() === "dark" ? m.themeLight() : m.themeDark()}
 		</Button>
 	);

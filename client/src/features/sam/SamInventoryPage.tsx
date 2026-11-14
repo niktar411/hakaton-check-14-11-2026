@@ -33,7 +33,7 @@ export default function SamInventoryPage() {
 								<li class={s.row}>
 									<div>
 										<h2 class={s.rowTitle}>
-											<A class={s.inlineLink} href={`/sam/inventory/${asset.id}`}>
+											<A class={s.inlineLink} href={`/sam/inventory/${encodeURIComponent(asset.hostname)}`}>
 												{asset.hostname}
 											</A>
 										</h2>

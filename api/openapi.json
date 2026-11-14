@@ -231,7 +231,6 @@
             "type": "integer"
           },
           "riskCost": {
-            "description": "Annual cost at risk in the category, RUB",
             "format": "int64",
             "type": "integer"
           }
@@ -242,6 +241,134 @@
           "installedDevices",
           "overusedSeats",
           "riskCost"
+        ],
+        "type": "object"
+      },
+      "ChatAgentInputBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/ChatAgentInputBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "parentId": {
+            "format": "int64",
+            "minimum": 1,
+            "type": "integer"
+          },
+          "prompt": {
+            "maxLength": 16000,
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "prompt"
+        ],
+        "type": "object"
+      },
+      "ChatContextUpdateInputBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/ChatContextUpdateInputBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "general": {
+            "maxLength": 16000,
+            "type": "string"
+          }
+        },
+        "required": [
+          "general"
+        ],
+        "type": "object"
+      },
+      "ChatContextView": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/ChatContextView.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "agents": {
+            "type": "string"
+          },
+          "clarifyingPrompt": {
+            "type": "string"
+          },
+          "general": {
+            "type": "string"
+          },
+          "limit": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "skipPhrase": {
+            "type": "string"
+          },
+          "solutionPrompt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "general",
+          "agents",
+          "clarifyingPrompt",
+          "solutionPrompt",
+          "skipPhrase",
+          "limit"
+        ],
+        "type": "object"
+      },
+      "ChatHistory": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/ChatHistory.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "id": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "messages": {
+            "items": {
+              "$ref": "#/components/schemas/Message"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "phase": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "phase",
+          "messages"
         ],
         "type": "object"
       },
@@ -318,6 +445,37 @@
           "id",
           "phase",
           "messages"
+        ],
+        "type": "object"
+      },
+      "ChatSummary": {
+        "additionalProperties": false,
+        "properties": {
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "id": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "messageCount": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "phase": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "phase",
+          "messageCount",
+          "createdAt"
         ],
         "type": "object"
       },
@@ -489,233 +647,6 @@
           "clarification",
           "createdAt",
           "updatedAt"
-        ],
-        "type": "object"
-      },
-      "ComplianceLicense": {
-        "additionalProperties": false,
-        "properties": {
-          "costPerSeat": {
-            "description": "Annual seat price, RUB",
-            "format": "int64",
-            "type": "integer"
-          },
-          "currency": {
-            "type": "string"
-          },
-          "id": {
-            "format": "int64",
-            "type": "integer"
-          },
-          "kind": {
-            "enum": [
-              "subscription",
-              "perpetual",
-              "trial"
-            ],
-            "type": "string"
-          },
-          "seatsTotal": {
-            "format": "int32",
-            "type": "integer"
-          },
-          "seatsUsed": {
-            "format": "int32",
-            "type": "integer"
-          },
-          "status": {
-            "enum": [
-              "active",
-              "expiring",
-              "expired"
-            ],
-            "type": "string"
-          },
-          "validUntil": {
-            "description": "Calendar date in YYYY-MM-DD format",
-            "type": [
-              "string",
-              "null"
-            ]
-          }
-        },
-        "required": [
-          "id",
-          "kind",
-          "seatsTotal",
-          "seatsUsed",
-          "costPerSeat",
-          "currency",
-          "validUntil",
-          "status"
-        ],
-        "type": "object"
-      },
-      "ComplianceProduct": {
-        "additionalProperties": false,
-        "properties": {
-          "annualCost": {
-            "description": "Annual cost of valid seats, RUB",
-            "format": "int64",
-            "type": "integer"
-          },
-          "avgCostPerSeat": {
-            "description": "Average annual seat price, RUB",
-            "format": "int64",
-            "type": "integer"
-          },
-          "bannedInstallations": {
-            "description": "Hosts running a banned product",
-            "format": "int64",
-            "type": "integer"
-          },
-          "category": {
-            "type": "string"
-          },
-          "deltaSeats": {
-            "description": "Installed devices minus valid licensed seats",
-            "format": "int64",
-            "type": "integer"
-          },
-          "expiredSeats": {
-            "description": "Seats on licenses whose term has ended",
-            "format": "int64",
-            "type": "integer"
-          },
-          "id": {
-            "format": "int64",
-            "type": "integer"
-          },
-          "idleSeats": {
-            "description": "Valid seats without installations",
-            "format": "int64",
-            "type": "integer"
-          },
-          "installations": {
-            "description": "Installation records",
-            "format": "int64",
-            "type": "integer"
-          },
-          "installedDevices": {
-            "description": "Unique hosts running the product",
-            "format": "int64",
-            "type": "integer"
-          },
-          "licensedSeats": {
-            "description": "Seats on licenses valid today",
-            "format": "int64",
-            "type": "integer"
-          },
-          "licenses": {
-            "description": "License records for the product",
-            "format": "int64",
-            "type": "integer"
-          },
-          "name": {
-            "type": "string"
-          },
-          "overusedSeats": {
-            "description": "Installed devices beyond valid seats",
-            "format": "int64",
-            "type": "integer"
-          },
-          "purchasedSeats": {
-            "description": "Seats across all license records",
-            "format": "int64",
-            "type": "integer"
-          },
-          "recommendation": {
-            "description": "Plain-language next action",
-            "type": "string"
-          },
-          "riskCost": {
-            "description": "Annual cost of the balance violation, RUB",
-            "format": "int64",
-            "type": "integer"
-          },
-          "riskLevel": {
-            "enum": [
-              "low",
-              "medium",
-              "high"
-            ],
-            "type": "string"
-          },
-          "status": {
-            "enum": [
-              "active",
-              "inactive",
-              "archived",
-              "banned"
-            ],
-            "type": "string"
-          },
-          "vendor": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "id",
-          "name",
-          "vendor",
-          "category",
-          "status",
-          "licenses",
-          "purchasedSeats",
-          "licensedSeats",
-          "expiredSeats",
-          "installedDevices",
-          "installations",
-          "bannedInstallations",
-          "overusedSeats",
-          "idleSeats",
-          "deltaSeats",
-          "annualCost",
-          "avgCostPerSeat",
-          "riskCost",
-          "riskLevel",
-          "recommendation"
-        ],
-        "type": "object"
-      },
-      "ComplianceProductDetail": {
-        "additionalProperties": false,
-        "properties": {
-          "$schema": {
-            "description": "A URL to the JSON Schema for this object.",
-            "examples": [
-              "https://example.com/ComplianceProductDetail.json"
-            ],
-            "format": "uri",
-            "readOnly": true,
-            "type": "string"
-          },
-          "hosts": {
-            "items": {
-              "$ref": "#/components/schemas/HostUsage"
-            },
-            "type": [
-              "array",
-              "null"
-            ]
-          },
-          "licenses": {
-            "items": {
-              "$ref": "#/components/schemas/ComplianceLicense"
-            },
-            "type": [
-              "array",
-              "null"
-            ]
-          },
-          "product": {
-            "$ref": "#/components/schemas/ComplianceProduct"
-          }
-        },
-        "required": [
-          "product",
-          "licenses",
-          "hosts"
         ],
         "type": "object"
       },
@@ -1357,179 +1288,6 @@
           "answer",
           "links",
           "createdAt"
-        ],
-        "type": "object"
-      },
-      "HostDetail": {
-        "additionalProperties": false,
-        "properties": {
-          "$schema": {
-            "description": "A URL to the JSON Schema for this object.",
-            "examples": [
-              "https://example.com/HostDetail.json"
-            ],
-            "format": "uri",
-            "readOnly": true,
-            "type": "string"
-          },
-          "banned": {
-            "format": "int64",
-            "type": "integer"
-          },
-          "expired": {
-            "format": "int64",
-            "type": "integer"
-          },
-          "hostname": {
-            "type": "string"
-          },
-          "id": {
-            "format": "int64",
-            "type": "integer"
-          },
-          "inactive": {
-            "format": "int64",
-            "type": "integer"
-          },
-          "installations": {
-            "items": {
-              "$ref": "#/components/schemas/HostInstallation"
-            },
-            "type": [
-              "array",
-              "null"
-            ]
-          },
-          "lastSeenAt": {
-            "format": "date-time",
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "licensed": {
-            "format": "int64",
-            "type": "integer"
-          },
-          "owner": {
-            "type": "string"
-          },
-          "platform": {
-            "type": "string"
-          },
-          "unlicensed": {
-            "format": "int64",
-            "type": "integer"
-          }
-        },
-        "required": [
-          "id",
-          "hostname",
-          "platform",
-          "owner",
-          "lastSeenAt",
-          "installations",
-          "licensed",
-          "expired",
-          "unlicensed",
-          "banned",
-          "inactive"
-        ],
-        "type": "object"
-      },
-      "HostInstallation": {
-        "additionalProperties": false,
-        "properties": {
-          "category": {
-            "type": "string"
-          },
-          "detectedName": {
-            "type": "string"
-          },
-          "id": {
-            "format": "int64",
-            "type": "integer"
-          },
-          "product": {
-            "type": "string"
-          },
-          "productId": {
-            "format": "int64",
-            "type": "integer"
-          },
-          "status": {
-            "enum": [
-              "licensed",
-              "expired",
-              "unlicensed",
-              "banned",
-              "inactive"
-            ],
-            "type": "string"
-          },
-          "vendor": {
-            "type": "string"
-          },
-          "version": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "id",
-          "product",
-          "vendor",
-          "category",
-          "detectedName",
-          "version",
-          "status"
-        ],
-        "type": "object"
-      },
-      "HostUsage": {
-        "additionalProperties": false,
-        "properties": {
-          "assetId": {
-            "format": "int64",
-            "type": "integer"
-          },
-          "hostname": {
-            "type": "string"
-          },
-          "lastSeenAt": {
-            "format": "date-time",
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "licenseStatus": {
-            "enum": [
-              "licensed",
-              "expired",
-              "unlicensed",
-              "banned",
-              "inactive"
-            ],
-            "type": "string"
-          },
-          "owner": {
-            "type": "string"
-          },
-          "platform": {
-            "type": "string"
-          },
-          "version": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "assetId",
-          "hostname",
-          "platform",
-          "owner",
-          "version",
-          "lastSeenAt",
-          "licenseStatus"
         ],
         "type": "object"
       },
@@ -2274,6 +2032,10 @@
           "progress": {
             "$ref": "#/components/schemas/Progress"
           },
+          "startedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
           "title": {
             "type": "string"
           },
@@ -2516,60 +2278,6 @@
         ],
         "type": "object"
       },
-      "Risk": {
-        "additionalProperties": false,
-        "properties": {
-          "affected": {
-            "description": "Seats, hosts or installations touched by the risk",
-            "format": "int64",
-            "type": "integer"
-          },
-          "category": {
-            "type": "string"
-          },
-          "code": {
-            "enum": [
-              "banned_product",
-              "license_overuse",
-              "expired_license",
-              "idle_license",
-              "inactive_product",
-              "unmatched_installations"
-            ],
-            "type": "string"
-          },
-          "cost": {
-            "description": "Annual cost of the risk, RUB",
-            "format": "int64",
-            "type": "integer"
-          },
-          "productId": {
-            "format": "int64",
-            "type": "integer"
-          },
-          "productName": {
-            "type": "string"
-          },
-          "recommendation": {
-            "type": "string"
-          },
-          "severity": {
-            "enum": [
-              "medium",
-              "high"
-            ],
-            "type": "string"
-          }
-        },
-        "required": [
-          "code",
-          "severity",
-          "affected",
-          "cost",
-          "recommendation"
-        ],
-        "type": "object"
-      },
       "RunDeploymentInputBody": {
         "additionalProperties": false,
         "properties": {
@@ -2598,6 +2306,1108 @@
         },
         "required": [
           "target"
+        ],
+        "type": "object"
+      },
+      "SamAssistantAnswer": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/SamAssistantAnswer.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "answer": {
+            "type": "string"
+          },
+          "fallback": {
+            "type": "boolean"
+          },
+          "id": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "sources": {
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "answer",
+          "sources",
+          "fallback"
+        ],
+        "type": "object"
+      },
+      "SamAssistantChatInputBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/SamAssistantChatInputBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "id": {
+            "format": "int64",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "prompt": {
+            "maxLength": 16000,
+            "minLength": 1,
+            "type": "string"
+          },
+          "requestId": {
+            "maxLength": 80,
+            "minLength": 16,
+            "pattern": "^[a-zA-Z0-9-]+$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "prompt",
+          "requestId"
+        ],
+        "type": "object"
+      },
+      "SamAssistantHistory": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/SamAssistantHistory.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "id": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "messages": {
+            "items": {
+              "$ref": "#/components/schemas/SamAssistantMessage"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "messages"
+        ],
+        "type": "object"
+      },
+      "SamAssistantMessage": {
+        "additionalProperties": false,
+        "properties": {
+          "content": {
+            "type": "string"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "role": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "role",
+          "content",
+          "createdAt"
+        ],
+        "type": "object"
+      },
+      "SamAssistantSummary": {
+        "additionalProperties": false,
+        "properties": {
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "id": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "messageCount": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "title": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "messageCount",
+          "createdAt",
+          "updatedAt"
+        ],
+        "type": "object"
+      },
+      "SamComplianceHostDetail": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/SamComplianceHostDetail.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "banned": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "expired": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "hostname": {
+            "type": "string"
+          },
+          "inactive": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "installations": {
+            "items": {
+              "$ref": "#/components/schemas/SamComplianceHostInstallation"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "lastSeenAt": {
+            "format": "date-time",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "licensed": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "unlicensed": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "hostname",
+          "lastSeenAt",
+          "installations",
+          "licensed",
+          "expired",
+          "unlicensed",
+          "banned",
+          "inactive"
+        ],
+        "type": "object"
+      },
+      "SamComplianceHostInstallation": {
+        "additionalProperties": false,
+        "properties": {
+          "category": {
+            "type": "string"
+          },
+          "detectedName": {
+            "type": "string"
+          },
+          "id": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "product": {
+            "type": "string"
+          },
+          "productId": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "status": {
+            "type": "string"
+          },
+          "vendor": {
+            "type": "string"
+          },
+          "version": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "product",
+          "vendor",
+          "category",
+          "detectedName",
+          "version",
+          "status"
+        ],
+        "type": "object"
+      },
+      "SamComplianceHostUsage": {
+        "additionalProperties": false,
+        "properties": {
+          "hostname": {
+            "type": "string"
+          },
+          "lastSeenAt": {
+            "format": "date-time",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "licenseStatus": {
+            "type": "string"
+          },
+          "version": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "hostname",
+          "version",
+          "lastSeenAt",
+          "licenseStatus"
+        ],
+        "type": "object"
+      },
+      "SamComplianceLicense": {
+        "additionalProperties": false,
+        "properties": {
+          "costPerSeat": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "id": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "seatsTotal": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "seatsUsed": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "status": {
+            "type": "string"
+          },
+          "validUntil": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "seatsTotal",
+          "seatsUsed",
+          "costPerSeat",
+          "currency",
+          "validUntil",
+          "status"
+        ],
+        "type": "object"
+      },
+      "SamComplianceProduct": {
+        "additionalProperties": false,
+        "properties": {
+          "annualCost": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "avgCostPerSeat": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "bannedInstallations": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "category": {
+            "type": "string"
+          },
+          "deltaSeats": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "expiredSeats": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "id": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "idleSeats": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "installations": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "installedDevices": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "licensedSeats": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "licenses": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          },
+          "overusedSeats": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "purchasedSeats": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "recommendation": {
+            "type": "string"
+          },
+          "riskCost": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "riskLevel": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "vendor": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "vendor",
+          "category",
+          "status",
+          "licenses",
+          "purchasedSeats",
+          "licensedSeats",
+          "expiredSeats",
+          "installedDevices",
+          "installations",
+          "bannedInstallations",
+          "overusedSeats",
+          "idleSeats",
+          "annualCost",
+          "avgCostPerSeat",
+          "riskCost",
+          "riskLevel",
+          "recommendation",
+          "deltaSeats"
+        ],
+        "type": "object"
+      },
+      "SamComplianceProductDetail": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/SamComplianceProductDetail.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "hosts": {
+            "items": {
+              "$ref": "#/components/schemas/SamComplianceHostUsage"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "licenses": {
+            "items": {
+              "$ref": "#/components/schemas/SamComplianceLicense"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "product": {
+            "$ref": "#/components/schemas/SamComplianceProduct"
+          }
+        },
+        "required": [
+          "product",
+          "licenses",
+          "hosts"
+        ],
+        "type": "object"
+      },
+      "SamComplianceRisk": {
+        "additionalProperties": false,
+        "properties": {
+          "affected": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "code": {
+            "type": "string"
+          },
+          "cost": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "productId": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "productName": {
+            "type": "string"
+          },
+          "recommendation": {
+            "type": "string"
+          },
+          "severity": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "severity",
+          "affected",
+          "cost",
+          "recommendation"
+        ],
+        "type": "object"
+      },
+      "SamComplianceSummary": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/SamComplianceSummary.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "activeProducts": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "annualCost": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "bannedInstallations": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "bannedProducts": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "categories": {
+            "items": {
+              "$ref": "#/components/schemas/CategoryBreakdown"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "compliancePercent": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "costAtRisk": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "devices": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "expiredCost": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "expiredSeats": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "idleCost": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "idleSeats": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "installations": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "licensedSeats": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "licenses": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "overuseCost": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "overusedSeats": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "products": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "purchasedSeats": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "recommendations": {
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "riskLevel": {
+            "type": "string"
+          },
+          "statuses": {
+            "items": {
+              "$ref": "#/components/schemas/StatusBreakdown"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "unmatchedInstallations": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "products",
+          "activeProducts",
+          "bannedProducts",
+          "installations",
+          "devices",
+          "unmatchedInstallations",
+          "licensedSeats",
+          "overusedSeats",
+          "idleSeats",
+          "expiredSeats",
+          "bannedInstallations",
+          "annualCost",
+          "overuseCost",
+          "idleCost",
+          "expiredCost",
+          "costAtRisk",
+          "licenses",
+          "purchasedSeats",
+          "compliancePercent",
+          "riskLevel",
+          "recommendations",
+          "categories",
+          "statuses"
+        ],
+        "type": "object"
+      },
+      "SamMatchingCandidate": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/SamMatchingCandidate.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "deviceName": {
+            "type": "string"
+          },
+          "id": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "installationId": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "lastSeenAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "method": {
+            "type": "string"
+          },
+          "productId": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "productName": {
+            "type": "string"
+          },
+          "rawName": {
+            "type": "string"
+          },
+          "resolvedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "resolvedBy": {
+            "type": "string"
+          },
+          "score": {
+            "format": "float",
+            "type": "number"
+          },
+          "status": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "installationId",
+          "productId",
+          "rawName",
+          "productName",
+          "deviceName",
+          "score",
+          "method",
+          "status",
+          "createdAt",
+          "lastSeenAt"
+        ],
+        "type": "object"
+      },
+      "SamMatchingRunInputBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/SamMatchingRunInputBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "limit": {
+            "format": "int32",
+            "maximum": 5000,
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "limit"
+        ],
+        "type": "object"
+      },
+      "SamMatchingRunResult": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/SamMatchingRunResult.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "candidates": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "limit": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "matched": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "pending": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "scanned": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "skipped": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "unmatched": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "limit",
+          "scanned",
+          "unmatched",
+          "matched",
+          "candidates",
+          "skipped",
+          "pending"
+        ],
+        "type": "object"
+      },
+      "SamMatchingSummary": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/SamMatchingSummary.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "confirmed": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "pending": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "rejected": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "unmatched": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "unmatched",
+          "pending",
+          "confirmed",
+          "rejected"
+        ],
+        "type": "object"
+      },
+      "SamOperatorAction": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/SamOperatorAction.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "actor": {
+            "type": "string"
+          },
+          "affected": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "after": {},
+          "appliedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "before": {},
+          "conversationId": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "error": {
+            "type": "string"
+          },
+          "id": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "intent": {
+            "type": "string"
+          },
+          "preview": {
+            "$ref": "#/components/schemas/SamOperatorPreview"
+          },
+          "status": {
+            "type": "string"
+          },
+          "undoneAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "actor",
+          "intent",
+          "status",
+          "affected",
+          "preview",
+          "createdAt"
+        ],
+        "type": "object"
+      },
+      "SamOperatorApplyInputBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/SamOperatorApplyInputBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "confirmation": {
+            "maxLength": 200,
+            "type": "string"
+          }
+        },
+        "required": [
+          "confirmation"
+        ],
+        "type": "object"
+      },
+      "SamOperatorChatInputBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/SamOperatorChatInputBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "id": {
+            "format": "int64",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "prompt": {
+            "maxLength": 16000,
+            "minLength": 1,
+            "type": "string"
+          },
+          "requestId": {
+            "maxLength": 80,
+            "minLength": 16,
+            "pattern": "^[a-zA-Z0-9-]+$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "prompt",
+          "requestId"
+        ],
+        "type": "object"
+      },
+      "SamOperatorChatResult": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/SamOperatorChatResult.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "actions": {
+            "items": {
+              "$ref": "#/components/schemas/SamOperatorAction"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "answer": {
+            "type": "string"
+          },
+          "fallback": {
+            "type": "boolean"
+          },
+          "id": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "answer",
+          "actions",
+          "fallback"
+        ],
+        "type": "object"
+      },
+      "SamOperatorDiff": {
+        "additionalProperties": false,
+        "properties": {
+          "field": {
+            "type": "string"
+          },
+          "new": {},
+          "old": {},
+          "target": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "target",
+          "field",
+          "old",
+          "new"
+        ],
+        "type": "object"
+      },
+      "SamOperatorPreview": {
+        "additionalProperties": false,
+        "properties": {
+          "affected": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "confirmationPhrase": {
+            "type": "string"
+          },
+          "diffs": {
+            "items": {
+              "$ref": "#/components/schemas/SamOperatorDiff"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "intent": {
+            "type": "string"
+          },
+          "limit": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "requiresPhrase": {
+            "type": "boolean"
+          },
+          "samples": {
+            "items": {
+              "additionalProperties": {},
+              "type": "object"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "summary": {
+            "type": "string"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "intent",
+          "summary",
+          "affected",
+          "samples",
+          "diffs",
+          "warnings",
+          "requiresPhrase",
+          "confirmationPhrase",
+          "limit"
         ],
         "type": "object"
       },
@@ -2669,12 +3479,6 @@
             "type": "integer"
           },
           "status": {
-            "enum": [
-              "active",
-              "inactive",
-              "archived",
-              "banned"
-            ],
             "type": "string"
           }
         },
@@ -2709,185 +3513,6 @@
           "kind",
           "count",
           "path"
-        ],
-        "type": "object"
-      },
-      "Summary": {
-        "additionalProperties": false,
-        "properties": {
-          "$schema": {
-            "description": "A URL to the JSON Schema for this object.",
-            "examples": [
-              "https://example.com/Summary.json"
-            ],
-            "format": "uri",
-            "readOnly": true,
-            "type": "string"
-          },
-          "activeProducts": {
-            "description": "Products in active status",
-            "format": "int64",
-            "type": "integer"
-          },
-          "annualCost": {
-            "description": "Annual cost of valid licensed seats, RUB",
-            "format": "int64",
-            "type": "integer"
-          },
-          "assets": {
-            "description": "Managed hosts",
-            "format": "int64",
-            "type": "integer"
-          },
-          "bannedInstallations": {
-            "description": "Hosts running banned products",
-            "format": "int64",
-            "type": "integer"
-          },
-          "bannedProducts": {
-            "description": "Products banned by policy",
-            "format": "int64",
-            "type": "integer"
-          },
-          "categories": {
-            "description": "Product distribution by category",
-            "items": {
-              "$ref": "#/components/schemas/CategoryBreakdown"
-            },
-            "type": [
-              "array",
-              "null"
-            ]
-          },
-          "compliancePercent": {
-            "description": "Share of products without licence violations, 0..100",
-            "format": "int64",
-            "type": "integer"
-          },
-          "costAtRisk": {
-            "description": "Overuse plus expired cost, RUB",
-            "format": "int64",
-            "type": "integer"
-          },
-          "devices": {
-            "description": "Hosts with at least one installation",
-            "format": "int64",
-            "type": "integer"
-          },
-          "expiredCost": {
-            "description": "Annual cost of expired seats, RUB",
-            "format": "int64",
-            "type": "integer"
-          },
-          "expiredSeats": {
-            "description": "Seats on licenses whose term has ended",
-            "format": "int64",
-            "type": "integer"
-          },
-          "idleCost": {
-            "description": "Annual cost of idle seats, RUB",
-            "format": "int64",
-            "type": "integer"
-          },
-          "idleSeats": {
-            "description": "Valid licensed seats without installations",
-            "format": "int64",
-            "type": "integer"
-          },
-          "installations": {
-            "description": "Discovered software installations",
-            "format": "int64",
-            "type": "integer"
-          },
-          "licensedSeats": {
-            "description": "Seats on licenses valid today",
-            "format": "int64",
-            "type": "integer"
-          },
-          "licenses": {
-            "description": "License records",
-            "format": "int64",
-            "type": "integer"
-          },
-          "overuseCost": {
-            "description": "Annual cost of overused seats, RUB",
-            "format": "int64",
-            "type": "integer"
-          },
-          "overusedSeats": {
-            "description": "Installations beyond valid licensed seats",
-            "format": "int64",
-            "type": "integer"
-          },
-          "products": {
-            "description": "Software products in the catalog",
-            "format": "int64",
-            "type": "integer"
-          },
-          "purchasedSeats": {
-            "description": "Seats across all license records",
-            "format": "int64",
-            "type": "integer"
-          },
-          "recommendations": {
-            "description": "Ordered actions derived from the current balance",
-            "items": {
-              "type": "string"
-            },
-            "type": [
-              "array",
-              "null"
-            ]
-          },
-          "riskLevel": {
-            "enum": [
-              "low",
-              "medium",
-              "high"
-            ],
-            "type": "string"
-          },
-          "statuses": {
-            "description": "Product distribution by catalog status",
-            "items": {
-              "$ref": "#/components/schemas/StatusBreakdown"
-            },
-            "type": [
-              "array",
-              "null"
-            ]
-          },
-          "unmatchedInstallations": {
-            "description": "Installations without a catalog product",
-            "format": "int64",
-            "type": "integer"
-          }
-        },
-        "required": [
-          "products",
-          "activeProducts",
-          "bannedProducts",
-          "assets",
-          "licenses",
-          "installations",
-          "devices",
-          "unmatchedInstallations",
-          "purchasedSeats",
-          "licensedSeats",
-          "expiredSeats",
-          "overusedSeats",
-          "idleSeats",
-          "bannedInstallations",
-          "annualCost",
-          "overuseCost",
-          "idleCost",
-          "expiredCost",
-          "costAtRisk",
-          "compliancePercent",
-          "riskLevel",
-          "recommendations",
-          "categories",
-          "statuses"
         ],
         "type": "object"
       },
@@ -3363,6 +3988,68 @@
         "tags": [
           "Admin accounts"
         ]
+      }
+    },
+    "/api/admin/chat-context": {
+      "get": {
+        "operationId": "admin-chat-context",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatContextView"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        }
+      },
+      "put": {
+        "operationId": "update-admin-chat-context",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatContextUpdateInputBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatContextView"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        }
       }
     },
     "/api/admin/coding/tasks": {
@@ -4219,6 +4906,140 @@
         }
       }
     },
+    "/api/chat/agent": {
+      "post": {
+        "operationId": "chat-agent",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatAgentInputBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CodingTask"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        }
+      }
+    },
+    "/api/chat/conversations": {
+      "get": {
+        "operationId": "chat-conversations",
+        "parameters": [
+          {
+            "explode": false,
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "default": 50,
+              "format": "int32",
+              "maximum": 100,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "offset",
+            "schema": {
+              "default": 0,
+              "format": "int32",
+              "minimum": 0,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ChatSummary"
+                  },
+                  "type": [
+                    "array",
+                    "null"
+                  ]
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        }
+      }
+    },
+    "/api/chat/conversations/{id}": {
+      "get": {
+        "operationId": "chat-history",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "int64",
+              "minimum": 1,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatHistory"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        }
+      }
+    },
     "/api/coding/tasks": {
       "get": {
         "operationId": "list-coding-tasks",
@@ -4504,6 +5325,159 @@
         ]
       }
     },
+    "/api/deployments": {
+      "get": {
+        "operationId": "list-member-deployments",
+        "parameters": [
+          {
+            "explode": false,
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "default": 50,
+              "format": "int32",
+              "maximum": 100,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "offset",
+            "schema": {
+              "default": 0,
+              "format": "int32",
+              "minimum": 0,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/Deployment"
+                  },
+                  "type": [
+                    "array",
+                    "null"
+                  ]
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "List deployment operations for team members",
+        "tags": [
+          "Deployments"
+        ]
+      }
+    },
+    "/api/deployments/{action}": {
+      "post": {
+        "operationId": "run-member-deployment-operation",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "action",
+            "required": true,
+            "schema": {
+              "enum": [
+                "deploy",
+                "rollback",
+                "restart",
+                "start",
+                "stop",
+                "create_test_database",
+                "drop_test_database"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RunDeploymentInputBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Deployment"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Run a second-server operation as a team member",
+        "tags": [
+          "Deployments"
+        ]
+      }
+    },
+    "/api/logout": {
+      "post": {
+        "operationId": "logout",
+        "responses": {
+          "204": {
+            "description": "No Content",
+            "headers": {
+              "Set-Cookie": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Log out",
+        "tags": [
+          "Authentication"
+        ]
+      }
+    },
     "/api/me": {
       "get": {
         "operationId": "me",
@@ -4563,6 +5537,49 @@
           }
         },
         "summary": "List the full team planner (members only)",
+        "tags": [
+          "Planner"
+        ]
+      }
+    },
+    "/api/planner/blocks/{id}/start": {
+      "post": {
+        "operationId": "start-team-planner-block",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "int64",
+              "minimum": 1,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlannerBlock"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Mark your planner block as in progress",
         "tags": [
           "Planner"
         ]
@@ -4751,20 +5768,19 @@
         ]
       }
     },
-    "/api/public/sam/compliance/hosts/{id}": {
+    "/api/public/sam/compliance/hosts/{hostname}": {
       "get": {
-        "operationId": "sam-compliance-host",
+        "operationId": "sam-public-compliance-host",
         "parameters": [
           {
-            "description": "Managed host identifier",
+            "description": "Managed host name",
             "in": "path",
-            "name": "id",
+            "name": "hostname",
             "required": true,
             "schema": {
-              "description": "Managed host identifier",
-              "format": "int64",
-              "minimum": 1,
-              "type": "integer"
+              "description": "Managed host name",
+              "minLength": 1,
+              "type": "string"
             }
           }
         ],
@@ -4773,7 +5789,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/HostDetail"
+                  "$ref": "#/components/schemas/SamComplianceHostDetail"
                 }
               }
             },
@@ -4790,7 +5806,7 @@
             "description": "Error"
           }
         },
-        "summary": "Get one host with its installations and license state",
+        "summary": "Get a public host with its installations",
         "tags": [
           "SAM compliance"
         ]
@@ -4798,14 +5814,14 @@
     },
     "/api/public/sam/compliance/products": {
       "get": {
-        "operationId": "sam-compliance-products",
+        "operationId": "sam-public-compliance-products",
         "responses": {
           "200": {
             "content": {
               "application/json": {
                 "schema": {
                   "items": {
-                    "$ref": "#/components/schemas/ComplianceProduct"
+                    "$ref": "#/components/schemas/SamComplianceProduct"
                   },
                   "type": [
                     "array",
@@ -4827,7 +5843,7 @@
             "description": "Error"
           }
         },
-        "summary": "List the purchased/installed balance by product",
+        "summary": "List the public purchased/installed balance",
         "tags": [
           "SAM compliance"
         ]
@@ -4835,7 +5851,7 @@
     },
     "/api/public/sam/compliance/products/{id}": {
       "get": {
-        "operationId": "sam-compliance-product",
+        "operationId": "sam-public-compliance-product",
         "parameters": [
           {
             "description": "Catalog product identifier",
@@ -4855,7 +5871,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ComplianceProductDetail"
+                  "$ref": "#/components/schemas/SamComplianceProductDetail"
                 }
               }
             },
@@ -4872,7 +5888,7 @@
             "description": "Error"
           }
         },
-        "summary": "Get one product with licenses and affected hosts",
+        "summary": "Get a public product with licenses and hosts",
         "tags": [
           "SAM compliance"
         ]
@@ -4880,14 +5896,14 @@
     },
     "/api/public/sam/compliance/risks": {
       "get": {
-        "operationId": "sam-compliance-risks",
+        "operationId": "sam-public-compliance-risks",
         "responses": {
           "200": {
             "content": {
               "application/json": {
                 "schema": {
                   "items": {
-                    "$ref": "#/components/schemas/Risk"
+                    "$ref": "#/components/schemas/SamComplianceRisk"
                   },
                   "type": [
                     "array",
@@ -4909,7 +5925,7 @@
             "description": "Error"
           }
         },
-        "summary": "List compliance risks ordered by severity and cost",
+        "summary": "List public SAM compliance risks",
         "tags": [
           "SAM compliance"
         ]
@@ -4917,13 +5933,13 @@
     },
     "/api/public/sam/compliance/summary": {
       "get": {
-        "operationId": "sam-compliance-summary",
+        "operationId": "sam-public-compliance-summary",
         "responses": {
           "200": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Summary"
+                  "$ref": "#/components/schemas/SamComplianceSummary"
                 }
               }
             },
@@ -4940,7 +5956,7 @@
             "description": "Error"
           }
         },
-        "summary": "Get SAM compliance KPIs and recommendations",
+        "summary": "Get public SAM compliance KPIs",
         "tags": [
           "SAM compliance"
         ]
@@ -5119,29 +6135,25 @@
         ]
       }
     },
-    "/api/sam/compliance/hosts/{id}": {
-      "get": {
-        "operationId": "sam-compliance-team-host",
-        "parameters": [
-          {
-            "description": "Managed host identifier",
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "schema": {
-              "description": "Managed host identifier",
-              "format": "int64",
-              "minimum": 1,
-              "type": "integer"
+    "/api/sam/assistant/chat": {
+      "post": {
+        "operationId": "sam-assistant-chat",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SamAssistantChatInputBody"
+              }
             }
-          }
-        ],
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/HostDetail"
+                  "$ref": "#/components/schemas/SamAssistantAnswer"
                 }
               }
             },
@@ -5158,22 +6170,47 @@
             "description": "Error"
           }
         },
-        "summary": "Get one host with its installations and license state",
+        "summary": "Вопрос аналитику SAM по данным инвентаризации",
         "tags": [
-          "SAM compliance"
+          "SAM assistant"
         ]
       }
     },
-    "/api/sam/compliance/products": {
+    "/api/sam/assistant/conversations": {
       "get": {
-        "operationId": "sam-compliance-team-products",
+        "operationId": "sam-assistant-conversations",
+        "parameters": [
+          {
+            "explode": false,
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "default": 50,
+              "format": "int32",
+              "maximum": 100,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "offset",
+            "schema": {
+              "default": 0,
+              "format": "int32",
+              "minimum": 0,
+              "type": "integer"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
               "application/json": {
                 "schema": {
                   "items": {
-                    "$ref": "#/components/schemas/ComplianceProduct"
+                    "$ref": "#/components/schemas/SamAssistantSummary"
                   },
                   "type": [
                     "array",
@@ -5195,23 +6232,21 @@
             "description": "Error"
           }
         },
-        "summary": "List the purchased/installed balance by product",
+        "summary": "История диалогов аналитика SAM",
         "tags": [
-          "SAM compliance"
+          "SAM assistant"
         ]
       }
     },
-    "/api/sam/compliance/products/{id}": {
+    "/api/sam/assistant/conversations/{id}": {
       "get": {
-        "operationId": "sam-compliance-team-product",
+        "operationId": "sam-assistant-conversation",
         "parameters": [
           {
-            "description": "Catalog product identifier",
             "in": "path",
             "name": "id",
             "required": true,
             "schema": {
-              "description": "Catalog product identifier",
               "format": "int64",
               "minimum": 1,
               "type": "integer"
@@ -5223,7 +6258,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ComplianceProductDetail"
+                  "$ref": "#/components/schemas/SamAssistantHistory"
                 }
               }
             },
@@ -5240,7 +6275,44 @@
             "description": "Error"
           }
         },
-        "summary": "Get one product with licenses and affected hosts",
+        "summary": "Один диалог аналитика SAM",
+        "tags": [
+          "SAM assistant"
+        ]
+      }
+    },
+    "/api/sam/compliance/products": {
+      "get": {
+        "operationId": "sam-compliance-products",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/SamComplianceProduct"
+                  },
+                  "type": [
+                    "array",
+                    "null"
+                  ]
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Баланс куплено/установлено по продуктам",
         "tags": [
           "SAM compliance"
         ]
@@ -5248,14 +6320,14 @@
     },
     "/api/sam/compliance/risks": {
       "get": {
-        "operationId": "sam-compliance-team-risks",
+        "operationId": "sam-compliance-risks",
         "responses": {
           "200": {
             "content": {
               "application/json": {
                 "schema": {
                   "items": {
-                    "$ref": "#/components/schemas/Risk"
+                    "$ref": "#/components/schemas/SamComplianceRisk"
                   },
                   "type": [
                     "array",
@@ -5277,7 +6349,7 @@
             "description": "Error"
           }
         },
-        "summary": "List compliance risks ordered by severity and cost",
+        "summary": "Финансовые и юридические риски SAM",
         "tags": [
           "SAM compliance"
         ]
@@ -5285,13 +6357,13 @@
     },
     "/api/sam/compliance/summary": {
       "get": {
-        "operationId": "sam-compliance-team-summary",
+        "operationId": "sam-compliance-summary",
         "responses": {
           "200": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Summary"
+                  "$ref": "#/components/schemas/SamComplianceSummary"
                 }
               }
             },
@@ -5308,9 +6380,499 @@
             "description": "Error"
           }
         },
-        "summary": "Get SAM compliance KPIs and recommendations",
+        "summary": "KPI комплаенса SAM",
         "tags": [
           "SAM compliance"
+        ]
+      }
+    },
+    "/api/sam/matching/candidates": {
+      "get": {
+        "operationId": "sam-matching-candidates",
+        "parameters": [
+          {
+            "explode": false,
+            "in": "query",
+            "name": "status",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "default": 50,
+              "format": "int32",
+              "maximum": 100,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "offset",
+            "schema": {
+              "default": 0,
+              "format": "int32",
+              "minimum": 0,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/SamMatchingCandidate"
+                  },
+                  "type": [
+                    "array",
+                    "null"
+                  ]
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Очередь кандидатов сопоставления",
+        "tags": [
+          "SAM matching"
+        ]
+      }
+    },
+    "/api/sam/matching/candidates/{id}/confirm": {
+      "post": {
+        "operationId": "sam-matching-confirm",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "int64",
+              "minimum": 1,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SamMatchingCandidate"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Подтвердить сопоставление и создать алиас",
+        "tags": [
+          "SAM matching"
+        ]
+      }
+    },
+    "/api/sam/matching/candidates/{id}/reject": {
+      "post": {
+        "operationId": "sam-matching-reject",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "int64",
+              "minimum": 1,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SamMatchingCandidate"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Отклонить кандидата сопоставления",
+        "tags": [
+          "SAM matching"
+        ]
+      }
+    },
+    "/api/sam/matching/run": {
+      "post": {
+        "operationId": "sam-matching-run",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SamMatchingRunInputBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SamMatchingRunResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Построить очередь сопоставления несопоставленных установок",
+        "tags": [
+          "SAM matching"
+        ]
+      }
+    },
+    "/api/sam/matching/summary": {
+      "get": {
+        "operationId": "sam-matching-summary",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SamMatchingSummary"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Счётчики очереди сопоставления",
+        "tags": [
+          "SAM matching"
+        ]
+      }
+    },
+    "/api/sam/operator/actions": {
+      "get": {
+        "operationId": "sam-operator-actions",
+        "parameters": [
+          {
+            "explode": false,
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "default": 50,
+              "format": "int32",
+              "maximum": 100,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "offset",
+            "schema": {
+              "default": 0,
+              "format": "int32",
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "conversationId",
+            "schema": {
+              "default": 0,
+              "format": "int64",
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "status",
+            "schema": {
+              "maxLength": 20,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/SamOperatorAction"
+                  },
+                  "type": [
+                    "array",
+                    "null"
+                  ]
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "История предложенных и применённых изменений SAM",
+        "tags": [
+          "SAM operator"
+        ]
+      }
+    },
+    "/api/sam/operator/actions/{id}/apply": {
+      "post": {
+        "operationId": "sam-operator-apply",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "int64",
+              "minimum": 1,
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SamOperatorApplyInputBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SamOperatorAction"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Применить подтверждённое изменение SAM",
+        "tags": [
+          "SAM operator"
+        ]
+      }
+    },
+    "/api/sam/operator/actions/{id}/cancel": {
+      "post": {
+        "operationId": "sam-operator-cancel",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "int64",
+              "minimum": 1,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SamOperatorAction"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Отменить предложенное изменение SAM",
+        "tags": [
+          "SAM operator"
+        ]
+      }
+    },
+    "/api/sam/operator/actions/{id}/undo": {
+      "post": {
+        "operationId": "sam-operator-undo",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "int64",
+              "minimum": 1,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SamOperatorAction"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Откатить последнее применённое изменение SAM",
+        "tags": [
+          "SAM operator"
+        ]
+      }
+    },
+    "/api/sam/operator/chat": {
+      "post": {
+        "operationId": "sam-operator-chat",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SamOperatorChatInputBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SamOperatorChatResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Предложить изменение SAM через AI-оператора",
+        "tags": [
+          "SAM operator"
         ]
       }
     }

@@ -18,9 +18,9 @@ import {
 	riskLevelTone,
 } from "./labels";
 
-type Summary = components["schemas"]["Summary"];
-type Product = components["schemas"]["ComplianceProduct"];
-type Risk = components["schemas"]["Risk"];
+type Summary = components["schemas"]["SamComplianceSummary"];
+type Product = components["schemas"]["SamComplianceProduct"];
+type Risk = components["schemas"]["SamComplianceRisk"];
 
 type DashboardData = {
 	summary: Summary;
@@ -31,7 +31,7 @@ type DashboardData = {
 function isEmpty(value: DashboardData) {
 	return (
 		value.summary.products === 0 &&
-		value.summary.assets === 0 &&
+		value.summary.devices === 0 &&
 		value.summary.licenses === 0 &&
 		value.summary.installations === 0
 	);
@@ -142,7 +142,7 @@ export default function SamDashboardPage() {
 					<div class={s.page}>
 						<section class={s.kpis} aria-label={m.samDashboardPageTitle()}>
 							<A class={s.kpi} href="/sam/inventory">
-								<span class={s.kpiValue}>{formatNumber(value.summary.assets)}</span>
+								<span class={s.kpiValue}>{formatNumber(value.summary.devices)}</span>
 								<span class={s.kpiLabel}>{m.samKpiHosts()}</span>
 							</A>
 							<A class={s.kpi} href="/sam/catalog">

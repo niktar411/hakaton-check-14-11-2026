@@ -230,7 +230,7 @@ async function mockCompliance(page: Page) {
 		if (path.endsWith("/products/1")) {
 			return route.fulfill({ json: productDetail });
 		}
-		if (path.endsWith("/hosts/1")) return route.fulfill({ json: hostDetail });
+		if (path.endsWith("/hosts/alpha-linux")) return route.fulfill({ json: hostDetail });
 		if (path.endsWith("/products")) return route.fulfill({ json: products });
 		if (path.endsWith("/risks")) return route.fulfill({ json: risks });
 		return route.fulfill({ status: 404, json: { detail: "not_found" } });
@@ -435,7 +435,7 @@ test("risk rows lead to product and host details", async ({ page }) => {
 		page.getByRole("heading", { name: "Microsoft Office" }),
 	).toBeVisible();
 	await page.getByRole("link", { name: "alpha-linux", exact: true }).click();
-	await expect(page).toHaveURL(/\/sam\/inventory\/1$/);
+	await expect(page).toHaveURL(/\/sam\/inventory\/alpha-linux$/);
 	await expect(
 		page.getByRole("heading", { name: "alpha-linux" }),
 	).toBeVisible();
@@ -507,7 +507,7 @@ test("SAM pages fit 375px and 1280px without horizontal scrolling", async ({
 		"/sam/catalog/1",
 		"/sam/licenses",
 		"/sam/inventory",
-		"/sam/inventory/1",
+		"/sam/inventory/alpha-linux",
 		"/sam/matching",
 		"/sam/assistant",
 	];

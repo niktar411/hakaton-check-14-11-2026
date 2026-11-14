@@ -78,6 +78,7 @@ func NewService(pool *pgxpool.Pool, config Config) *Service {
 func newService(store Store, config Config) *Service {
 	config.PublicURL = strings.TrimRight(config.PublicURL, "/")
 	config.PlannerURL = strings.TrimRight(config.PlannerURL, "/")
+	config.AIURL = strings.TrimRight(config.AIURL, "/")
 	return &Service{
 		store:        store,
 		config:       config,
@@ -145,7 +146,8 @@ func (s *Service) Login(ctx context.Context, request LoginRequest, origin string
 	}
 
 	if request.Audience == "admin" && (requestIP == "" || s.config.AdminUser == "" || s.config.AdminIP == "" ||
-		account.Role != "admin" || account.Username != s.config.AdminUser || requestIP != s.config.AdminIP) {
+		account.Role != "admin" || account.Username != s.config.AdminUser ||
+		!identity.AdminAddressAllowed(requestIP, s.config.AdminIP)) {
 		return LoginResult{}, nil, ErrAdminAccess
 	}
 
@@ -188,7 +190,8 @@ func (s *Service) validOrigin(origin string) bool {
 		return false
 	}
 	return (s.config.PublicURL != "" && origin == s.config.PublicURL) ||
-		(s.config.PlannerURL != "" && origin == s.config.PlannerURL)
+		(s.config.PlannerURL != "" && origin == s.config.PlannerURL) ||
+		(s.config.AIURL != "" && origin == s.config.AIURL)
 }
 
 func (s *Service) opaqueToken() (string, error) {

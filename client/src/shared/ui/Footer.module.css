@@ -8,6 +8,10 @@
 	border-top: 1px solid var(--border);
 }
 
+.root[data-borderless='true'] {
+	border-top: 0;
+}
+
 .links {
 	display: flex;
 	flex-wrap: wrap;

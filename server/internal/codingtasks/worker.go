@@ -35,20 +35,22 @@ const (
 // ToolInput is the complete worker wire contract. TaskID is injected by the
 // server for repository operations; a model cannot select another workspace.
 type ToolInput struct {
-	TaskID       int64  `json:"taskId"`
-	ParentTaskID int64  `json:"parentTaskId,omitempty"`
-	Path         string `json:"path,omitempty"`
-	Query        string `json:"query,omitempty"`
-	Content      string `json:"content,omitempty"`
-	Check        string `json:"check,omitempty"`
-	Title        string `json:"title,omitempty"`
-	Description  string `json:"description,omitempty"`
-	OwnerID      int64  `json:"ownerId,omitempty"`
-	Position     *int32 `json:"position,omitempty"`
-	Branch       string `json:"branch,omitempty"`
-	MRIID        *int64 `json:"mrIid,omitempty"`
-	Action       string `json:"action,omitempty"`
-	Target       string `json:"target,omitempty"`
+	TaskID         int64  `json:"taskId"`
+	ParentTaskID   int64  `json:"parentTaskId,omitempty"`
+	Path           string `json:"path,omitempty"`
+	Query          string `json:"query,omitempty"`
+	Content        string `json:"content,omitempty"`
+	Check          string `json:"check,omitempty"`
+	Title          string `json:"title,omitempty"`
+	Description    string `json:"description,omitempty"`
+	OwnerID        int64  `json:"ownerId,omitempty"`
+	PlannerBlockID int64  `json:"plannerBlockId,omitempty"`
+	Position       *int32 `json:"position,omitempty"`
+	Branch         string `json:"branch,omitempty"`
+	MRIID          *int64 `json:"mrIid,omitempty"`
+	SHA            string `json:"sha,omitempty"`
+	Action         string `json:"action,omitempty"`
+	Target         string `json:"target,omitempty"`
 }
 
 // SearchMatch is one bounded code-search result.

@@ -16,9 +16,9 @@ import {
 	riskLevelTone,
 } from "./labels";
 
-type Summary = components["schemas"]["Summary"];
-type Product = components["schemas"]["ComplianceProduct"];
-type Risk = components["schemas"]["Risk"];
+type Summary = components["schemas"]["SamComplianceSummary"];
+type Product = components["schemas"]["SamComplianceProduct"];
+type Risk = components["schemas"]["SamComplianceRisk"];
 
 type ComplianceData = {
 	summary: Summary;
