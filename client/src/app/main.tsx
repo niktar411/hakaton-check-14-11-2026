@@ -66,7 +66,7 @@ function PublicNavigation() {
 	return (
 		<nav class="flex flex-wrap gap-x-5 gap-y-2" aria-label={m.mainNavigation()}>
 			<A href="/team">{m.teamPageTitle()}</A>
-			<A href="/">{m.samNavigation()}</A>
+			<A href="/sam">{m.samNavigation()}</A>
 		</nav>
 	);
 }

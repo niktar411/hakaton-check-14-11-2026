@@ -1,4 +1,4 @@
-﻿package plannerblocks
+package plannerblocks
 
 import (
 	"context"

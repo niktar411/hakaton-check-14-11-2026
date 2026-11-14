@@ -1,4 +1,4 @@
-﻿upstream hackathon_api { server api:4000; keepalive 16; }
+upstream hackathon_api { server api:4000; keepalive 16; }
 
 server {
     listen 80 default_server;
@@ -30,6 +30,10 @@ server {
     index index.html;
     include /etc/nginx/snippets/tls.conf;
     include /etc/nginx/snippets/security-headers.conf;
+
+    # The site root points visitors at the SAM registry; the SPA keeps
+    # rendering "/" too, so this is a plain redirect, not a rewrite.
+    location = / { return 302 /sam; }
 
     location = /health {
         include /etc/nginx/snippets/proxy.conf;
