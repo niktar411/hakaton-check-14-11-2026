@@ -1,56 +1,18 @@
 import {
-	createSignal,
+	createResource,
 	type JSX,
+	type Resource,
 	Match,
-	onMount,
 	Switch,
 } from "solid-js";
 import { EmptyState, ErrorState, LoadingState } from "@/shared/ui/State";
 
 /**
- * Minimal resource shape used by SAM screens. It is deliberately smaller than
- * Solid's Resource: only the four data states and refetch are needed here.
- */
-export type SamResource<T> = {
-	(): T | undefined;
-	readonly loading: boolean;
-	readonly error: unknown;
-};
-
-/**
- * Loads data into explicit signals instead of a rejected Resource promise.
- * A failed request must always reach the error branch, including on the first
- * render, so the screen never stays in the loading skeleton.
+ * Loads data into Solid's native resource so every SAM screen shares the same
+ * loading, error, empty and success behaviour.
  */
 export function createSamResource<T>(loader: () => Promise<T>) {
-	const [data, setData] = createSignal<T>();
-	const [error, setError] = createSignal<unknown>();
-	const [loading, setLoading] = createSignal(true);
-	let request = 0;
-
-	const refetch = async () => {
-		const current = ++request;
-		setLoading(true);
-		setError(undefined);
-		try {
-			const value = await loader();
-			if (current === request) setData(() => value);
-		} catch (reason) {
-			if (current === request) setError(reason);
-		} finally {
-			if (current === request) setLoading(false);
-		}
-	};
-
-	onMount(() => {
-		void refetch();
-	});
-
-	const resource = (() => data()) as SamResource<T>;
-	Object.defineProperties(resource, {
-		loading: { get: loading },
-		error: { get: error },
-	});
+	const [resource, { refetch }] = createResource(loader);
 	return { resource, refetch };
 }
 
@@ -59,7 +21,7 @@ export function createSamResource<T>(loader: () => Promise<T>) {
  * only runs after data arrives, so pages never render partial results.
  */
 export function SamPageState<T>(props: {
-	data: SamResource<T>;
+	data: Resource<T>;
 	empty?: (value: T) => boolean;
 	onRetry: () => void;
 	emptyMessage?: string;
@@ -88,3 +50,4 @@ export function SamPageState<T>(props: {
 		</Switch>
 	);
 }
+

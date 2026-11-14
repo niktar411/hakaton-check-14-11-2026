@@ -13,6 +13,9 @@ test("README team block powers the public page", () => {
 		expect(member.name.length).toBeGreaterThan(0);
 		expect(member.role.length).toBeGreaterThan(0);
 		expect(member.telegram).toMatch(/^https:\/\/t\.me\//);
+		expect(member.quote?.trim().length ?? 0).toBeGreaterThan(0);
+		expect(member.bio?.trim().length ?? 0).toBeGreaterThan(0);
+		if (member.photo) expect(member.photo).toStartWith("/team/");
 	}
 });
 

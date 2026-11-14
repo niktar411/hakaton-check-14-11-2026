@@ -20,6 +20,7 @@ import { Button } from "@/shared/ui/Button";
 import { Footer } from "@/shared/ui/Footer";
 import { LoadingState } from "@/shared/ui/State";
 import { Toast } from "@/shared/ui/Toast";
+import { DragonMark } from "@/shared/ui/DragonMark";
 import { CookieBanner } from "@/shared/ui/CookieBanner";
 import { ConsentPage, CookiesPage, PolicyPage, TermsPage } from "@/features/legal/LegalPage";
 import { ThemeToggle } from "@/app/theme";
@@ -143,6 +144,16 @@ function App(props: { children?: JSX.Element }) {
 		location.pathname.startsWith("/coding/") ||
 		location.pathname === "/planner" ||
 		location.pathname.startsWith("/planner/");
+	// The public team page is monochrome: the black-and-white palette keeps the
+	// focus on the plan, the team and the assistant instead of decoration.
+	const monoPage = () =>
+		!plannerHost() &&
+		(location.pathname === "/" ||
+			location.pathname === "/team" ||
+			location.pathname === "/questions");
+	createEffect(() => {
+		document.documentElement.toggleAttribute("data-mono", monoPage());
+	});
 	createEffect(() => {
 		// The public site is one page: old question, plan and team URLs open it.
 		if (
@@ -215,7 +226,7 @@ function App(props: { children?: JSX.Element }) {
 								}
 							>
 								<A class="text-text inline-flex items-center gap-2 text-xl font-bold no-underline" href="/">
-									<img class="size-8 rounded-full" src="/logo-192.png" alt="" />
+									<DragonMark class="size-8" />
 									{m.appTitle()}
 								</A>
 								<div class="flex flex-wrap items-center gap-4">
