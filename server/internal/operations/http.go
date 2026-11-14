@@ -49,7 +49,9 @@ func (s *Service) Router() http.Handler {
 			next.ServeHTTP(w, r.WithContext(identity.WithRequestIP(r.Context(), remoteIP(r))))
 		})
 	})
-	r.Get("/sitemap.xml", cachePublic(http.HandlerFunc(s.sitemap)))
+	r.Get("/sitemap.xml", func(w http.ResponseWriter, r *http.Request) {
+		cachePublic(http.HandlerFunc(s.sitemap)).ServeHTTP(w, r)
+	})
 	r.Get("/robots.txt", s.robots)
 	r.Get("/llms.txt", s.llms)
 	r.Get("/admin/login", s.serveIndex)
