@@ -34,15 +34,6 @@
     text-decoration: underline;
   }
 
-  /* Кнопки плавно меняют цвет при наведении и смене темы. */
-  button {
-    transition:
-      background-color var(--dur) var(--ease),
-      border-color var(--dur) var(--ease),
-      color var(--dur) var(--ease),
-      box-shadow var(--dur) var(--ease);
-  }
-
   h1,
   h2,
   h3 {
