@@ -1,4 +1,4 @@
-upstream hackathon_api { server api:4000; keepalive 16; }
+﻿upstream hackathon_api { server api:4000; keepalive 16; }
 
 server {
     listen 80 default_server;
@@ -83,6 +83,10 @@ server {
         expires 30d;
         try_files $uri =404;
     }
+    # The SPA route /team collides with the static photos directory:
+    # the page goes to the app, /team/*.jpg keep being served as files.
+    location = /team { try_files /index.html =404; }
+    location = /team/ { try_files /index.html =404; }
     location = /index.html {
         add_header Cache-Control "no-store" always;
         include /etc/nginx/snippets/security-headers.conf;
@@ -173,6 +177,10 @@ server {
         expires 30d;
         try_files $uri =404;
     }
+    # The SPA route /team collides with the static photos directory:
+    # the page goes to the app, /team/*.jpg keep being served as files.
+    location = /team { try_files /index.html =404; }
+    location = /team/ { try_files /index.html =404; }
     location = /index.html {
         add_header Cache-Control "no-store" always;
         include /etc/nginx/snippets/security-headers.conf;
@@ -229,6 +237,10 @@ server {
         expires 30d;
         try_files $uri =404;
     }
+    # The SPA route /team collides with the static photos directory:
+    # the page goes to the app, /team/*.jpg keep being served as files.
+    location = /team { try_files /index.html =404; }
+    location = /team/ { try_files /index.html =404; }
     location = /index.html {
         add_header Cache-Control "no-store" always;
         include /etc/nginx/snippets/security-headers.conf;
