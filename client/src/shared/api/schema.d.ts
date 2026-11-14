@@ -720,91 +720,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/public/sam/compliance/hosts/{hostname}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get a public host with its installations */
-        get: operations["sam-public-compliance-host"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/public/sam/compliance/products": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List the public purchased/installed balance */
-        get: operations["sam-public-compliance-products"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/public/sam/compliance/products/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get a public product with licenses and hosts */
-        get: operations["sam-public-compliance-product"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/public/sam/compliance/risks": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List public SAM compliance risks */
-        get: operations["sam-public-compliance-risks"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/public/sam/compliance/summary": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get public SAM compliance KPIs */
-        get: operations["sam-public-compliance-summary"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/public/sam/dashboard": {
         parameters: {
             query?: never;
@@ -1231,17 +1146,6 @@ export interface components {
             target: string;
             username: string;
         };
-        CategoryBreakdown: {
-            category: string;
-            /** Format: int64 */
-            installedDevices: number;
-            /** Format: int64 */
-            overusedSeats: number;
-            /** Format: int64 */
-            products: number;
-            /** Format: int64 */
-            riskCost: number;
-        };
         ChatAgentInputBody: {
             /**
              * Format: uri
@@ -1620,6 +1524,8 @@ export interface components {
             username: string;
         };
         License: {
+            /** @description Contract or order number */
+            contract: string;
             /** Format: int64 */
             id: number;
             /** @enum {string} */
@@ -1901,13 +1807,23 @@ export interface components {
         };
         Product: {
             category: string;
+            classCode: string;
             /** Format: int64 */
             id: number;
             /** Format: int64 */
             installationCount: number;
+            /** @description Counted in compliance calculations */
+            isTrackable: boolean;
             /** Format: int64 */
             licenseCount: number;
+            /** @enum {string} */
+            licenseMetric: "device" | "user" | "installation" | "none";
             name: string;
+            /** @description Registry entry number */
+            registryEntry: string;
+            /** @description Listed in the Russian software registry */
+            registryRf: boolean;
+            sectionCode: string;
             /** Format: date-time */
             updatedAt: string;
             vendor: string;
@@ -2030,61 +1946,6 @@ export interface components {
             /** Format: date-time */
             updatedAt: string;
         };
-        SamComplianceHostDetail: {
-            /**
-             * Format: uri
-             * @description A URL to the JSON Schema for this object.
-             * @example https://example.com/SamComplianceHostDetail.json
-             */
-            readonly $schema?: string;
-            /** Format: int64 */
-            banned: number;
-            /** Format: int64 */
-            expired: number;
-            hostname: string;
-            /** Format: int64 */
-            inactive: number;
-            installations: components["schemas"]["SamComplianceHostInstallation"][] | null;
-            /** Format: date-time */
-            lastSeenAt: string | null;
-            /** Format: int64 */
-            licensed: number;
-            /** Format: int64 */
-            unlicensed: number;
-        };
-        SamComplianceHostInstallation: {
-            category: string;
-            detectedName: string;
-            /** Format: int64 */
-            id: number;
-            product: string;
-            /** Format: int64 */
-            productId?: number;
-            status: string;
-            vendor: string;
-            version: string;
-        };
-        SamComplianceHostUsage: {
-            hostname: string;
-            /** Format: date-time */
-            lastSeenAt: string | null;
-            licenseStatus: string;
-            version: string;
-        };
-        SamComplianceLicense: {
-            /** Format: int64 */
-            costPerSeat: number;
-            currency: string;
-            /** Format: int64 */
-            id: number;
-            kind: string;
-            /** Format: int64 */
-            seatsTotal: number;
-            /** Format: int64 */
-            seatsUsed: number;
-            status: string;
-            validUntil: string | null;
-        };
         SamComplianceProduct: {
             /** Format: int64 */
             annualCost: number;
@@ -2093,8 +1954,6 @@ export interface components {
             /** Format: int64 */
             bannedInstallations: number;
             category: string;
-            /** Format: int64 */
-            deltaSeats: number;
             /** Format: int64 */
             expiredSeats: number;
             /** Format: int64 */
@@ -2107,30 +1966,15 @@ export interface components {
             installedDevices: number;
             /** Format: int64 */
             licensedSeats: number;
-            /** Format: int64 */
-            licenses: number;
             name: string;
             /** Format: int64 */
             overusedSeats: number;
-            /** Format: int64 */
-            purchasedSeats: number;
             recommendation: string;
             /** Format: int64 */
             riskCost: number;
             riskLevel: string;
             status: string;
             vendor: string;
-        };
-        SamComplianceProductDetail: {
-            /**
-             * Format: uri
-             * @description A URL to the JSON Schema for this object.
-             * @example https://example.com/SamComplianceProductDetail.json
-             */
-            readonly $schema?: string;
-            hosts: components["schemas"]["SamComplianceHostUsage"][] | null;
-            licenses: components["schemas"]["SamComplianceLicense"][] | null;
-            product: components["schemas"]["SamComplianceProduct"];
         };
         SamComplianceRisk: {
             /** Format: int64 */
@@ -2159,9 +2003,6 @@ export interface components {
             bannedInstallations: number;
             /** Format: int64 */
             bannedProducts: number;
-            categories: components["schemas"]["CategoryBreakdown"][] | null;
-            /** Format: int64 */
-            compliancePercent: number;
             /** Format: int64 */
             costAtRisk: number;
             /** Format: int64 */
@@ -2179,18 +2020,13 @@ export interface components {
             /** Format: int64 */
             licensedSeats: number;
             /** Format: int64 */
-            licenses: number;
-            /** Format: int64 */
             overuseCost: number;
             /** Format: int64 */
             overusedSeats: number;
             /** Format: int64 */
             products: number;
-            /** Format: int64 */
-            purchasedSeats: number;
             recommendations: string[] | null;
             riskLevel: string;
-            statuses: components["schemas"]["StatusBreakdown"][] | null;
             /** Format: int64 */
             unmatchedInstallations: number;
         };
@@ -2371,13 +2207,6 @@ export interface components {
             links: components["schemas"]["Link"][] | null;
             plannerBaseUrl: string;
             publicBaseUrl: string;
-        };
-        StatusBreakdown: {
-            /** Format: int64 */
-            installedDevices: number;
-            /** Format: int64 */
-            products: number;
-            status: string;
         };
         Suggestion: {
             /** Format: int64 */
@@ -3949,157 +3778,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Finding"][] | null;
-                };
-            };
-            /** @description Error */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["ErrorModel"];
-                };
-            };
-        };
-    };
-    "sam-public-compliance-host": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description Managed host name */
-                hostname: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SamComplianceHostDetail"];
-                };
-            };
-            /** @description Error */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["ErrorModel"];
-                };
-            };
-        };
-    };
-    "sam-public-compliance-products": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SamComplianceProduct"][] | null;
-                };
-            };
-            /** @description Error */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["ErrorModel"];
-                };
-            };
-        };
-    };
-    "sam-public-compliance-product": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description Catalog product identifier */
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SamComplianceProductDetail"];
-                };
-            };
-            /** @description Error */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["ErrorModel"];
-                };
-            };
-        };
-    };
-    "sam-public-compliance-risks": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SamComplianceRisk"][] | null;
-                };
-            };
-            /** @description Error */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["ErrorModel"];
-                };
-            };
-        };
-    };
-    "sam-public-compliance-summary": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SamComplianceSummary"];
                 };
             };
             /** @description Error */

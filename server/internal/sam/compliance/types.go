@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 	"sort"
-	"time"
 
 	"github.com/danielgtaylor/huma/v2"
 	"hackathon/internal/db/sqlc"
@@ -17,8 +16,6 @@ type SamComplianceProduct struct {
 	Vendor              string `json:"vendor"`
 	Category            string `json:"category"`
 	Status              string `json:"status"`
-	Licenses            int64  `json:"licenses"`
-	PurchasedSeats      int64  `json:"purchasedSeats"`
 	LicensedSeats       int64  `json:"licensedSeats"`
 	ExpiredSeats        int64  `json:"expiredSeats"`
 	InstalledDevices    int64  `json:"installedDevices"`
@@ -31,100 +28,27 @@ type SamComplianceProduct struct {
 	RiskCost            int64  `json:"riskCost"`
 	RiskLevel           string `json:"riskLevel"`
 	Recommendation      string `json:"recommendation"`
-	DeltaSeats          int64  `json:"deltaSeats"`
 }
 
 type SamComplianceSummary struct {
-	Products               int64               `json:"products"`
-	ActiveProducts         int64               `json:"activeProducts"`
-	BannedProducts         int64               `json:"bannedProducts"`
-	Installations          int64               `json:"installations"`
-	Devices                int64               `json:"devices"`
-	UnmatchedInstallations int64               `json:"unmatchedInstallations"`
-	LicensedSeats          int64               `json:"licensedSeats"`
-	OverusedSeats          int64               `json:"overusedSeats"`
-	IdleSeats              int64               `json:"idleSeats"`
-	ExpiredSeats           int64               `json:"expiredSeats"`
-	BannedInstallations    int64               `json:"bannedInstallations"`
-	AnnualCost             int64               `json:"annualCost"`
-	OveruseCost            int64               `json:"overuseCost"`
-	IdleCost               int64               `json:"idleCost"`
-	ExpiredCost            int64               `json:"expiredCost"`
-	CostAtRisk             int64               `json:"costAtRisk"`
-	Licenses               int64               `json:"licenses"`
-	PurchasedSeats         int64               `json:"purchasedSeats"`
-	CompliancePercent      int64               `json:"compliancePercent"`
-	RiskLevel              string              `json:"riskLevel"`
-	Recommendations        []string            `json:"recommendations"`
-	Categories             []CategoryBreakdown `json:"categories"`
-	Statuses               []StatusBreakdown   `json:"statuses"`
-}
-
-// CategoryBreakdown powers the category chart and its accessible table.
-type CategoryBreakdown struct {
-	Category         string `json:"category"`
-	Products         int64  `json:"products"`
-	InstalledDevices int64  `json:"installedDevices"`
-	OverusedSeats    int64  `json:"overusedSeats"`
-	RiskCost         int64  `json:"riskCost"`
-}
-
-// StatusBreakdown powers the catalog status chart.
-type StatusBreakdown struct {
-	Status           string `json:"status"`
-	Products         int64  `json:"products"`
-	InstalledDevices int64  `json:"installedDevices"`
-}
-
-// SamComplianceLicense is a license record shown on the product detail screen.
-type SamComplianceLicense struct {
-	ID          int64   `json:"id"`
-	Kind        string  `json:"kind"`
-	SeatsTotal  int64   `json:"seatsTotal"`
-	SeatsUsed   int64   `json:"seatsUsed"`
-	CostPerSeat int64   `json:"costPerSeat"`
-	Currency    string  `json:"currency"`
-	ValidUntil  *string `json:"validUntil"`
-	Status      string  `json:"status"`
-}
-
-// SamComplianceHostUsage links a product to one affected host.
-type SamComplianceHostUsage struct {
-	Hostname      string     `json:"hostname"`
-	Version       string     `json:"version"`
-	LastSeenAt    *time.Time `json:"lastSeenAt"`
-	LicenseStatus string     `json:"licenseStatus"`
-}
-
-// SamComplianceProductDetail is the drill-down target for a compliance row.
-type SamComplianceProductDetail struct {
-	Product  SamComplianceProduct     `json:"product"`
-	Licenses []SamComplianceLicense   `json:"licenses"`
-	Hosts    []SamComplianceHostUsage `json:"hosts"`
-}
-
-// SamComplianceHostInstallation is one discovered installation on a host screen.
-type SamComplianceHostInstallation struct {
-	ID           int64  `json:"id"`
-	ProductID    *int64 `json:"productId,omitempty"`
-	Product      string `json:"product"`
-	Vendor       string `json:"vendor"`
-	Category     string `json:"category"`
-	DetectedName string `json:"detectedName"`
-	Version      string `json:"version"`
-	Status       string `json:"status"`
-}
-
-// SamComplianceHostDetail is the drill-down target for a managed host.
-type SamComplianceHostDetail struct {
-	Hostname      string                          `json:"hostname"`
-	LastSeenAt    *time.Time                      `json:"lastSeenAt"`
-	Installations []SamComplianceHostInstallation `json:"installations"`
-	Licensed      int64                           `json:"licensed"`
-	Expired       int64                           `json:"expired"`
-	Unlicensed    int64                           `json:"unlicensed"`
-	Banned        int64                           `json:"banned"`
-	Inactive      int64                           `json:"inactive"`
+	Products               int64    `json:"products"`
+	ActiveProducts         int64    `json:"activeProducts"`
+	BannedProducts         int64    `json:"bannedProducts"`
+	Installations          int64    `json:"installations"`
+	Devices                int64    `json:"devices"`
+	UnmatchedInstallations int64    `json:"unmatchedInstallations"`
+	LicensedSeats          int64    `json:"licensedSeats"`
+	OverusedSeats          int64    `json:"overusedSeats"`
+	IdleSeats              int64    `json:"idleSeats"`
+	ExpiredSeats           int64    `json:"expiredSeats"`
+	BannedInstallations    int64    `json:"bannedInstallations"`
+	AnnualCost             int64    `json:"annualCost"`
+	OveruseCost            int64    `json:"overuseCost"`
+	IdleCost               int64    `json:"idleCost"`
+	ExpiredCost            int64    `json:"expiredCost"`
+	CostAtRisk             int64    `json:"costAtRisk"`
+	RiskLevel              string   `json:"riskLevel"`
+	Recommendations        []string `json:"recommendations"`
 }
 
 type SamComplianceRisk struct {
@@ -203,8 +127,6 @@ func summaryFromRow(row db.SamComplianceSummaryRow) SamComplianceSummary {
 		IdleCost:               row.IdleCost,
 		ExpiredCost:            row.ExpiredCost,
 		CostAtRisk:             row.OveruseCost + row.ExpiredCost,
-		Licenses:               row.Licenses,
-		PurchasedSeats:         row.PurchasedSeats,
 	}
 	summary.RiskLevel = summaryRiskLevel(summary)
 	summary.Recommendations = summaryRecommendations(summary)
@@ -220,8 +142,6 @@ func productFromRow(row db.SamComplianceProductsRow) SamComplianceProduct {
 		Vendor:              row.Vendor,
 		Category:            row.Category,
 		Status:              row.Status,
-		Licenses:            row.Licenses,
-		PurchasedSeats:      row.PurchasedSeats,
 		LicensedSeats:       row.LicensedSeats,
 		ExpiredSeats:        row.ExpiredSeats,
 		InstalledDevices:    row.InstalledDevices,
@@ -232,15 +152,7 @@ func productFromRow(row db.SamComplianceProductsRow) SamComplianceProduct {
 		AnnualCost:          row.AnnualCost,
 		AvgCostPerSeat:      row.AvgCostPerSeat,
 	}
-	product.DeltaSeats = row.InstalledDevices - row.LicensedSeats
-	if product.Status == "banned" {
-		product.LicensedSeats = 0
-		product.ExpiredSeats = 0
-		product.OverusedSeats = 0
-		product.IdleSeats = 0
-		product.DeltaSeats = product.BannedInstallations
-	}
-	product.RiskCost = (product.OverusedSeats + product.ExpiredSeats + product.IdleSeats) * row.AvgCostPerSeat
+	product.RiskCost = (overused + row.ExpiredSeats + idle) * row.AvgCostPerSeat
 	product.RiskLevel = productRiskLevel(product)
 	product.Recommendation = productRecommendation(product)
 	return product
@@ -263,7 +175,7 @@ func productRiskLevel(product SamComplianceProduct) string {
 	if product.OverusedSeats > 0 || product.ExpiredSeats > 0 {
 		return "high"
 	}
-	if product.IdleSeats > 0 || (product.Status == "inactive" || product.Status == "archived") && product.InstalledDevices > 0 {
+	if product.IdleSeats > 0 || (product.Status == "outdated" || product.Status == "archived") && product.InstalledDevices > 0 {
 		return "medium"
 	}
 	return "low"
@@ -339,9 +251,9 @@ func buildRisks(summary SamComplianceSummary, products []SamComplianceProduct) [
 				Recommendation: product.Recommendation,
 			})
 		}
-		if (product.Status == "inactive" || product.Status == "archived") && product.InstalledDevices > 0 {
+		if (product.Status == "outdated" || product.Status == "archived") && product.InstalledDevices > 0 {
 			risks = append(risks, SamComplianceRisk{
-				Code: "inactive_product", Severity: "medium", ProductID: &id, ProductName: name,
+				Code: "outdated_product", Severity: "medium", ProductID: &id, ProductName: name,
 				Affected: product.InstalledDevices, Recommendation: product.Recommendation,
 			})
 		}

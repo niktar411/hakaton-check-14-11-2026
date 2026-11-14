@@ -288,7 +288,7 @@ func resolveProducts(ctx context.Context, store Store, ids []int64, query string
 
 func buildStatusPlan(ctx context.Context, store Store, args setStatusArgs, intent string) (*Plan, error) {
 	status := strings.ToLower(strings.TrimSpace(args.Status))
-	if status != "active" && status != "inactive" && status != "archived" && status != "banned" {
+	if status != "active" && status != "outdated" && status != "archived" && status != "banned" {
 		return nil, huma.Error422UnprocessableEntity("operator.invalid_status")
 	}
 	products, err := resolveProducts(ctx, store, args.ProductIDs, args.Query, args.All)
@@ -674,7 +674,7 @@ func buildCreateProductPlan(ctx context.Context, store Store, args createProduct
 	if status == "" {
 		status = "active"
 	}
-	if status != "active" && status != "inactive" && status != "archived" && status != "banned" {
+	if status != "active" && status != "outdated" && status != "archived" && status != "banned" {
 		return nil, huma.Error422UnprocessableEntity("operator.invalid_status")
 	}
 	category := strings.TrimSpace(args.Category)

@@ -22,17 +22,6 @@
 	overflow-wrap: anywhere;
 }
 
-.contacts {
-	display: flex;
-	flex-wrap: wrap;
-	gap: var(--space-3) var(--space-5);
-	font-size: var(--text-sm);
-}
-
-.contacts a {
-	color: var(--text-muted);
-}
-
 .note {
 	margin: 0;
 	color: var(--text-muted);
