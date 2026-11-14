@@ -4,6 +4,7 @@ import { Button } from "@/shared/ui/Button";
 
 type Theme = "light" | "dark";
 type ViewTransition = {
+	ready: Promise<void>;
 	finished: Promise<void>;
 	skipTransition: () => void;
 };
@@ -14,6 +15,7 @@ const STORAGE_KEY = "portal-theme";
 let activeTransition: ViewTransition | undefined;
 let transitionId = 0;
 let pendingTheme: Theme | undefined;
+let fallbackTimer: number | undefined;
 
 function readTheme(): Theme {
 	const stored = localStorage.getItem(STORAGE_KEY);
@@ -25,76 +27,91 @@ function readTheme(): Theme {
 
 function applyTheme(theme: Theme) {
 	document.documentElement.dataset.theme = theme;
-	localStorage.setItem(STORAGE_KEY, theme);
+	try {
+		localStorage.setItem(STORAGE_KEY, theme);
+	} catch {
+		// Theme still applies for this page if storage is unavailable.
+	}
+	const toggleButton = document.querySelector<HTMLButtonElement>("[data-theme-toggle]");
+	if (toggleButton) {
+		const label = theme === "dark" ? m.themeLight() : m.themeDark();
+		toggleButton.textContent = label;
+		toggleButton.setAttribute("aria-label", `${label} — ${m.themeToggle()}`);
+	}
 }
 
 export function ThemeToggle() {
 	const [theme, setTheme] = createSignal<Theme>(readTheme());
-	const [labelTheme, setLabelTheme] = createSignal<Theme>(theme());
-	let toggleButton: HTMLButtonElement | undefined;
-	const syncButton = (value: Theme) => {
-		if (!toggleButton) return;
-		const label = value === "dark" ? m.themeLight() : m.themeDark();
-		toggleButton.textContent = label;
-		toggleButton.setAttribute("aria-label", `${label} — ${m.themeToggle()}`);
-	};
-	onMount(() => {
-		setLabelTheme(theme());
-		applyTheme(theme());
-		syncButton(theme());
-	});
+	onMount(() => applyTheme(theme()));
 	const toggle = (event: MouseEvent) => {
 		const current = pendingTheme ?? theme();
 		const next = current === "dark" ? "light" : "dark";
 		const root = document.documentElement;
 		const viewDocument = document as ViewTransitionDocument;
 		const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-		setTheme(next);
 
 		if (!viewDocument.startViewTransition || reducedMotion) {
 			pendingTheme = undefined;
-			setLabelTheme(next);
+			setTheme(next);
 			applyTheme(next);
-			syncButton(next);
 			return;
 		}
 
 		const id = ++transitionId;
 		pendingTheme = next;
 		activeTransition?.skipTransition();
+		if (fallbackTimer !== undefined) window.clearTimeout(fallbackTimer);
+		root.classList.remove("theme-wave-fallback");
 		root.style.setProperty("--theme-wave-x", `${event.clientX}px`);
 		root.style.setProperty("--theme-wave-y", `${event.clientY}px`);
 		root.classList.add("theme-wave");
+		let fallbackStarted = false;
+		const fallbackWave = () => {
+			if (id !== transitionId || fallbackStarted) return;
+			fallbackStarted = true;
+			root.classList.remove("theme-wave");
+			root.classList.add("theme-wave-fallback");
+			setTheme(next);
+			applyTheme(next);
+			fallbackTimer = window.setTimeout(() => {
+				if (id !== transitionId) return;
+				root.classList.remove("theme-wave-fallback");
+				root.style.removeProperty("--theme-wave-x");
+				root.style.removeProperty("--theme-wave-y");
+				fallbackTimer = undefined;
+			}, 900);
+		};
 		const transition = viewDocument.startViewTransition(() => {
 			if (id !== transitionId) return;
 			setTheme(next);
-			setLabelTheme(next);
 			applyTheme(next);
-			syncButton(next);
 		});
 		activeTransition = transition;
+		void transition.ready.catch(fallbackWave);
 		const cleanup = () => {
 			if (id !== transitionId) return;
 			root.classList.remove("theme-wave");
-			root.style.removeProperty("--theme-wave-x");
-			root.style.removeProperty("--theme-wave-y");
+			if (!fallbackStarted) {
+				root.style.removeProperty("--theme-wave-x");
+				root.style.removeProperty("--theme-wave-y");
+			}
 			activeTransition = undefined;
 			pendingTheme = undefined;
 			setTheme(next);
-			setLabelTheme(next === "dark" ? "light" : "dark");
-			setLabelTheme(next);
 			applyTheme(next);
-			syncButton(next);
 		};
-		void transition.finished.then(cleanup, cleanup);
+		void transition.finished.then(cleanup, () => {
+			fallbackWave();
+			cleanup();
+		});
 	};
 	return (
 		<Button
-			ref={(element) => (toggleButton = element)}
-			aria-label={`${labelTheme() === "dark" ? m.themeLight() : m.themeDark()} — ${m.themeToggle()}`}
+			data-theme-toggle="true"
+			aria-label={`${theme() === "dark" ? m.themeLight() : m.themeDark()} — ${m.themeToggle()}`}
 			onClick={toggle}
 		>
-			{labelTheme() === "dark" ? m.themeLight() : m.themeDark()}
+			{theme() === "dark" ? m.themeLight() : m.themeDark()}
 		</Button>
 	);
 }

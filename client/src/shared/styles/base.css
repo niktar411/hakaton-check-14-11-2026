@@ -85,9 +85,44 @@
     clip-path: circle(0 at var(--theme-wave-x, 50vw) var(--theme-wave-y, 50vh));
   }
 
+  /* Fallback when a page error prevents a View Transition snapshot. */
+  html.theme-wave-fallback *,
+  html.theme-wave-fallback body {
+    transition:
+      background-color 0.75s ease,
+      color 0.75s ease,
+      border-color 0.75s ease,
+      box-shadow 0.75s ease,
+      fill 0.75s ease,
+      stroke 0.75s ease;
+  }
+
+  html.theme-wave-fallback::after {
+    position: fixed;
+    z-index: 1000;
+    top: var(--theme-wave-y, 50vh);
+    left: var(--theme-wave-x, 50vw);
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--primary);
+    border-radius: 50%;
+    box-shadow: 0 0 0 1px var(--bg);
+    content: "";
+    pointer-events: none;
+    transform: translate(-50%, -50%) scale(0.1);
+    animation: theme-wave-ripple 0.85s ease-out both;
+  }
+
   @keyframes theme-wave-reveal {
     to {
       clip-path: circle(150vmax at var(--theme-wave-x, 50vw) var(--theme-wave-y, 50vh));
+    }
+  }
+
+  @keyframes theme-wave-ripple {
+    to {
+      opacity: 0;
+      transform: translate(-50%, -50%) scale(100);
     }
   }
 
