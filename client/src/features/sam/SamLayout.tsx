@@ -1,5 +1,5 @@
-import { A } from "@solidjs/router";
-import { For, type JSX } from "solid-js";
+import { A, Outlet } from "@solidjs/router";
+import { For } from "solid-js";
 import * as m from "@/paraglide/messages";
 import s from "./SamLayout.module.css";
 
@@ -14,7 +14,7 @@ const sections = [
 ];
 
 /** Shared frame for every SAM screen: section navigation and a single width. */
-export function SamLayout(props: { children?: JSX.Element }) {
+export function SamLayout() {
 	return (
 		<div class={s.page}>
 			<nav class={s.nav} aria-label={m.samSectionNavigation()}>
@@ -31,7 +31,8 @@ export function SamLayout(props: { children?: JSX.Element }) {
 					)}
 				</For>
 			</nav>
-			{props.children}
+			<Outlet />
 		</div>
 	);
 }
+
