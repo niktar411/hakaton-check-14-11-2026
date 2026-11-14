@@ -1,0 +1,18 @@
+.header {
+	position: sticky;
+	z-index: 40;
+	top: 0;
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--space-4);
+	padding: var(--space-2) var(--space-4);
+	border-bottom: 1px solid var(--border);
+	background: color-mix(in srgb, var(--bg) 92%, transparent);
+	backdrop-filter: blur(12px);
+}
+
+.teamHeader {
+	border-bottom-color: transparent;
+}

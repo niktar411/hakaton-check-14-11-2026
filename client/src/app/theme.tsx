@@ -30,17 +30,21 @@ function applyTheme(theme: Theme) {
 
 export function ThemeToggle() {
 	const [theme, setTheme] = createSignal<Theme>(readTheme());
-	onMount(() => applyTheme(theme()));
+	const [labelTheme, setLabelTheme] = createSignal<Theme>(theme());
+	onMount(() => {
+		setLabelTheme(theme());
+		applyTheme(theme());
+	});
 	const toggle = (event: MouseEvent) => {
 		const current = pendingTheme ?? theme();
 		const next = current === "dark" ? "light" : "dark";
 		const root = document.documentElement;
 		const viewDocument = document as ViewTransitionDocument;
 		const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+		setTheme(next);
 
 		if (!viewDocument.startViewTransition || reducedMotion) {
 			pendingTheme = undefined;
-			setTheme(next);
 			applyTheme(next);
 			return;
 		}
@@ -64,15 +68,19 @@ export function ThemeToggle() {
 			root.style.removeProperty("--theme-wave-y");
 			activeTransition = undefined;
 			pendingTheme = undefined;
+			setTheme(next);
+			setLabelTheme(next === "dark" ? "light" : "dark");
+			setLabelTheme(next);
+			applyTheme(next);
 		};
 		void transition.finished.then(cleanup, cleanup);
 	};
 	return (
 		<Button
-			aria-label={`${theme() === "dark" ? m.themeLight() : m.themeDark()} — ${m.themeToggle()}`}
+			aria-label={`${labelTheme() === "dark" ? m.themeLight() : m.themeDark()} — ${m.themeToggle()}`}
 			onClick={toggle}
 		>
-			{theme() === "dark" ? m.themeLight() : m.themeDark()}
+			{labelTheme() === "dark" ? m.themeLight() : m.themeDark()}
 		</Button>
 	);
 }

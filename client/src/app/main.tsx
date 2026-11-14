@@ -24,6 +24,7 @@ import { Toast } from "@/shared/ui/Toast";
 import { DragonMark } from "@/shared/ui/DragonMark";
 import { CookieBanner } from "@/shared/ui/CookieBanner";
 import { ThemeToggle } from "@/app/theme";
+import s from "./App.module.css";
 import TeamPage from "@/features/team/TeamPage";
 import { SiteConfigProvider } from "@/app/site-config";
 import { lazyPage } from "@/app/lazyPage";
@@ -243,7 +244,7 @@ function App(props: { children?: JSX.Element }) {
 						when={!adminArea() || publicAdminLogin()}
 						fallback={
 							<div class="mx-auto flex min-h-dvh w-full max-w-7xl flex-col gap-6 p-4 md:p-8">
-								<header class="border-border flex flex-wrap items-center justify-between gap-4 border-b pb-4">
+								<header class={s.header}>
 									<A class="text-text text-xl font-bold no-underline" href="/admin">
 										{m.administrationPageTitle()}
 									</A>
@@ -257,13 +258,7 @@ function App(props: { children?: JSX.Element }) {
 							<a href="#main-content" class="focus:bg-surface focus:text-text sr-only focus:not-sr-only focus:absolute focus:z-50 focus:p-2">
 								{m.skipToContent()}
 							</a>
-							<header
-								class={
-									teamArea()
-										? "flex flex-wrap items-center justify-between gap-4 px-4"
-										: "border-border flex flex-wrap items-center justify-between gap-4 border-b px-4 pb-4"
-								}
-							>
+							<header classList={{ [s.header]: true, [s.teamHeader]: teamArea() }}>
 								<A class="text-text inline-flex items-center gap-2 text-xl font-bold no-underline" href="/">
 									<DragonMark class="size-8" />
 									{m.appTitle()}

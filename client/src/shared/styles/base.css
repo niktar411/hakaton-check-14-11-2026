@@ -75,20 +75,14 @@
   }
 
   /* Круговая волна раскрывает новую тему от переключателя. */
-  html.theme-wave::view-transition-old(root) {
-    animation: theme-wave-old 1s ease-out both;
+  html.theme-wave::view-transition-group(root) {
+    animation: none;
   }
 
   html.theme-wave::view-transition-new(root) {
     z-index: 1;
-    animation: theme-wave-reveal 1s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation: theme-wave-reveal 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
     clip-path: circle(0 at var(--theme-wave-x, 50vw) var(--theme-wave-y, 50vh));
-  }
-
-  @keyframes theme-wave-old {
-    to {
-      opacity: 0.92;
-    }
   }
 
   @keyframes theme-wave-reveal {
