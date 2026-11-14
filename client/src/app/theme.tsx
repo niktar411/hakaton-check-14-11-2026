@@ -27,7 +27,10 @@ export function ThemeToggle() {
 		applyTheme(next);
 	};
 	return (
-		<Button aria-label={m.themeToggle()} onClick={toggle}>
+		<Button
+			aria-label={`${theme() === "dark" ? m.themeLight() : m.themeDark()} — ${m.themeToggle()}`}
+			onClick={toggle}
+		>
 			{theme() === "dark" ? m.themeLight() : m.themeDark()}
 		</Button>
 	);

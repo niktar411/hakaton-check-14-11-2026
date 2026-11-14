@@ -14,26 +14,11 @@ const sections = [
 	{ href: "/sam/assistant", label: () => m.samAssistantPageTitle() },
 ];
 
-/** Чёрная полоса-заголовок раздела с номером и выходом за левую границу. */
-export function SamSectionBand(props: {
-	num: string;
-	title: string;
-	meta?: string;
-}) {
-	return (
-		<div class={s.secBand}>
-			<span class={s.secNum}>{props.num}</span>
-			<h2 class={s.secTitle}>{props.title}</h2>
-			{props.meta && <p class={s.secMeta}>{props.meta}</p>}
-		</div>
-	);
-}
-
 /** Shared frame for every SAM screen: section navigation and a single width. */
 export function SamLayout(props: { children?: JSX.Element }) {
 	return (
-		<div classList={{ [s.page]: true, [s.samRoot]: true }}>
-			<aside class={s.disclaimer}>
+		<div class={s.page}>
+			<aside class={s.disclaimer} data-tone="warning">
 				<strong>{m.samDemoDisclaimer()}</strong>
 				<span>{m.samDemoDisclaimerDetails()}</span>
 			</aside>

@@ -135,6 +135,7 @@ export default function TeamPage() {
 						aria-valuemin={0}
 						aria-valuemax={100}
 						aria-valuenow={progress()}
+						aria-label={m.teamPlanProgress({ done: completed(), total: total() })}
 					>
 						<span
 							class={s.progressFill}
@@ -201,7 +202,7 @@ export default function TeamPage() {
 										type="button"
 										class={s.memberButton}
 										onClick={() => setSelectedMember(member)}
-										aria-label={`${member.name} — ${m.teamMemberDetails()}`}
+										aria-label={`${member.name} ${member.role} — ${m.teamMemberDetails()}`}
 									>
 										<span class={s.avatar} aria-hidden="true">
 											<Show when={member.photo} fallback={initials(member.name)}>
