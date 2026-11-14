@@ -1,5 +1,26 @@
 import * as m from "@/paraglide/messages";
+import { formatMoney } from "@/shared/lib/format";
 import type { SamTone } from "./SamPage";
+
+export function riskCostLabel(value: number) {
+	return value > 0 ? formatMoney(value) : m.samRiskCostUnknown();
+}
+
+export function productRiskCostLabel(product: {
+	riskCost: number;
+	overusedSeats: number;
+	expiredSeats: number;
+	idleSeats: number;
+	bannedInstallations: number;
+}) {
+	if (product.riskCost > 0) return formatMoney(product.riskCost);
+	const hasViolation =
+		product.overusedSeats > 0 ||
+		product.expiredSeats > 0 ||
+		product.idleSeats > 0 ||
+		product.bannedInstallations > 0;
+	return hasViolation ? m.samRiskCostUnknown() : formatMoney(0);
+}
 
 export function licenseKindLabel(value: string) {
 	switch (value) {
@@ -80,6 +101,115 @@ export function findingStatusLabel(value: string) {
 			return m.samFindingResolved();
 		default:
 			return value;
+	}
+}
+
+export function productStatusLabel(value: string) {
+	switch (value) {
+		case "active":
+			return m.samProductStatusActive();
+		case "inactive":
+			return m.samProductStatusInactive();
+		case "archived":
+			return m.samProductStatusArchived();
+		case "banned":
+			return m.samProductStatusBanned();
+		default:
+			return value;
+	}
+}
+
+export function productStatusTone(value: string): SamTone {
+	switch (value) {
+		case "active":
+			return "success";
+		case "inactive":
+			return "warning";
+		case "archived":
+			return "neutral";
+		case "banned":
+			return "danger";
+		default:
+			return "neutral";
+	}
+}
+
+export function riskLevelLabel(value: string) {
+	switch (value) {
+		case "high":
+			return m.samRiskLevelHigh();
+		case "medium":
+			return m.samRiskLevelMedium();
+		case "low":
+			return m.samRiskLevelLow();
+		default:
+			return value;
+	}
+}
+
+export function riskLevelTone(value: string): SamTone {
+	switch (value) {
+		case "high":
+			return "danger";
+		case "medium":
+			return "warning";
+		case "low":
+			return "success";
+		default:
+			return "neutral";
+	}
+}
+
+export function riskCodeLabel(value: string) {
+	switch (value) {
+		case "banned_product":
+			return m.samRiskCodeBanned();
+		case "license_overuse":
+			return m.samRiskCodeOveruse();
+		case "expired_license":
+			return m.samRiskCodeExpired();
+		case "idle_license":
+			return m.samRiskCodeIdle();
+		case "inactive_product":
+			return m.samRiskCodeInactive();
+		case "unmatched_installations":
+			return m.samRiskCodeUnmatched();
+		default:
+			return value;
+	}
+}
+
+export function hostLicenseStatusLabel(value: string) {
+	switch (value) {
+		case "licensed":
+			return m.samLicenseStatusLicensed();
+		case "expired":
+			return m.samLicenseStatusExpired();
+		case "unlicensed":
+			return m.samLicenseStatusUnlicensed();
+		case "banned":
+			return m.samLicenseStatusBanned();
+		case "inactive":
+			return m.samLicenseStatusInactive();
+		default:
+			return value;
+	}
+}
+
+export function hostLicenseStatusTone(value: string): SamTone {
+	switch (value) {
+		case "licensed":
+			return "success";
+		case "expired":
+			return "warning";
+		case "unlicensed":
+			return "danger";
+		case "banned":
+			return "danger";
+		case "inactive":
+			return "warning";
+		default:
+			return "neutral";
 	}
 }
 

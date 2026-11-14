@@ -21,7 +21,15 @@ export function Footer(props: {
 				>
 					<A href="/">{m.teamPageTitle()}</A>
 				</Show>
+				<A href="/terms">{m.footerTerms()}</A>
+				<A href="/policy">{m.footerPolicy()}</A>
+				<A href="/consent">{m.footerConsent()}</A>
+				<A href="/cookies">{m.footerCookies()}</A>
 			</nav>
+			<div class={s.contacts}>
+				<a href={`mailto:${m.footerEmail()}`}>{m.footerEmail()}</a>
+				<a href={`tel:${m.footerPhone().replaceAll(" ", "")}`}>{m.footerPhone()}</a>
+			</div>
 			<p class={s.note}>
 				{props.team ? m.teamFooterNote() : m.publicFooterNote()}
 			</p>

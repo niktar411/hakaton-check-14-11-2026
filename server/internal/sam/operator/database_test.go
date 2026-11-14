@@ -146,11 +146,11 @@ func TestDatabaseOperatorLifecycle(t *testing.T) {
 		t.Fatal("undo audit record is missing")
 	}
 
-	stale, err := service.Propose(ctx, 0, "niktar411", "set_status", `{"query":"Notepad++","status":"inactive"}`)
+	stale, err := service.Propose(ctx, 0, "niktar411", "set_status", `{"query":"Notepad++","status":"outdated"}`)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err := pool.Exec(ctx, `UPDATE sam_products SET status='inactive' WHERE name='Notepad++'`); err != nil {
+	if _, err := pool.Exec(ctx, `UPDATE sam_products SET status='outdated' WHERE name='Notepad++'`); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := service.Apply(ctx, "niktar411", true, stale.ID, ""); err == nil {
