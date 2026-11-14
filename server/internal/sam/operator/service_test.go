@@ -810,6 +810,25 @@ func TestFallbackMatchesAllChromes(t *testing.T) {
 	}
 }
 
+func TestFallbackBansProduct(t *testing.T) {
+	store := newFakeStore()
+	store.products = []db.SamProduct{{ID: 1, Name: "Radmin", Status: "active"}}
+	service := testOperator(store, &fakeModel{ready: false})
+	result, err := service.Chat(context.Background(), "niktar411", 0, "Поставь Radmin статус запрещённый", "0123456789abcdef")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !result.Fallback || len(result.Actions) != 1 {
+		t.Fatalf("unexpected fallback result: %+v", result)
+	}
+	if result.Actions[0].Intent != "set_status" || !strings.Contains(string(store.actions[result.Actions[0].ID].Payload), "banned") {
+		t.Fatalf("unexpected banned action: %+v", result.Actions[0])
+	}
+	if store.businessWrite != 0 {
+		t.Fatal("fallback preview wrote business data")
+	}
+}
+
 func TestUndoOnlyLatestApplied(t *testing.T) {
 	store := newFakeStore()
 	store.products = []db.SamProduct{

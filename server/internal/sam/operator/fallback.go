@@ -25,6 +25,8 @@ var productStopWords = map[string]bool{
 	"статус": true, "статусом": true, "status": true,
 	"неактивный": true, "неактивную": true, "неактив": true,
 	"активный": true, "активную": true, "актив": true,
+	"запрещённый": true, "запрещенный": true, "запрещённую": true, "запрещенную": true,
+	"banned":   true,
 	"архивный": true, "архивную": true, "архив": true,
 	"категория": true, "категорию": true, "category": true,
 	"создай": true, "добавь": true, "создать": true, "добавить": true,
@@ -77,6 +79,8 @@ func afterKeyword(prompt, keyword string) string {
 
 func fallbackStatus(prompt string) string {
 	switch {
+	case strings.Contains(prompt, "запрещ"):
+		return "banned"
 	case strings.Contains(prompt, "неактив"):
 		return "inactive"
 	case strings.Contains(prompt, "архив"):

@@ -45,7 +45,7 @@ func toolDefinitions() []llm.Tool {
 			"productIds": intArraySchema("ID продуктов, если известны."),
 			"query":      stringSchema("Название или часть названия продукта."),
 			"all":        boolSchema("Применить ко всем продуктам. Потребует контрольную фразу."),
-			"status":     map[string]any{"type": "string", "enum": []string{"active", "inactive", "archived"}, "description": "Новый статус."},
+			"status":     map[string]any{"type": "string", "enum": []string{"active", "inactive", "archived", "banned"}, "description": "Новый статус."},
 		}, []string{"status"}),
 		tool("propose_set_category", "Предложить смену категории продуктов SAM. Только preview.", map[string]any{
 			"productIds": intArraySchema("ID продуктов, если известны."),
@@ -75,7 +75,7 @@ func toolDefinitions() []llm.Tool {
 			"vendor":   stringSchema("Вендор."),
 			"version":  stringSchema("Версия."),
 			"category": stringSchema("Категория."),
-			"status":   map[string]any{"type": "string", "enum": []string{"active", "inactive", "archived"}},
+			"status":   map[string]any{"type": "string", "enum": []string{"active", "inactive", "archived", "banned"}},
 			"aliases":  stringArraySchema("Необязательные алиасы."),
 			"all":      boolSchema("Служебный флаг, обычно false."),
 		}, []string{"name"}),
