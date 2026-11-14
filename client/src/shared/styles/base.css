@@ -74,11 +74,27 @@
     }
   }
 
-  /* Смена темы: снимок старой страницы растворяется в новой (document.startViewTransition). */
-  html.theme-vt::view-transition-old(root),
-  html.theme-vt::view-transition-new(root) {
-    animation-duration: 0.45s;
-    animation-timing-function: var(--ease);
+  /* Круговая волна раскрывает новую тему от переключателя. */
+  html.theme-wave::view-transition-old(root) {
+    animation: theme-wave-old 1.3s ease-out both;
+  }
+
+  html.theme-wave::view-transition-new(root) {
+    z-index: 1;
+    animation: theme-wave-reveal 1.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+    clip-path: circle(0 at var(--theme-wave-x, 50vw) var(--theme-wave-y, 50vh));
+  }
+
+  @keyframes theme-wave-old {
+    to {
+      opacity: 0.92;
+    }
+  }
+
+  @keyframes theme-wave-reveal {
+    to {
+      clip-path: circle(150vmax at var(--theme-wave-x, 50vw) var(--theme-wave-y, 50vh));
+    }
   }
 
   @media (prefers-reduced-motion: reduce) {
