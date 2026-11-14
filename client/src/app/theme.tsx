@@ -13,6 +13,7 @@ type ViewTransitionDocument = Document & {
 const STORAGE_KEY = "portal-theme";
 let activeTransition: ViewTransition | undefined;
 let transitionId = 0;
+let pendingTheme: Theme | undefined;
 
 function readTheme(): Theme {
 	const stored = localStorage.getItem(STORAGE_KEY);
@@ -31,26 +32,30 @@ export function ThemeToggle() {
 	const [theme, setTheme] = createSignal<Theme>(readTheme());
 	onMount(() => applyTheme(theme()));
 	const toggle = (event: MouseEvent) => {
-		const next = theme() === "dark" ? "light" : "dark";
+		const current = pendingTheme ?? theme();
+		const next = current === "dark" ? "light" : "dark";
 		const root = document.documentElement;
 		const viewDocument = document as ViewTransitionDocument;
 		const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-		const update = () => {
-			setTheme(next);
-			applyTheme(next);
-		};
 
 		if (!viewDocument.startViewTransition || reducedMotion) {
-			update();
+			pendingTheme = undefined;
+			setTheme(next);
+			applyTheme(next);
 			return;
 		}
 
 		const id = ++transitionId;
+		pendingTheme = next;
 		activeTransition?.skipTransition();
 		root.style.setProperty("--theme-wave-x", `${event.clientX}px`);
 		root.style.setProperty("--theme-wave-y", `${event.clientY}px`);
 		root.classList.add("theme-wave");
-		const transition = viewDocument.startViewTransition(update);
+		const transition = viewDocument.startViewTransition(() => {
+			if (id !== transitionId) return;
+			setTheme(next);
+			applyTheme(next);
+		});
 		activeTransition = transition;
 		const cleanup = () => {
 			if (id !== transitionId) return;
@@ -58,6 +63,7 @@ export function ThemeToggle() {
 			root.style.removeProperty("--theme-wave-x");
 			root.style.removeProperty("--theme-wave-y");
 			activeTransition = undefined;
+			pendingTheme = undefined;
 		};
 		void transition.finished.then(cleanup, cleanup);
 	};
