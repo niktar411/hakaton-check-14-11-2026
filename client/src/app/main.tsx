@@ -23,16 +23,9 @@ import SamHostPage from "@/features/sam/SamHostPage";
 import SamMatchingPage from "@/features/sam/SamMatchingPage";
 import SamAssistantPage from "@/features/sam/SamAssistantPage";
 import { SiteConfigProvider } from "@/app/site-config";
+import { initTheme, ThemeToggle } from "@/app/theme";
 
-function isSamPath(pathname: string) {
-	return pathname === "/sam" || pathname.startsWith("/sam/");
-}
-
-// Set the theme before the first render so a direct /sam visit does not flash
-// the light palette while Solid mounts.
-document.documentElement.dataset.theme = isSamPath(window.location.pathname)
-	? "dark"
-	: "light";
+initTheme();
 
 function PublicNavigation(props: { publicUrl?: string }) {
 	return (
@@ -57,7 +50,6 @@ function App(props: { children?: JSX.Element }) {
 		adminArea() ||
 		location.pathname === "/coding" ||
 		location.pathname.startsWith("/coding/");
-	const samArea = () => isSamPath(location.pathname);
 	createEffect(() => {
 		const robots = document.querySelector('meta[name="robots"]');
 		if (robots) {
@@ -66,9 +58,6 @@ function App(props: { children?: JSX.Element }) {
 				privateArea() ? "noindex,nofollow" : "index,follow",
 			);
 		}
-	});
-	createEffect(() => {
-		document.documentElement.dataset.theme = samArea() ? "dark" : "light";
 	});
 	return (
 		<SiteConfigProvider
@@ -88,7 +77,10 @@ function App(props: { children?: JSX.Element }) {
 							<A class="text-text text-xl font-bold no-underline" href="/admin">
 								{m.administrationPageTitle()}
 							</A>
-							<A href="/">{m.publicSite()}</A>
+							<div class="flex flex-wrap items-center gap-3">
+								<A href="/">{m.publicSite()}</A>
+								<ThemeToggle />
+							</div>
 						</header>
 						{props.children}
 					</div>
@@ -99,9 +91,12 @@ function App(props: { children?: JSX.Element }) {
 						<A class="text-text text-xl font-bold no-underline" href="/">
 							{m.appTitle()}
 						</A>
-						<PublicNavigation
-							publicUrl={config.error ? undefined : config()?.publicBaseUrl}
-						/>
+						<div class="flex flex-wrap items-center gap-3">
+							<PublicNavigation
+								publicUrl={config.error ? undefined : config()?.publicBaseUrl}
+							/>
+							<ThemeToggle />
+						</div>
 					</header>
 					<div class="flex flex-1 flex-col">{props.children}</div>
 					<Footer

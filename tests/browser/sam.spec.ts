@@ -441,14 +441,26 @@ test("risk rows lead to product and host details", async ({ page }) => {
 	).toBeVisible();
 });
 
-test("SAM section uses the dark theme and the rest stays light", async ({
-	page,
-}) => {
-	await mockCompliance(page);
+test("theme toggle switches the whole site and persists", async ({ page }) => {
+	await page.emulateMedia({ colorScheme: "light" });
+	const state = await mockCompliance(page);
+	state.mode = "success";
+	await page.goto("/");
+	const toggle = page.getByRole("button", { name: "Переключить тему" });
+	await expect(toggle).toBeVisible();
+	await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+
+	await toggle.click();
+	await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+	await expect(toggle).toHaveText("Светлая тема");
+
 	await page.goto("/sam");
 	await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
-	await page.goto("/sam/compliance");
+	await page.reload();
 	await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+
+	await toggle.click();
+	await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
 	await page.goto("/");
 	await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
 });
@@ -499,6 +511,9 @@ test("SAM pages fit 375px and 1280px without horizontal scrolling", async ({
 		"/sam/matching",
 		"/sam/assistant",
 	];
+	await page.addInitScript(() => {
+		localStorage.setItem("portal-theme", "dark");
+	});
 	for (const width of [375, 1280]) {
 		await page.setViewportSize({ width, height: 900 });
 		for (const path of paths) {

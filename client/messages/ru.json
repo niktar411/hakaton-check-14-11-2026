@@ -400,5 +400,8 @@
   "samProductPageTitle": "SAM: карточка продукта",
   "samHostPageTitle": "SAM: карточка хоста",
   "samCostPerSeat": "Цена места",
-  "samRiskCostUnknown": "Не оценено"
+  "samRiskCostUnknown": "Не оценено",
+  "themeToggle": "Переключить тему",
+  "themeDark": "Тёмная тема",
+  "themeLight": "Светлая тема"
 }
