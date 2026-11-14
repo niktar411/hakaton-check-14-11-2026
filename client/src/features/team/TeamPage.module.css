@@ -370,10 +370,24 @@
 }
 
 .assistantGrid {
+	position: relative;
 	display: grid;
 	grid-template-columns: minmax(0, 1fr);
 	align-items: start;
-	gap: var(--space-8);
+	gap: 0;
+	overflow: hidden;
+	border: 1px solid var(--border);
+	border-radius: var(--radius-lg);
+	background: var(--surface-2);
+	isolation: isolate;
+	transition:
+		border-color var(--dur) var(--ease),
+		box-shadow var(--dur) var(--ease);
+}
+
+.assistantGrid:focus-within {
+	border-color: color-mix(in srgb, var(--primary) 45%, var(--border));
+	box-shadow: 0 18px 42px color-mix(in srgb, var(--primary) 12%, transparent);
 }
 
 .assistantCopy {
@@ -383,10 +397,7 @@
 	gap: var(--space-3);
 	padding: var(--space-6);
 	overflow: hidden;
-	border: 1px solid var(--border);
-	border-radius: var(--radius-lg);
-	background: var(--surface-2);
-	isolation: isolate;
+	background: transparent;
 }
 
 .assistantCopy h2 {
@@ -469,29 +480,16 @@
 	width: 100%;
 	min-width: 0;
 	padding: var(--space-5);
-	overflow: hidden;
-	border: 1px solid var(--border);
-	border-radius: var(--radius-lg);
-	background: var(--surface);
-	box-shadow: 0 18px 46px color-mix(in srgb, var(--text) 9%, transparent);
-	transition:
-		border-color var(--dur) var(--ease),
-		box-shadow var(--dur) var(--ease);
+	border-top: 1px solid var(--border);
+	background: transparent;
 }
 
 .assistantCard::before {
-	position: absolute;
-	top: 0;
-	right: 0;
-	left: 0;
-	height: 3px;
-	background: linear-gradient(90deg, var(--primary), var(--teal-600));
-	content: "";
+	content: none;
 }
 
 .assistantCard:focus-within {
-	border-color: color-mix(in srgb, var(--primary) 45%, var(--border));
-	box-shadow: 0 20px 52px color-mix(in srgb, var(--primary) 16%, transparent);
+	border-color: var(--border);
 }
 
 .memberGrid {
@@ -770,7 +768,6 @@
 
 	.assistantGrid {
 		grid-template-columns: 1fr;
-		gap: var(--space-5);
 	}
 }
 
@@ -810,7 +807,6 @@
 	.assistantCopy,
 	.assistantCard {
 		padding: var(--space-4);
-		border-radius: var(--radius-md);
 	}
 
 	.assistantOrb {

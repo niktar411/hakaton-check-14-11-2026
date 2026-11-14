@@ -1,4 +1,4 @@
-import { createSignal, createUniqueId, For, Show } from "solid-js";
+import { createSignal, createUniqueId, For, onMount, Show } from "solid-js";
 import * as m from "@/paraglide/messages";
 import { api, ApiError, requestId, unwrap } from "@/shared/api";
 import type { components } from "@/shared/api/schema";
@@ -12,10 +12,28 @@ type QuestionResult = components["schemas"]["Answer"];
 export function PublicAssistant() {
 	const toast = useToast();
 	const fieldId = createUniqueId();
+	let questionField: HTMLTextAreaElement | undefined;
+	let defaultQuestionHeight = 0;
 	const [question, setQuestion] = createSignal("");
 	const [result, setResult] = createSignal<QuestionResult>();
 	const [pending, setPending] = createSignal(false);
 	const [failed, setFailed] = createSignal(false);
+
+	function resizeQuestion(field = questionField) {
+		if (!field) return;
+		field.style.height = "auto";
+		const style = getComputedStyle(field);
+		const borders =
+			Number.parseFloat(style.borderTopWidth) +
+			Number.parseFloat(style.borderBottomWidth);
+		field.style.height = `${Math.max(defaultQuestionHeight, field.scrollHeight + borders)}px`;
+	}
+
+	onMount(() => {
+		if (!questionField) return;
+		defaultQuestionHeight = questionField.getBoundingClientRect().height;
+		resizeQuestion();
+	});
 
 	async function submit(event: SubmitEvent) {
 		event.preventDefault();
@@ -54,7 +72,11 @@ export function PublicAssistant() {
 					maxlength={4000}
 					rows={4}
 					value={question()}
-					onInput={(event) => setQuestion(event.currentTarget.value)}
+					ref={(element) => (questionField = element)}
+					onInput={(event) => {
+						setQuestion(event.currentTarget.value);
+						resizeQuestion(event.currentTarget);
+					}}
 					placeholder={m.questionPlaceholder()}
 				/>
 				<Button

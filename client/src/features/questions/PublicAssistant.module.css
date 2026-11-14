@@ -18,7 +18,8 @@
 .form textarea {
 	width: 100%;
 	box-sizing: border-box;
-	resize: vertical;
+	overflow-y: hidden;
+	resize: none;
 	padding: var(--space-3);
 	border: 1px solid var(--border);
 	border-radius: var(--radius-sm);
