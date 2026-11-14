@@ -9,6 +9,7 @@ import {
 	createEffect,
 	createResource,
 	createSignal,
+	onMount,
 	type JSX,
 	Show,
 } from "solid-js";
@@ -102,6 +103,13 @@ function LogoutButton(props: { csrf?: string; onLoggedOut: () => void }) {
 function App(props: { children?: JSX.Element }) {
 	const location = useLocation();
 	const navigate = useNavigate();
+	// Solid render appends instead of clearing the mount node, so the static
+	// first-paint splash would stay on top of the page and block clicks.
+	onMount(() => {
+		for (const node of document.querySelectorAll("[data-boot]")) {
+			node.remove();
+		}
+	});
 	const [config, { refetch }] = createResource(async () =>
 		unwrap(await api.GET("/api/public/site-config")),
 	);

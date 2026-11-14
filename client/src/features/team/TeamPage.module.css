@@ -330,11 +330,14 @@
 .progressFill {
 	position: relative;
 	display: block;
+	width: 100%;
 	height: 100%;
 	overflow: hidden;
 	border-radius: var(--radius-full);
 	background: linear-gradient(90deg, var(--primary), var(--teal-600));
-	transition: width 0.8s var(--ease);
+	transform-origin: 0 50%;
+	transition: transform 0.8s var(--ease);
+	will-change: transform;
 }
 
 .progressFill::after {

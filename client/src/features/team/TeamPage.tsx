@@ -138,7 +138,7 @@ export default function TeamPage() {
 					>
 						<span
 							class={s.progressFill}
-							style={{ width: `${progress()}%` }}
+							style={{ transform: `scaleX(${progress() / 100})` }}
 						/>
 					</div>
 					<p class={s.progressHint}>{m.plannerPublicHint()}</p>
