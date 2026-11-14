@@ -12,7 +12,6 @@ import { api, unwrap } from "@/shared/api";
 import type { components } from "@/shared/api/schema";
 import { formatDate } from "@/shared/lib/format";
 import { Dialog } from "@/shared/ui/Dialog";
-import { DragonMark } from "@/shared/ui/DragonMark";
 import { EmptyState, ErrorState, LoadingState } from "@/shared/ui/State";
 import { PublicAssistant } from "@/features/questions/PublicAssistant";
 import {
@@ -20,7 +19,6 @@ import {
 	plannerStatus,
 } from "@/features/planner/PlannerPage";
 import { DragonScene } from "./DragonScene";
-import type { TeamMember } from "./readme-team";
 import { team } from "./team-data";
 import s from "./TeamPage.module.css";
 
@@ -41,25 +39,8 @@ function initials(name: string) {
 		.join("");
 }
 
-/** First sentence of the bio, used as the short summary in the profile window. */
-function summaryOf(member: TeamMember) {
-	const bio = member.bio?.trim();
-	if (!bio) return member.role;
-	const sentence = /^.+?[.!?](?:\s|$)/.exec(bio);
-	return sentence ? sentence[0].trim() : bio;
-}
-
-function TelegramIcon() {
-	return (
-		<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-			<path d="M21.9 4.3 2.9 11.6c-1 .4-1 1.8.1 2.1l4.7 1.5 1.8 5.4c.3.9 1.4 1.1 2 .4l2.5-2.6 4.8 3.5c.8.6 1.9.2 2.1-.8l3-14.7c.2-1-.8-1.8-2-1.4Z" />
-		</svg>
-	);
-}
-
 export default function TeamPage() {
 	const [selected, setSelected] = createSignal<PublicBlock>();
-	const [selectedMember, setSelectedMember] = createSignal<TeamMember>();
 	const [planner, { refetch }] = createResource(
 		async () => unwrap(await api.GET("/api/public/planner")) ?? [],
 	);
@@ -185,6 +166,7 @@ export default function TeamPage() {
 								blocks={planner() ?? []}
 								team={false}
 								contained
+								wheelZoom={false}
 								onSelect={(block) => {
 									if (!("owner" in block)) setSelected(block);
 								}}
@@ -195,11 +177,18 @@ export default function TeamPage() {
 			</section>
 
 			<section id="team" class={s.section} aria-labelledby="team-people-title">
-				<div class={s.teamHeading}>
-					<span class={s.teamHeadingLine} aria-hidden="true" />
+				<header class={s.sectionHeader}>
+					<p class={s.sectionLabel}>
+						<span class={s.sectionIndex} aria-hidden="true">
+							02
+						</span>
+						{m.teamTeamLabel()}
+					</p>
 					<h2 id="team-people-title">{m.teamTeamTitle()}</h2>
-					<span class={s.teamHeadingLine} aria-hidden="true" />
-				</div>
+					<p class={s.sectionText}>
+						{team.summary ?? m.teamTeamDescription()}
+					</p>
+				</header>
 
 				<Show
 					when={team.members.length > 0}
@@ -212,43 +201,27 @@ export default function TeamPage() {
 									class={s.memberCard}
 									style={{ "animation-delay": `${index() * 70}ms` }}
 								>
-									<button
-										type="button"
-										class={s.memberCardButton}
-										aria-haspopup="dialog"
-										aria-label={`${member.name}: ${m.teamMemberDetails()}`}
-										onClick={() => setSelectedMember(member)}
-									>
-										<span class={s.memberPhotoFrame}>
-											<Show
-												when={member.photo}
-												fallback={
-													<>
-														<DragonMark class={s.memberPhotoMark} />
-														<span
-															class={s.memberPhotoInitials}
-															aria-hidden="true"
-														>
-															{initials(member.name)}
-														</span>
-													</>
-												}
+									<span class={s.memberNumber} aria-hidden="true">
+										{String(index() + 1).padStart(2, "0")}
+									</span>
+									<span class={s.avatar} aria-hidden="true">
+										{initials(member.name)}
+									</span>
+									<h3>{member.name}</h3>
+									<p class={s.memberRole}>{member.role}</p>
+									<Show when={member.telegram}>
+										{(url) => (
+											<a
+												class={s.memberLink}
+												href={url()}
+												target="_blank"
+												rel="noopener noreferrer"
+												aria-label={`${m.teamTelegram()}: ${member.name}`}
 											>
-												{(photo) => (
-													<img
-														class={s.memberPhotoImage}
-														src={photo()}
-														alt=""
-														loading="lazy"
-													/>
-												)}
-											</Show>
-										</span>
-										<span class={s.memberCardBody}>
-											<span class={s.memberCardName}>{member.name}</span>
-											<span class={s.memberRole}>{member.role}</span>
-										</span>
-									</button>
+												{m.teamTelegram()}
+											</a>
+										)}
+									</Show>
 								</li>
 							)}
 						</For>
@@ -287,128 +260,6 @@ export default function TeamPage() {
 					</div>
 				</div>
 			</section>
-
-			<Dialog
-				open={!!selectedMember()}
-				title={selectedMember()?.name ?? m.teamPageTitle()}
-				hideHeader
-				onClose={() => setSelectedMember(undefined)}
-			>
-				<Show when={selectedMember()}>
-					{(member) => (
-						<div class={s.memberProfile}>
-							<div class={s.memberTop}>
-								<div class={s.memberPortraitColumn}>
-									<Show
-										when={member().photo}
-										fallback={
-											<span class={s.memberPortraitFallback}>
-												<DragonMark class={s.memberPortraitMark} />
-												<span>{initials(member().name)}</span>
-											</span>
-										}
-									>
-										{(photo) => (
-											<img
-												class={s.memberPortrait}
-												src={photo()}
-												alt=""
-												loading="lazy"
-											/>
-										)}
-									</Show>
-									<Show when={member().telegram}>
-										{(url) => (
-											<a
-												class={s.memberSocial}
-												href={url()}
-												target="_blank"
-												rel="noopener noreferrer"
-												aria-label={`${m.teamTelegram()}: ${member().name}`}
-											>
-												<TelegramIcon />
-											</a>
-										)}
-									</Show>
-								</div>
-
-								<div class={s.memberIntro}>
-									<p class={s.memberEyebrow}>
-										<span class={s.memberEyebrowDot} aria-hidden="true" />
-										{m.teamMemberNumber({
-											number: String(
-												team.members.indexOf(member()) + 1,
-											).padStart(2, "0"),
-										})}
-									</p>
-									<h2 class={s.memberProfileName}>{member().name}</h2>
-									<p class={s.memberDialogRole}>{member().role}</p>
-									<p class={s.memberSummary}>{summaryOf(member())}</p>
-								</div>
-							</div>
-
-							<Show when={member().quote}>
-								{(quote) => (
-									<blockquote class={s.memberQuote}>
-										<p>«{quote()}»</p>
-									</blockquote>
-								)}
-							</Show>
-
-							<div class={s.memberDivider} />
-
-							<div class={s.memberAbout}>
-								<div class={s.memberBio}>
-									<h3>{m.teamMemberBio()}</h3>
-									<Show when={member().bio}>
-										{(bio) => <p>{bio()}</p>}
-									</Show>
-								</div>
-
-								<div class={s.codeCard} aria-hidden="true">
-									<div class={s.codeBar}>
-										<span class={s.codeDotRed} />
-										<span class={s.codeDotYellow} />
-										<span class={s.codeDotGreen} />
-										<span class={s.codeFile}>profile.js</span>
-									</div>
-									<pre class={s.codeBlock}>
-										<code>
-											<span class={s.codeKeyword}>const</span>{" "}
-											<span class={s.codeDeveloper}>developer</span> =
-											{" "}
-											{"{"}
-											{"\n"} <span class={s.codeProperty}>name</span>:{" "}
-											<span class={s.codeString}>
-												"{member().name}"
-											</span>
-											,
-											{"\n"} <span class={s.codeProperty}>role</span>:{" "}
-											<span class={s.codeStringAlt}>
-												"{member().role}"
-											</span>
-											,
-											{"\n"} <span class={s.codeProperty}>goal</span>:{" "}
-											<span class={s.codeString}>
-												"{m.teamMemberGoal()}"
-											</span>
-											{"\n"}
-											{"};"}
-										</code>
-									</pre>
-								</div>
-							</div>
-
-							<div class={s.memberDivider} />
-
-							<div class={s.memberDuty}>
-								<h3>{m.teamMemberRoleTitle()}</h3>
-								<p class={s.memberDutyRole}>{member().role}</p>
-							</div>
-						</div>
-					)}
-				</Show>
-			</Dialog>
 
 			<Dialog
 				open={!!selected()}

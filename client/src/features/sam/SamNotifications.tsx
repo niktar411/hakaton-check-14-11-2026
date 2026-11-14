@@ -4,8 +4,8 @@ import { api, unwrap } from "@/shared/api";
 import { Button } from "@/shared/ui/Button";
 import { SamBadge } from "./SamPage";
 import { findingSeverityLabel, findingSeverityTone } from "./labels";
-import { notificationKey, readSeen, writeSeen } from "./notifications";
-import s from "./notifications.module.css";
+import { notificationKey, readSeen, writeSeen } from "./samNotifications";
+import s from "./SamNotifications.module.css";
 
 export function SamNotifications() {
 	const [findings] = createResource(async () => unwrap(await api.GET("/api/public/sam/compliance")) ?? []);
