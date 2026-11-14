@@ -327,6 +327,7 @@ SELECT l.id,
        (SELECT count(DISTINCT coalesce(nullif(i.device_name, ''), 'installation:' || i.id))::int
         FROM sam_installations i
         WHERE i.product_id = p.id AND i.status = 'installed') AS seats_used,
+       l.contract,
        l.expires_at AS valid_until,
        CASE
            WHEN l.status <> 'active' THEN 'expired'
@@ -353,6 +354,7 @@ type ListSamLicensesRow struct {
 	Kind          string      `json:"kind"`
 	SeatsTotal    int32       `json:"seats_total"`
 	SeatsUsed     int32       `json:"seats_used"`
+	Contract      string      `json:"contract"`
 	ValidUntil    pgtype.Date `json:"valid_until"`
 	Status        string      `json:"status"`
 }
@@ -373,6 +375,7 @@ func (q *Queries) ListSamLicenses(ctx context.Context, arg ListSamLicensesParams
 			&i.Kind,
 			&i.SeatsTotal,
 			&i.SeatsUsed,
+			&i.Contract,
 			&i.ValidUntil,
 			&i.Status,
 		); err != nil {
@@ -448,7 +451,7 @@ func (q *Queries) ListSamMatches(ctx context.Context, arg ListSamMatchesParams) 
 }
 
 const listSamProducts = `-- name: ListSamProducts :many
-SELECT id, name, vendor, version, category, status, created_at, updated_at
+SELECT id, name, vendor, version, category, status, created_at, updated_at, vendor_id, section_code, class_code, license_metric, registry_rf, registry_entry, is_trackable
 FROM sam_products
 WHERE $1::text = '' OR status = $1::text
 ORDER BY name, id
@@ -478,6 +481,13 @@ func (q *Queries) ListSamProducts(ctx context.Context, arg ListSamProductsParams
 			&i.Status,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.VendorID,
+			&i.SectionCode,
+			&i.ClassCode,
+			&i.LicenseMetric,
+			&i.RegistryRf,
+			&i.RegistryEntry,
+			&i.IsTrackable,
 		); err != nil {
 			return nil, err
 		}
@@ -843,6 +853,12 @@ SELECT p.id,
        p.name,
        p.vendor,
        p.category,
+       p.section_code,
+       p.class_code,
+       p.license_metric,
+       p.registry_rf,
+       p.registry_entry,
+       p.is_trackable,
        p.updated_at,
        (SELECT count(*) FROM sam_licenses l WHERE l.product_id = p.id)::bigint AS license_count,
        (SELECT count(*) FROM sam_installations i
@@ -862,6 +878,12 @@ type SamPublicProductsRow struct {
 	Name              string             `json:"name"`
 	Vendor            string             `json:"vendor"`
 	Category          string             `json:"category"`
+	SectionCode       string             `json:"section_code"`
+	ClassCode         string             `json:"class_code"`
+	LicenseMetric     string             `json:"license_metric"`
+	RegistryRf        bool               `json:"registry_rf"`
+	RegistryEntry     string             `json:"registry_entry"`
+	IsTrackable       bool               `json:"is_trackable"`
 	UpdatedAt         pgtype.Timestamptz `json:"updated_at"`
 	LicenseCount      int64              `json:"license_count"`
 	InstallationCount int64              `json:"installation_count"`
@@ -881,6 +903,12 @@ func (q *Queries) SamPublicProducts(ctx context.Context, arg SamPublicProductsPa
 			&i.Name,
 			&i.Vendor,
 			&i.Category,
+			&i.SectionCode,
+			&i.ClassCode,
+			&i.LicenseMetric,
+			&i.RegistryRf,
+			&i.RegistryEntry,
+			&i.IsTrackable,
 			&i.UpdatedAt,
 			&i.LicenseCount,
 			&i.InstallationCount,
@@ -972,7 +1000,7 @@ func (q *Queries) SamUnmatchedNames(ctx context.Context, limit int32) ([]SamUnma
 }
 
 const searchSamProducts = `-- name: SearchSamProducts :many
-SELECT p.id, p.name, p.vendor, p.version, p.category, p.status, p.created_at, p.updated_at
+SELECT p.id, p.name, p.vendor, p.version, p.category, p.status, p.created_at, p.updated_at, p.vendor_id, p.section_code, p.class_code, p.license_metric, p.registry_rf, p.registry_entry, p.is_trackable
 FROM sam_products p
 WHERE p.name ILIKE '%' || $1::text || '%'
    OR p.vendor ILIKE '%' || $1::text || '%'
@@ -1008,6 +1036,13 @@ func (q *Queries) SearchSamProducts(ctx context.Context, arg SearchSamProductsPa
 			&i.Status,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.VendorID,
+			&i.SectionCode,
+			&i.ClassCode,
+			&i.LicenseMetric,
+			&i.RegistryRf,
+			&i.RegistryEntry,
+			&i.IsTrackable,
 		); err != nil {
 			return nil, err
 		}

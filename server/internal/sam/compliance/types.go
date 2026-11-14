@@ -263,7 +263,7 @@ func productRiskLevel(product SamComplianceProduct) string {
 	if product.OverusedSeats > 0 || product.ExpiredSeats > 0 {
 		return "high"
 	}
-	if product.IdleSeats > 0 || (product.Status == "inactive" || product.Status == "archived") && product.InstalledDevices > 0 {
+	if product.IdleSeats > 0 || (product.Status == "outdated" || product.Status == "archived") && product.InstalledDevices > 0 {
 		return "medium"
 	}
 	return "low"
@@ -339,9 +339,9 @@ func buildRisks(summary SamComplianceSummary, products []SamComplianceProduct) [
 				Recommendation: product.Recommendation,
 			})
 		}
-		if (product.Status == "inactive" || product.Status == "archived") && product.InstalledDevices > 0 {
+		if (product.Status == "outdated" || product.Status == "archived") && product.InstalledDevices > 0 {
 			risks = append(risks, SamComplianceRisk{
-				Code: "inactive_product", Severity: "medium", ProductID: &id, ProductName: name,
+				Code: "outdated_product", Severity: "medium", ProductID: &id, ProductName: name,
 				Affected: product.InstalledDevices, Recommendation: product.Recommendation,
 			})
 		}

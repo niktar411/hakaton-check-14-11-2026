@@ -118,8 +118,8 @@ func toolDefinitions() []llm.Tool {
 			"query": stringSchema("Строка поиска, например Google Chrome или Microsoft."),
 			"limit": intSchema("Сколько строк вернуть, по умолчанию 10."),
 		}, []string{"query"}),
-		tool("list_products", "Список продуктов SAM с необязательным фильтром по статусу active, inactive или archived.", map[string]any{
-			"status": stringSchema("Пустая строка — все статусы, иначе active, inactive или archived."),
+		tool("list_products", "Список продуктов SAM с необязательным фильтром по статусу active, outdated или archived.", map[string]any{
+			"status": stringSchema("Пустая строка — все статусы, иначе active, outdated или archived."),
 			"limit":  intSchema("Сколько строк вернуть, по умолчанию 20."),
 		}, nil),
 		tool("product_balance", "Баланс мест по продукту: оплаченные места, установки, свободные места и ближайшее истечение лицензии.", map[string]any{
@@ -175,8 +175,8 @@ func (s *Service) executeTool(ctx context.Context, name, raw string) (toolEnvelo
 			return toolEnvelope{}, err
 		}
 		status := strings.ToLower(strings.TrimSpace(args.Status))
-		if status != "" && status != "active" && status != "inactive" && status != "archived" && status != "banned" {
-			return toolEnvelope{}, fmt.Errorf("status must be active, inactive, archived or banned")
+		if status != "" && status != "active" && status != "outdated" && status != "archived" && status != "banned" {
+			return toolEnvelope{}, fmt.Errorf("status must be active, outdated, archived or banned")
 		}
 		rows, err := s.store.ListSamProducts(ctx, dbListProductsParams(status, clampLimit(args.Limit, 20, maxToolRows)))
 		if err != nil {
