@@ -129,6 +129,24 @@ type PlannerBlock struct {
 	StartedAt       pgtype.Timestamptz `json:"started_at"`
 }
 
+type SamAiAction struct {
+	ID             int64              `json:"id"`
+	ConversationID pgtype.Int8        `json:"conversation_id"`
+	Actor          string             `json:"actor"`
+	Intent         string             `json:"intent"`
+	Payload        []byte             `json:"payload"`
+	Preview        []byte             `json:"preview"`
+	Status         string             `json:"status"`
+	Affected       int64              `json:"affected"`
+	Error          string             `json:"error"`
+	Fingerprint    string             `json:"fingerprint"`
+	CreatedAt      pgtype.Timestamptz `json:"created_at"`
+	AppliedAt      pgtype.Timestamptz `json:"applied_at"`
+	UndoneAt       pgtype.Timestamptz `json:"undone_at"`
+	Before         []byte             `json:"before"`
+	After          []byte             `json:"after"`
+}
+
 type SamAiConversation struct {
 	ID        int64              `json:"id"`
 	Actor     string             `json:"actor"`

@@ -28,6 +28,7 @@ import (
 	"hackathon/internal/sam/compliance"
 	"hackathon/internal/sam/guard"
 	"hackathon/internal/sam/matching"
+	"hackathon/internal/sam/operator"
 )
 
 type Service struct {
@@ -46,6 +47,7 @@ type Service struct {
 	samAssistant  *assistant.Service
 	samMatching   *matching.Service
 	samCompliance *compliance.Service
+	samOperator   *operator.Service
 	coding        *codingtasks.Service
 	deployments   *deployments.Service
 	gitLab        *gitlab.Client
@@ -66,6 +68,7 @@ func NewService(pool *pgxpool.Pool, c Config) *Service {
 	s.samAssistant = assistant.NewService(pool, s.model, modelGuard)
 	s.samMatching = matching.NewService(pool)
 	s.samCompliance = compliance.NewService(pool)
+	s.samOperator = operator.NewService(pool, s.model, modelGuard, operator.Config{AdminUser: c.AdminUser, AdminIP: c.AdminIP})
 	workerHTTP := &http.Client{Timeout: 3 * time.Minute, CheckRedirect: noRedirect}
 	httpWorker, err := codingtasks.NewHTTPWorker(c.WorkerURL, c.WorkerToken, workerHTTP)
 	var worker codingtasks.Worker

@@ -21,6 +21,7 @@ import (
 	"hackathon/internal/sam/assistant"
 	"hackathon/internal/sam/compliance"
 	"hackathon/internal/sam/matching"
+	"hackathon/internal/sam/operator"
 )
 
 func APIConfig() huma.Config {
@@ -77,6 +78,7 @@ func (s *Service) Router() http.Handler {
 		assistant.Register(api, s.samAssistant)
 		matching.Register(api, s.samMatching)
 		compliance.Register(api, s.samCompliance)
+		operator.Register(api, s.samOperator)
 		plannerblocks.RegisterTeam(api, s.planner)
 		plannerblocks.RegisterAdmin(api, s.planner)
 		codingtasks.Register(api, s.coding)
@@ -134,6 +136,7 @@ func WriteOpenAPI(ctx context.Context, path string) error {
 	assistant.Register(api, nil)
 	matching.Register(api, nil)
 	compliance.Register(api, nil)
+	operator.Register(api, nil)
 	plannerblocks.Register(api, nil)
 	codingtasks.Register(api, nil)
 	deployments.Register(api, nil)

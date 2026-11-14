@@ -873,6 +873,91 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/sam/operator/actions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** История предложенных и применённых изменений SAM */
+        get: operations["sam-operator-actions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sam/operator/actions/{id}/apply": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Применить подтверждённое изменение SAM */
+        post: operations["sam-operator-apply"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sam/operator/actions/{id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Отменить предложенное изменение SAM */
+        post: operations["sam-operator-cancel"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sam/operator/actions/{id}/undo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Откатить последнее применённое изменение SAM */
+        post: operations["sam-operator-undo"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sam/operator/chat": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Предложить изменение SAM через AI-оператора */
+        post: operations["sam-operator-chat"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1759,6 +1844,88 @@ export interface components {
             rejected: number;
             /** Format: int64 */
             unmatched: number;
+        };
+        SamOperatorAction: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/SamOperatorAction.json
+             */
+            readonly $schema?: string;
+            actor: string;
+            /** Format: int64 */
+            affected: number;
+            after?: unknown;
+            /** Format: date-time */
+            appliedAt?: string;
+            before?: unknown;
+            /** Format: int64 */
+            conversationId?: number;
+            /** Format: date-time */
+            createdAt: string;
+            error?: string;
+            /** Format: int64 */
+            id: number;
+            intent: string;
+            preview: components["schemas"]["SamOperatorPreview"];
+            status: string;
+            /** Format: date-time */
+            undoneAt?: string;
+        };
+        SamOperatorApplyInputBody: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/SamOperatorApplyInputBody.json
+             */
+            readonly $schema?: string;
+            confirmation: string;
+        };
+        SamOperatorChatInputBody: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/SamOperatorChatInputBody.json
+             */
+            readonly $schema?: string;
+            /** Format: int64 */
+            id: number;
+            prompt: string;
+            requestId: string;
+        };
+        SamOperatorChatResult: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/SamOperatorChatResult.json
+             */
+            readonly $schema?: string;
+            actions: components["schemas"]["SamOperatorAction"][] | null;
+            answer: string;
+            fallback: boolean;
+            /** Format: int64 */
+            id: number;
+        };
+        SamOperatorDiff: {
+            field: string;
+            new: unknown;
+            old: unknown;
+            target: string;
+        };
+        SamOperatorPreview: {
+            /** Format: int64 */
+            affected: number;
+            confirmationPhrase: string;
+            diffs: components["schemas"]["SamOperatorDiff"][] | null;
+            intent: string;
+            /** Format: int64 */
+            limit: number;
+            requiresPhrase: boolean;
+            samples: {
+                [key: string]: unknown;
+            }[] | null;
+            summary: string;
+            warnings: string[] | null;
         };
         SetEnabledInputBody: {
             /**
@@ -3625,6 +3792,170 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SamMatchingSummary"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "sam-operator-actions": {
+        parameters: {
+            query?: {
+                limit?: number;
+                offset?: number;
+                conversationId?: number;
+                status?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SamOperatorAction"][] | null;
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "sam-operator-apply": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SamOperatorApplyInputBody"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SamOperatorAction"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "sam-operator-cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SamOperatorAction"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "sam-operator-undo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SamOperatorAction"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "sam-operator-chat": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SamOperatorChatInputBody"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SamOperatorChatResult"];
                 };
             };
             /** @description Error */
