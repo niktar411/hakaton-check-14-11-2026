@@ -20,6 +20,7 @@ import {
 } from "@/features/planner/PlannerPage";
 import { DragonScene } from "./DragonScene";
 import { team } from "./team-data";
+import type { TeamMember } from "./readme-team";
 import s from "./TeamPage.module.css";
 
 type PublicBlock = components["schemas"]["PublicPlannerBlock"];
@@ -41,6 +42,7 @@ function initials(name: string) {
 
 export default function TeamPage() {
 	const [selected, setSelected] = createSignal<PublicBlock>();
+	const [selectedMember, setSelectedMember] = createSignal<TeamMember>();
 	const [planner, { refetch }] = createResource(
 		async () => unwrap(await api.GET("/api/public/planner")) ?? [],
 	);
@@ -56,7 +58,7 @@ export default function TeamPage() {
 	onMount(() => {
 		const hash = window.location.hash.slice(1);
 		if (hash) {
-			document.getElementById(hash)?.scrollIntoView();
+			document.getElementById(hash)?.scrollIntoView({ behavior: "smooth" });
 		}
 		const timer = window.setInterval(() => {
 			if (!planner.loading) void refetch();
@@ -195,11 +197,28 @@ export default function TeamPage() {
 									class={s.memberCard}
 									style={{ "animation-delay": `${index() * 70}ms` }}
 								>
-									<span class={s.avatar} aria-hidden="true">
-										{initials(member.name)}
-									</span>
-									<h3>{member.name}</h3>
-									<p class={s.memberRole}>{member.role}</p>
+									<button
+										type="button"
+										class={s.memberButton}
+										onClick={() => setSelectedMember(member)}
+										aria-label={`${member.name} — ${m.teamMemberDetails()}`}
+									>
+										<span class={s.avatar} aria-hidden="true">
+											<Show when={member.photo} fallback={initials(member.name)}>
+												<img
+													class={s.avatarPhoto}
+													src={member.photo}
+													alt=""
+													loading="lazy"
+													onError={(event) => {
+														event.currentTarget.remove();
+													}}
+												/>
+											</Show>
+										</span>
+										<h3>{member.name}</h3>
+										<p class={s.memberRole}>{member.role}</p>
+									</button>
 									<Show when={member.telegram}>
 										{(url) => (
 											<a
@@ -209,7 +228,7 @@ export default function TeamPage() {
 												rel="noopener noreferrer"
 												aria-label={`${m.teamTelegram()}: ${member.name}`}
 											>
-												{m.teamTelegram()}
+												{m.teamTelegram()} ↗
 											</a>
 										)}
 									</Show>
@@ -271,6 +290,49 @@ export default function TeamPage() {
 								</div>
 							</dl>
 							<p class={s.dialogHint}>{m.plannerPublicHint()}</p>
+						</div>
+					)}
+				</Show>
+			</Dialog>
+
+			<Dialog
+				open={!!selectedMember()}
+				title={selectedMember()?.name ?? ""}
+				onClose={() => setSelectedMember(undefined)}
+			>
+				<Show when={selectedMember()}>
+					{(member) => (
+						<div class={s.memberDialog}>
+							<Show when={member().photo} fallback={<span class={s.avatar}>{initials(member().name)}</span>}>
+								{(photo) => (
+									<img
+										class={s.memberDialogPhoto}
+										src={photo()}
+										alt=""
+									/>
+								)}
+							</Show>
+							<div class={s.memberDialogBody}>
+								<p class={s.memberRole}>{member().role}</p>
+								<Show when={member().quote}>
+									{(quote) => <blockquote class={s.memberQuote}>{quote()}</blockquote>}
+								</Show>
+								<Show when={member().bio}>
+									{(bio) => <p class={s.memberBio}>{bio()}</p>}
+								</Show>
+								<Show when={member().telegram}>
+									{(url) => (
+										<a
+											class={s.memberLink}
+											href={url()}
+											target="_blank"
+											rel="noopener noreferrer"
+										>
+											{m.teamTelegram()} ↗
+										</a>
+									)}
+								</Show>
+							</div>
 						</div>
 					)}
 				</Show>
