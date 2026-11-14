@@ -9,8 +9,8 @@
 
 - добавляет статус `banned` для `sam_products`;
 - обновляет `sam_risk_overview`: запрещённые продукты теперь отдельный
-  high-риск, а `inactive_products_installed` считает только
-  `inactive/archived`.
+  high-риск, а `outdated_products_installed` считает только
+  `outdated/archived` (после блока 15 статус `inactive` заменён на `outdated`).
 
 Лицензия на устройство: установки считаются по уникальным
 `sam_installations.device_name`; пустое имя заменяется на стабильный
@@ -60,7 +60,7 @@
 
 `risks` — плоский список: `code`, `severity`, `productId/productName`,
 `affected`, `cost`, `recommendation`. Коды: `banned_product`, `license_overuse`,
-`expired_license`, `idle_license`, `inactive_product`,
+`expired_license`, `idle_license`, `outdated_product`,
 `unmatched_installations`.
 
 ## Рекомендации
