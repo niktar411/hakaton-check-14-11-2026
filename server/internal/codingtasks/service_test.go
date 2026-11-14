@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/jackc/pgx/v5/pgtype"
 	db "hackathon/internal/db/sqlc"
@@ -452,5 +453,46 @@ func TestReworkDoesNotCopyParentMessages(t *testing.T) {
 	}
 	if stored.ParentID != (pgtype.Int8{}) {
 		t.Fatal("new parent unexpectedly has a parent")
+	}
+}
+
+func TestConfirmAsyncReturnsRunningAndCompletes(t *testing.T) {
+	store := newFakeStore()
+	model := &fakeModel{responses: []llm.Response{clarification("Which parser inputs?")}}
+	worker := &fakeWorker{}
+	gitLab := successfulGitLab("coding/task-1")
+	svc := NewService(store, model, worker, gitLab, Config{AdminUser: "root", AdminIP: "10.77.0.2", WorkerToken: "worker-test-token", AsyncExecution: true})
+	ctx := userContext(1, "alice")
+	created, err := svc.Create(ctx, "Implement the parser", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	model.add(
+		toolResponse(call("check-1", ToolRunCheck, `{"check":"server-test"}`)),
+		toolResponse(call("mr-1", ToolCreateMergeRequest, `{"taskId":1,"title":"Implement parser","description":"Implementation and server tests"}`)),
+	)
+	confirmed, err := svc.Confirm(ctx, created.ID, "understood")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if confirmed.Phase != PhaseRunning {
+		t.Fatalf("async confirmation did not return a running task: %+v", confirmed)
+	}
+	deadline := time.Now().Add(3 * time.Second)
+	for {
+		stored, err := store.GetCodingTask(ctx, created.ID)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if stored.Phase != PhaseRunning {
+			if stored.Phase != PhaseAwaitingMerge {
+				t.Fatalf("async task finished in %q, want %q", stored.Phase, PhaseAwaitingMerge)
+			}
+			return
+		}
+		if time.Now().After(deadline) {
+			t.Fatal("async coding task did not finish")
+		}
+		time.Sleep(10 * time.Millisecond)
 	}
 }

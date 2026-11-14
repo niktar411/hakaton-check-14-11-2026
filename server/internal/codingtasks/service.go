@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log/slog"
 	"strings"
 	"sync"
 	"time"
@@ -22,15 +23,17 @@ var (
 	ErrInvalid   = errors.New("invalid coding task input")
 	ErrConflict  = errors.New("coding task state conflict")
 	ErrForbidden = errors.New("coding task access denied")
+	ErrBusy      = errors.New("coding task execution busy")
 )
 
 // Config contains only administrative authorization and worker connection
 // settings. Model and GitLab credentials stay in their shared services.
 type Config struct {
-	AdminUser   string
-	AdminIP     string
-	WorkerURL   string
-	WorkerToken string
+	AdminUser      string
+	AdminIP        string
+	WorkerURL      string
+	WorkerToken    string
+	AsyncExecution bool
 }
 
 // Model is implemented by llm.Service.
@@ -78,10 +81,30 @@ type Service struct {
 	adminDeployments AdminDeployments
 	locksMu          sync.Mutex
 	locks            map[int64]*taskLock
+	execSlots        chan struct{}
 }
 
 func NewService(store Store, model Model, worker Worker, gitLab GitLab, config Config) *Service {
-	return &Service{store: store, model: model, worker: worker, gitLab: gitLab, config: config, locks: make(map[int64]*taskLock)}
+	return &Service{store: store, model: model, worker: worker, gitLab: gitLab, config: config, locks: make(map[int64]*taskLock), execSlots: make(chan struct{}, 3)}
+}
+
+// Recover fails tasks that were left running by a previous process. A goroutine
+// cannot survive a restart, so keeping the phase running would make clients
+// poll forever and block a new execution.
+func (s *Service) Recover(ctx context.Context) error {
+	rows, err := s.store.ListCodingTasks(ctx, db.ListCodingTasksParams{Limit: 1000, Offset: 0})
+	if err != nil {
+		return fmt.Errorf("list running coding tasks: %w", err)
+	}
+	for _, task := range rows {
+		if task.Phase != PhaseRunning {
+			continue
+		}
+		if _, failErr := s.fail(ctx, task.ID, "worker_restarted"); failErr != nil {
+			return failErr
+		}
+	}
+	return nil
 }
 
 func (s *Service) lockTask(id int64) func() {
@@ -301,31 +324,81 @@ func (s *Service) Confirm(ctx context.Context, id int64, confirmation string) (C
 	if err != nil || !explicitConfirmation(confirmation) {
 		return CodingTask{}, ErrInvalid
 	}
+	if s.config.AsyncExecution {
+		select {
+		case s.execSlots <- struct{}{}:
+		default:
+			return CodingTask{}, ErrBusy
+		}
+	}
+	launched := false
+	defer func() {
+		if s.config.AsyncExecution && !launched {
+			<-s.execSlots
+		}
+	}()
 	unlock := s.lockTask(id)
 	defer unlock()
-	task, err := s.owned(ctx, id, account.ID)
+	task, err := s.startConfirmed(ctx, id, account, confirmation)
 	if err != nil {
 		return CodingTask{}, err
 	}
+	if !s.config.AsyncExecution {
+		task, err = s.execute(ctx, task, account)
+		if err != nil {
+			return CodingTask{}, err
+		}
+		return taskDTO(task), nil
+	}
+	jobCtx := context.WithoutCancel(ctx)
+	go func() {
+		defer func() { <-s.execSlots }()
+		defer func() {
+			if recovered := recover(); recovered != nil {
+				slog.ErrorContext(jobCtx, "coding task execution panicked", "task_id", id, "panic", recovered)
+				if _, failErr := s.fail(jobCtx, id, "worker_failed"); failErr != nil {
+					slog.ErrorContext(jobCtx, "mark panicked coding task failed", "task_id", id, "error", failErr)
+				}
+			}
+		}()
+		unlock := s.lockTask(id)
+		defer unlock()
+		if _, execErr := s.execute(jobCtx, task, account); execErr != nil {
+			slog.ErrorContext(jobCtx, "coding task execution failed", "task_id", id, "error", execErr)
+			current, getErr := s.store.GetCodingTask(jobCtx, id)
+			if getErr == nil && current.Phase == PhaseRunning {
+				if _, failErr := s.fail(jobCtx, id, "worker_failed"); failErr != nil {
+					slog.ErrorContext(jobCtx, "mark failed coding task", "task_id", id, "error", failErr)
+				}
+			}
+		}
+	}()
+	launched = true
+	return taskDTO(task), nil
+}
+
+// startConfirmed atomically consumes the confirmation and creates the branch.
+// The caller owns the task lock.
+func (s *Service) startConfirmed(ctx context.Context, id int64, account db.LocalAccount, confirmation string) (db.CodingTask, error) {
+	task, err := s.owned(ctx, id, account.ID)
+	if err != nil {
+		return db.CodingTask{}, err
+	}
 	if task.Phase != PhaseAwaitingConfirmation {
-		return CodingTask{}, ErrConflict
+		return db.CodingTask{}, ErrConflict
 	}
 	branch := fmt.Sprintf("coding/task-%d", id)
 	task, err = s.store.StartCodingTask(ctx, db.StartCodingTaskParams{ID: id, AccountID: account.ID, Branch: branch})
 	if isNotFound(err) {
-		return CodingTask{}, ErrConflict
+		return db.CodingTask{}, ErrConflict
 	}
 	if err != nil {
-		return CodingTask{}, fmt.Errorf("start coding task: %w", err)
+		return db.CodingTask{}, fmt.Errorf("start coding task: %w", err)
 	}
 	if _, err := s.store.AddCodingMessage(ctx, db.AddCodingMessageParams{TaskID: id, Role: "user", Content: confirmation}); err != nil {
-		return CodingTask{}, fmt.Errorf("store coding task confirmation: %w", err)
+		return db.CodingTask{}, fmt.Errorf("store coding task confirmation: %w", err)
 	}
-	task, err = s.execute(ctx, task, account)
-	if err != nil {
-		return CodingTask{}, err
-	}
-	return taskDTO(task), nil
+	return task, nil
 }
 
 func explicitConfirmation(value string) bool {

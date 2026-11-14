@@ -137,6 +137,7 @@ export default function ChatPage() {
 	>({});
 	const [contextPinned, setContextPinned] = createSignal(false);
 	const [contextOpen, setContextOpen] = createSignal(false);
+	const [followStream, setFollowStream] = createSignal(true);
 	let contextCloseTimer: number | undefined;
 	let composer: HTMLTextAreaElement | undefined;
 	let filePicker: HTMLInputElement | undefined;
@@ -327,19 +328,24 @@ export default function ChatPage() {
 	});
 
 	createEffect(() => {
-		// Follow the growing answer while the model is streaming, but keep the
-		// reader's position when they scrolled up to inspect an earlier message.
+		// Follow the growing answer while the model is streaming, but stop as
+		// soon as the reader scrolls up to inspect an earlier message.
 		displayMessages();
-		if (!pending() || !messageList) return;
+		if (!followStream() || !messageList) return;
 		queueMicrotask(() => {
 			if (!messageList) return;
-			const distance =
-				messageList.scrollHeight -
-				messageList.scrollTop -
-				messageList.clientHeight;
-			if (distance < 160) messagesEnd?.scrollIntoView({ block: "end" });
+			messageList.scrollTop = messageList.scrollHeight;
 		});
 	});
+
+	function onMessagesScroll() {
+		if (!messageList) return;
+		const distance =
+			messageList.scrollHeight -
+			messageList.scrollTop -
+			messageList.clientHeight;
+		setFollowStream(distance < 140);
+	}
 
 	async function addFiles(files: FileList | File[]) {
 		const selectedFiles = Array.from(files);
@@ -468,15 +474,25 @@ export default function ChatPage() {
 			toast.show(m.chatPromptTooLong());
 			return;
 		}
+		const draftText = text();
+		const draftAttachments = attachments();
 		streamController?.abort();
 		const controller = new AbortController();
 		streamController = controller;
 		let conversationID = selected();
+		let restoreDraft = false;
+		setFollowStream(true);
 		setPending(true);
 		setOptimisticPrompt(prompt);
 		setLiveAnswer("");
 		setContextPinned(false);
 		setContextOpen(false);
+		if (useDraft) {
+			// Clear the composer immediately so the sent text does not sit in the
+			// field while the model streams. It is restored only after an error.
+			setText("");
+			setAttachments([]);
+		}
 		setReasoningByConversation((previous) => {
 			const next = { ...previous };
 			delete next[conversationID];
@@ -514,14 +530,21 @@ export default function ChatPage() {
 				controller.signal,
 			);
 			await Promise.all([refetchHistory(), refetchConversations()]);
-			if (useDraft) {
-				setText("");
-				setAttachments([]);
-			}
 		} catch (error) {
-			if (controller.signal.aborted) return;
-			toast.show(chatError(error));
+			if (!controller.signal.aborted) {
+				restoreDraft = true;
+				toast.show(chatError(error));
+			}
 		} finally {
+			if (
+				restoreDraft &&
+				useDraft &&
+				!text().trim() &&
+				attachments().length === 0
+			) {
+				setText(draftText);
+				setAttachments(draftAttachments);
+			}
 			if (streamController === controller) streamController = undefined;
 			setPending(false);
 			setOptimisticPrompt("");
@@ -566,6 +589,7 @@ export default function ChatPage() {
 		setLiveAnswer("");
 		setContextPinned(false);
 		setContextOpen(false);
+		setFollowStream(true);
 		setSelected(0);
 		setText("");
 		setAttachments([]);
@@ -615,6 +639,7 @@ export default function ChatPage() {
 											streamController?.abort();
 											setContextPinned(false);
 											setContextOpen(false);
+											setFollowStream(true);
 											setSelected(conversation.id);
 										}}
 									>
@@ -795,6 +820,7 @@ export default function ChatPage() {
 							aria-live="polite"
 							aria-relevant="additions text"
 							aria-busy={pending()}
+							onScroll={onMessagesScroll}
 						>
 							<Show
 								when={displayMessages().length > 0}

@@ -9,7 +9,7 @@ import {
 	Show,
 } from "solid-js";
 import * as m from "@/paraglide/messages";
-import { api, unwrap } from "@/shared/api";
+import { api, csrfHeaders, unwrap } from "@/shared/api";
 import type { components } from "@/shared/api/schema";
 import { safeColor } from "@/shared/lib/color";
 import { formatDate } from "@/shared/lib/format";
@@ -25,7 +25,7 @@ type PublicBlock = components["schemas"]["PublicPlannerBlock"];
 type AnyBlock = PlannerBlock | PublicBlock;
 
 type PlannerView =
-	| { team: true; username: string; blocks: PlannerBlock[] }
+	| { team: true; username: string; csrf: string; blocks: PlannerBlock[] }
 	| { team: false; blocks: PublicBlock[] };
 
 type LayoutNode = {
@@ -700,6 +700,7 @@ export default function PlannerPage() {
 					return {
 						team: true,
 						username: me.username,
+						csrf: me.csrf,
 						blocks: unwrap(await api.GET("/api/planner")) ?? [],
 					};
 				} catch {
@@ -723,8 +724,11 @@ export default function PlannerPage() {
 		if (starting()) return;
 		setStarting(true);
 		try {
+			const view = planner();
+			const csrf = view?.team ? view.csrf : undefined;
 			const updated = unwrap(
 				await api.POST("/api/planner/blocks/{id}/start", {
+					headers: csrfHeaders(csrf),
 					params: { path: { id: block.id } },
 				}),
 			);

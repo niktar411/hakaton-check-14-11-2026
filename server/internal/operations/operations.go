@@ -61,7 +61,7 @@ func NewService(pool *pgxpool.Pool, c Config) *Service {
 	if err == nil {
 		worker = httpWorker
 	}
-	s.coding = codingtasks.NewService(s.db, s.model, worker, gitLab, codingtasks.Config{AdminUser: c.AdminUser, AdminIP: c.AdminIP, WorkerURL: c.WorkerURL, WorkerToken: c.WorkerToken})
+	s.coding = codingtasks.NewService(s.db, s.model, worker, gitLab, codingtasks.Config{AdminUser: c.AdminUser, AdminIP: c.AdminIP, WorkerURL: c.WorkerURL, WorkerToken: c.WorkerToken, AsyncExecution: true})
 	orchestrator := deployments.Orchestrator(deployments.NewOrchestrator(deployments.Config{AgentURL: c.AgentURL, AgentToken: c.AgentToken}, s.http))
 	if c.WorkerAgentURL != "" && c.WorkerAgentToken != "" {
 		workerOrchestrator := deployments.NewOrchestrator(deployments.Config{AgentURL: c.WorkerAgentURL, AgentToken: c.WorkerAgentToken}, s.http)
@@ -72,8 +72,15 @@ func NewService(pool *pgxpool.Pool, c Config) *Service {
 	return s
 }
 
-func (s *Service) Model() *llm.Service                    { return s.model }
 func noRedirect(_ *http.Request, _ []*http.Request) error { return http.ErrUseLastResponse }
+
+// RecoverCodingTasks fails executions left running by a previous process.
+func (s *Service) RecoverCodingTasks(ctx context.Context) error {
+	if s.coding == nil {
+		return nil
+	}
+	return s.coding.Recover(ctx)
+}
 
 func (s *Service) agent(ctx context.Context, path string, body interface{}, out interface{}) error {
 	return s.controlRequest(ctx, s.config.AgentURL, s.config.AgentToken, path, body, out)

@@ -88,22 +88,7 @@ func (s *Service) List(ctx context.Context) ([]PlannerBlock, error) {
 	}
 	blocks := make([]PlannerBlock, len(rows))
 	for i, row := range rows {
-		blocks[i] = PlannerBlock{
-			ID:          row.ID,
-			Title:       row.Title,
-			Description: row.Description,
-			Position:    row.Position,
-			Owner: Owner{
-				Username:    row.OwnerUsername,
-				DisplayName: row.OwnerDisplayName,
-				Color:       row.OwnerColor,
-			},
-			Branch:    row.Branch,
-			MRIID:     nullableInt64(row.MergeRequestIid),
-			ParentID:  nullableInt64(row.ParentID),
-			UpdatedAt: row.UpdatedAt.Time,
-			Progress:  initialProgress(row.StartedAt),
-		}
+		blocks[i] = plannerBlockFromRow(row)
 	}
 
 	var wg sync.WaitGroup
@@ -133,24 +118,28 @@ func (s *Service) Snapshot(ctx context.Context) ([]PlannerBlock, error) {
 	}
 	blocks := make([]PlannerBlock, len(rows))
 	for i, row := range rows {
-		blocks[i] = PlannerBlock{
-			ID:          row.ID,
-			Title:       row.Title,
-			Description: row.Description,
-			Position:    row.Position,
-			Owner: Owner{
-				Username:    row.OwnerUsername,
-				DisplayName: row.OwnerDisplayName,
-				Color:       row.OwnerColor,
-			},
-			Branch:    row.Branch,
-			MRIID:     nullableInt64(row.MergeRequestIid),
-			ParentID:  nullableInt64(row.ParentID),
-			UpdatedAt: row.UpdatedAt.Time,
-			Progress:  initialProgress(row.StartedAt),
-		}
+		blocks[i] = plannerBlockFromRow(row)
 	}
 	return blocks, nil
+}
+
+func plannerBlockFromRow(row db.ListPlannerBlocksRow) PlannerBlock {
+	return PlannerBlock{
+		ID:          row.ID,
+		Title:       row.Title,
+		Description: row.Description,
+		Position:    row.Position,
+		Owner: Owner{
+			Username:    row.OwnerUsername,
+			DisplayName: row.OwnerDisplayName,
+			Color:       row.OwnerColor,
+		},
+		Branch:    row.Branch,
+		MRIID:     nullableInt64(row.MergeRequestIid),
+		ParentID:  nullableInt64(row.ParentID),
+		UpdatedAt: row.UpdatedAt.Time,
+		Progress:  initialProgress(row.StartedAt),
+	}
 }
 
 // ListPublic returns the compact anonymous view. It reuses the same GitLab
