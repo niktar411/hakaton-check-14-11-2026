@@ -15,9 +15,11 @@ import type { components } from "@/shared/api/schema";
 import { LocalLoginForm } from "@/features/auth/LocalLoginForm";
 import { formatDate } from "@/shared/lib/format";
 import { Button } from "@/shared/ui/Button";
+import { Markdown } from "@/shared/ui/Markdown";
 import { EmptyState, LoadingState } from "@/shared/ui/State";
 import { useToast } from "@/shared/ui/Toast";
 import { AgentRunCard } from "./AgentRunCard";
+import { ChatModeTabs } from "./ChatModeTabs";
 import { ContextPopover, type ContextBreakdown } from "./ContextPopover";
 import s from "./ChatPage.module.css";
 
@@ -138,7 +140,7 @@ export default function ChatPage() {
 	const [contextPinned, setContextPinned] = createSignal(false);
 	const [contextOpen, setContextOpen] = createSignal(false);
 	const [followStream, setFollowStream] = createSignal(true);
-	const [agentMode, setAgentMode] = createSignal(false);
+	const [agentMode, setAgentMode] = createSignal(true);
 	const [agentTask, setAgentTask] = createSignal<CodingTaskDetails>();
 	const [agentPending, setAgentPending] = createSignal(false);
 	let contextCloseTimer: number | undefined;
@@ -669,7 +671,7 @@ export default function ChatPage() {
 	}
 
 	return (
-		<main class={s.page}>
+		<main class={s.page} data-mode={agentMode() ? "agent" : "chat"}>
 			<Show
 				when={!session.loading}
 				fallback={
@@ -770,6 +772,7 @@ export default function ChatPage() {
 								</Show>
 							</div>
 						</header>
+						<ChatModeTabs agent={agentMode()} onChange={setAgentMode} />
 						<Show when={session()?.modelReady === false}>
 							<p class={s.modelWarning} role="status">
 								{m.modelUnavailable()}
@@ -784,6 +787,7 @@ export default function ChatPage() {
 							aria-busy={pending()}
 							onScroll={onMessagesScroll}
 						>
+							<Show when={!agentMode()}>
 							<Show
 								when={displayMessages().length > 0}
 								fallback={<EmptyState message={m.chatEmpty()} />}
@@ -846,19 +850,25 @@ export default function ChatPage() {
 												</details>
 											</Show>
 											<Show when={message().content}>
-												<p>
-													{message().content}
-													<Show when={message().streaming}>
-														<span class={s.caret} aria-hidden="true" />
-													</Show>
-												</p>
+												<Show
+													when={message().role === "assistant"}
+													fallback={<p>{message().content}</p>}
+												>
+													<Markdown content={message().content} />
+												</Show>
+												<Show when={message().streaming}>
+													<span class={s.caret} aria-hidden="true" />
+												</Show>
 											</Show>
 										</article>
 									)}
 								</Index>
 							</Show>
-							<Show when={agentTask()}>
-								{(task) => <AgentRunCard task={task()} />}
+							</Show>
+							<Show when={agentMode()}>
+								<Show when={agentTask()} fallback={<EmptyState message={m.chatAgentEmpty()} />}>
+									{(task) => <AgentRunCard task={task()} />}
+								</Show>
 							</Show>
 							<div ref={messagesEnd} class={s.messagesEnd} />
 						</div>
@@ -947,15 +957,6 @@ export default function ChatPage() {
 										onClick={() => void toggleVoice()}
 									>
 										{listening() ? m.chatVoiceStop() : m.chatVoice()}
-									</Button>
-									<Button
-										type="button"
-										variant={agentMode() ? "primary" : undefined}
-										aria-pressed={agentMode()}
-										title={m.chatAgentModeHint()}
-										onClick={() => setAgentMode(!agentMode())}
-									>
-										{m.chatAgentMode()}
 									</Button>
 								</div>
 								<div class={s.composerSend}>
