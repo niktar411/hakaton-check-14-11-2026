@@ -9,7 +9,11 @@
 	font: inherit;
 	font-weight: 600;
 	cursor: pointer;
-	transition: background var(--dur-fast) var(--ease);
+	transition:
+		background-color var(--dur) var(--ease),
+		border-color var(--dur) var(--ease),
+		color var(--dur) var(--ease),
+		box-shadow var(--dur) var(--ease);
 }
 
 .root:hover:not(:disabled) {

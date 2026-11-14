@@ -2,6 +2,9 @@ export type TeamMember = {
 	name: string;
 	role: string;
 	telegram?: string;
+	quote?: string;
+	bio?: string;
+	photo?: string;
 };
 
 export type TeamSection = {
@@ -60,6 +63,9 @@ export function parseTeamSection(source: string): TeamSection {
 					name,
 					role,
 					telegram: telegramUrl(cells[2] ?? ""),
+					quote: cells[3]?.trim() || undefined,
+					bio: cells[4]?.trim() || undefined,
+					photo: cells[5]?.trim() || undefined,
 				});
 			}
 			continue;
