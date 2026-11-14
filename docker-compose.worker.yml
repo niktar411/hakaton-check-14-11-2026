@@ -61,6 +61,7 @@ services:
     tmpfs:
       - /var/cache/nginx:size=32m,mode=1777
       - /var/run:size=1m,mode=1777
+      - /tmp:size=16m,mode=1777
     volumes:
       - /var/lib/hackathon-worker/reviews:/srv/reviews:ro
     security_opt: [no-new-privileges:true]

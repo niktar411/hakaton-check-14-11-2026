@@ -21,6 +21,9 @@ import (
 
 func TestDatabaseAuthorizationAndMigrations(t *testing.T) {
 	address := os.Getenv("TEST_DATABASE_URL")
+	if address == "" {
+		t.Skip("TEST_DATABASE_URL is not set; skipping disposable portal_test database test")
+	}
 	parsed, err := url.Parse(address)
 	if err != nil || parsed.Path != "/portal_test" {
 		t.Fatal("TEST_DATABASE_URL must point to disposable portal_test database")

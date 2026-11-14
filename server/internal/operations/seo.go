@@ -27,6 +27,17 @@ func (s *Service) publicPages() []publicPage {
 		{Path: "/", Title: "Хакатон: продукт команды", Description: "Публичная информация о проекте, ответы DeepSeek и реальный план разработки команды."},
 		{Path: "/questions", Title: "Вопросы о проекте", Description: "Ответы DeepSeek по проверяемому контексту проекта и ссылки только на страницы сайта."},
 		{Path: "/planner", Title: "План команды", Description: "Публичный план работ с реальным прогрессом Merge Request и CI GitLab."},
+		{Path: "/sam", Title: "SAM: обзор", Description: "Сводка по программным активам, лицензиям, инвентаризации и рискам."},
+		{Path: "/sam/catalog", Title: "SAM: каталог", Description: "Каталог программных продуктов, лицензий и обнаруженных установок."},
+		{Path: "/sam/licenses", Title: "SAM: лицензии", Description: "Сроки действия лицензий и занятые места."},
+		{Path: "/sam/inventory", Title: "SAM: инвентаризация", Description: "Устройства, владельцы и обнаруженное программное обеспечение."},
+		{Path: "/sam/compliance", Title: "SAM: комплаенс", Description: "Баланс куплено/установлено, превышения, простой, запрещённое ПО и стоимость риска."},
+		{Path: "/sam/matching", Title: "SAM: сопоставление", Description: "Предложения сопоставить установки с каталогом продуктов."},
+		{Path: "/sam/assistant", Title: "SAM: ассистент", Description: "Рекомендации по текущим данным SAM без изменения записей."},
+		{Path: "/terms", Title: "Пользовательское соглашение", Description: "Условия использования демонстрационным стендом и ответственность сторон."},
+		{Path: "/policy", Title: "Политика конфиденциальности", Description: "Состав обрабатываемых данных, цели, сроки и права субъекта."},
+		{Path: "/consent", Title: "Согласие на обработку ПДн", Description: "Что собирается в демо-режиме и как отозвать согласие."},
+		{Path: "/cookies", Title: "Политика cookie", Description: "Необходимые cookie и порядок подключения аналитики."},
 		{Path: "/coding", Title: "Разработка с DeepSeek", Description: "Закрытая зона участников: локальный вход и разработка с обязательным уточнением каждой задачи.", Private: true},
 	}
 }
@@ -83,6 +94,8 @@ func (s *Service) llms(w http.ResponseWriter, r *http.Request) {
 		"## Проект\n- [Главная](" + s.config.PublicURL + "): описание проекта и возможностей.\n" +
 		"- [Вопросы](" + s.config.PublicURL + "/questions): ответы по редактируемому проверенному контексту.\n" +
 		"- [План](" + s.config.PlannerURL + "/planner): этапы работ и время обновления.\n" +
+		"- [SAM](" + s.config.PublicURL + "/sam): сводка по активам, лицензиям и рискам.\n" +
+		"Каталог, лицензии, инвентаризация, комплаенс, сопоставление и рекомендации SAM доступны в разделах /sam/catalog, /sam/licenses, /sam/inventory, /sam/compliance, /sam/matching и /sam/assistant.\n" +
 		"Зона разработки с DeepSeek доступна только участникам команды после локального входа.\n"
 	writePublic(r, w, text)
 }
@@ -101,7 +114,7 @@ func (s *Service) serveIndex(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	content := string(data)
-	if strings.HasPrefix(r.URL.Path, "/admin") || r.URL.Path == "/coding" {
+	if strings.HasPrefix(r.URL.Path, "/admin") || r.URL.Path == "/coding" || r.URL.Path == "/planner" {
 		content = robotsPattern.ReplaceAllString(content, `<meta name="robots" content="noindex,nofollow"/>`)
 	} else {
 		content = robotsPattern.ReplaceAllString(content, `<meta name="robots" content="index,follow"/>`)

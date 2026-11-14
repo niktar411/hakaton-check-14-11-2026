@@ -85,6 +85,18 @@ type ChatResult struct {
 	Phase    string    `json:"phase"`
 	Messages []Message `json:"messages"`
 }
+type ChatSummary struct {
+	ID           int64     `json:"id"`
+	Title        string    `json:"title"`
+	Phase        string    `json:"phase"`
+	MessageCount int       `json:"messageCount"`
+	CreatedAt    time.Time `json:"createdAt"`
+}
+type ChatHistory struct {
+	ID       int64     `json:"id"`
+	Phase    string    `json:"phase"`
+	Messages []Message `json:"messages"`
+}
 type meOutput struct{ Body Identity }
 type dashboardOutput struct{ Body Dashboard }
 type usageInput struct {
@@ -111,3 +123,12 @@ type chatInput struct {
 	}
 }
 type chatOutput struct{ Body ChatResult }
+type chatConversationsInput struct {
+	Limit  int32 `query:"limit" minimum:"1" maximum:"100" default:"50"`
+	Offset int32 `query:"offset" minimum:"0" default:"0"`
+}
+type chatConversationsOutput struct{ Body []ChatSummary }
+type chatHistoryInput struct {
+	ID int64 `path:"id" minimum:"1"`
+}
+type chatHistoryOutput struct{ Body ChatHistory }

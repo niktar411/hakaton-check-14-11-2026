@@ -34,6 +34,16 @@ func RegisterTeam(api huma.API, svc *Service) {
 		}
 		return &plannerOutput{Body: blocks}, nil
 	})
+	huma.Register(api, huma.Operation{
+		OperationID: "start-team-planner-block", Method: http.MethodPost, Path: "/api/planner/blocks/{id}/start",
+		Summary: "Mark your planner block as in progress", Tags: []string{"Planner"},
+	}, func(ctx context.Context, in *startPlannerBlockInput) (*plannerBlockOutput, error) {
+		block, err := svc.Start(ctx, in.ID)
+		if err != nil {
+			return nil, plannerAPIError(err)
+		}
+		return &plannerBlockOutput{Body: block}, nil
+	})
 }
 
 func RegisterAdmin(api huma.API, svc *Service) {

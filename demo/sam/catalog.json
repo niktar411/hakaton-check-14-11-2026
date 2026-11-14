@@ -1,0 +1,410 @@
+{
+  "_meta": {
+    "demo": true,
+    "dataset_date": "2026-11-14",
+    "disclaimer": "Демонстрационные обезличенные данные. Исходная инвентаризация очищена от серийников; устройства заменены на PC-0001…PC-0187. Купленные места, цены и last_used_at синтетические."
+  },
+  "vendors": [
+    "Adobe",
+    "Apache Software Foundation",
+    "Archi",
+    "CMake",
+    "Cppcheck",
+    "DBeaver",
+    "Eugene Roshal & Far Group",
+    "Famatech",
+    "GIMP",
+    "Git",
+    "GlassFish",
+    "Graphviz",
+    "Inkscape",
+    "JetBrains",
+    "MediaWiki",
+    "MiKTeX",
+    "Microsoft",
+    "NVIDIA",
+    "Node.js Foundation",
+    "Oracle",
+    "PostGIS",
+    "Python Software Foundation",
+    "Tortoise",
+    "pdfforge GmbH",
+    "pgAdmin"
+  ],
+  "products": [
+    {
+      "vendor": "Adobe",
+      "name": "Adobe Photoshop",
+      "aliases": [
+        "Photoshop",
+        "Adobe Photoshop"
+      ],
+      "category": "05 - Прикладное программное обеспечение",
+      "status": "active",
+      "licenses": [],
+      "demo": true
+    },
+    {
+      "vendor": "Apache Software Foundation",
+      "name": "Apache NetBeans",
+      "aliases": [
+        "18 28"
+      ],
+      "category": "04 - Средства разработки программного обеспечения / 04.04 - Среды разработки, тестирования и отладки",
+      "status": "active",
+      "licenses": []
+    },
+    {
+      "vendor": "Archi",
+      "name": "Archi",
+      "aliases": [
+        "4.8.1"
+      ],
+      "category": "05 - Прикладное программное обеспечение / Системы управления проектами, исследованиями, разработкой, проектированием и внедрением",
+      "status": "active",
+      "licenses": []
+    },
+    {
+      "vendor": "CMake",
+      "name": "Cmake",
+      "aliases": [
+        "4.1.1"
+      ],
+      "category": "04 - Средства разработки программного обеспечения / 04.01 - Средства подготовки исполнимого кода",
+      "status": "active",
+      "licenses": []
+    },
+    {
+      "vendor": "Cppcheck",
+      "name": "Cppcheck",
+      "aliases": [
+        "2.18.0"
+      ],
+      "category": "04 - Средства разработки программного обеспечения / 04.01 - Средства подготовки исполнимого кода",
+      "status": "active",
+      "licenses": []
+    },
+    {
+      "vendor": "DBeaver",
+      "name": "dBeaver Community Edition",
+      "aliases": [
+        "26.0.0",
+        "26.0.2",
+        "24.1.2"
+      ],
+      "category": "04 - Средства разработки программного обеспечения / 04.04 - Среды разработки, тестирования и отладки",
+      "status": "active",
+      "licenses": []
+    },
+    {
+      "vendor": "",
+      "name": "Debugging Tools for Windows",
+      "aliases": [
+        "September 2016"
+      ],
+      "category": "04 - Средства разработки программного обеспечения / 04.03 - Библиотеки подпрограмм (SDK)",
+      "status": "active",
+      "licenses": []
+    },
+    {
+      "vendor": "Eugene Roshal & Far Group",
+      "name": "Far Manager 3",
+      "aliases": [
+        "3.0.6364"
+      ],
+      "category": "05 - Прикладное программное обеспечение / Прикладное программное обеспечение общего назначения",
+      "status": "active",
+      "licenses": []
+    },
+    {
+      "vendor": "GIMP",
+      "name": "GIMP",
+      "aliases": [
+        "3.0.6 для Windows, 2.10.38 для Альт"
+      ],
+      "category": "05 - Прикладное программное обеспечение / Офисные приложения",
+      "status": "active",
+      "licenses": []
+    },
+    {
+      "vendor": "Git",
+      "name": "Git",
+      "aliases": [
+        "2.49.0"
+      ],
+      "category": "04 - Средства разработки программного обеспечения / 04.02 - Средства версионного контроля исходного кода",
+      "status": "active",
+      "licenses": []
+    },
+    {
+      "vendor": "GlassFish",
+      "name": "Glassfish Server Open Source Edition",
+      "aliases": [
+        "4.1.2"
+      ],
+      "category": "02 - Системное программное обеспечение / 02.06 - Серверное и связующее программное обеспечение",
+      "status": "active",
+      "licenses": []
+    },
+    {
+      "vendor": "Graphviz",
+      "name": "Graphviz",
+      "aliases": [
+        "2.34.0"
+      ],
+      "category": "05 - Прикладное программное обеспечение / Прикладное программное обеспечение общего назначения",
+      "status": "active",
+      "licenses": []
+    },
+    {
+      "vendor": "Inkscape",
+      "name": "InkScape",
+      "aliases": [
+        "1.4.3"
+      ],
+      "category": "05 - Прикладное программное обеспечение / Офисные приложения",
+      "status": "active",
+      "licenses": []
+    },
+    {
+      "vendor": "JetBrains",
+      "name": "IntelliJ IDEA Community Edition",
+      "aliases": [
+        "2023.1.1"
+      ],
+      "category": "04 - Средства разработки программного обеспечения / 04.04 - Среды разработки, тестирования и отладки",
+      "status": "active",
+      "licenses": []
+    },
+    {
+      "vendor": "Oracle",
+      "name": "Liberica JDK",
+      "aliases": [
+        "11.0.32"
+      ],
+      "category": "04 - Средства разработки программного обеспечения / 04.01 - Средства подготовки исполнимого кода",
+      "status": "active",
+      "licenses": []
+    },
+    {
+      "vendor": "MediaWiki",
+      "name": "MediaWiki",
+      "aliases": [
+        "1.25.1"
+      ],
+      "category": "05 - Прикладное программное обеспечение / Системы управления процессами организации",
+      "status": "active",
+      "licenses": []
+    },
+    {
+      "vendor": "Microsoft",
+      "name": "Microsoft Office",
+      "aliases": [
+        "Office",
+        "Microsoft Office",
+        "Office 2010",
+        "Office 2013",
+        "Office 2016",
+        "Office 2019",
+        "Office 2021"
+      ],
+      "category": "05 - Прикладное программное обеспечение",
+      "status": "active",
+      "licenses": [
+        {
+          "metric": "per_device",
+          "quantity": 100,
+          "expiresAt": "2027-12-31",
+          "notes": "demo"
+        }
+      ],
+      "demo": true
+    },
+    {
+      "vendor": "Microsoft",
+      "name": "Microsoft Project",
+      "aliases": [
+        "Project",
+        "MS Project",
+        "Microsoft Project"
+      ],
+      "category": "05 - Прикладное программное обеспечение",
+      "status": "active",
+      "licenses": [
+        {
+          "metric": "per_user",
+          "quantity": 50,
+          "expiresAt": "2027-12-31",
+          "notes": "demo"
+        }
+      ],
+      "demo": true
+    },
+    {
+      "vendor": "Microsoft",
+      "name": "Microsoft Visual Studio Express 2015 для Windows Desktop",
+      "aliases": [
+        "2015"
+      ],
+      "category": "04 - Средства разработки программного обеспечения / 04.04 - Среды разработки, тестирования и отладки",
+      "status": "active",
+      "licenses": []
+    },
+    {
+      "vendor": "MiKTeX",
+      "name": "MiKTeX",
+      "aliases": [
+        "версия от 12.01.2017"
+      ],
+      "category": "04 - Средства разработки программного обеспечения / 04.01 - Средства подготовки исполнимого кода",
+      "status": "active",
+      "licenses": []
+    },
+    {
+      "vendor": "Node.js Foundation",
+      "name": "Node.js",
+      "aliases": [
+        "24.22.1 для существующих проектов, 26.12.1 при первичной установке и для новых проектов",
+        "22.14.0",
+        "22.23.4"
+      ],
+      "category": "04 - Средства разработки программного обеспечения / 04.04 - Среды разработки, тестирования и отладки",
+      "status": "active",
+      "licenses": []
+    },
+    {
+      "vendor": "NVIDIA",
+      "name": "Nvidia CUDA",
+      "aliases": [
+        "10.2"
+      ],
+      "category": "04 - Средства разработки программного обеспечения / 04.03 - Библиотеки подпрограмм (SDK)",
+      "status": "active",
+      "licenses": []
+    },
+    {
+      "vendor": "pdfforge GmbH",
+      "name": "PDFCreator",
+      "aliases": [
+        "3.1.2, 4.4.0"
+      ],
+      "category": "05 - Прикладное программное обеспечение / Офисные приложения",
+      "status": "active",
+      "licenses": []
+    },
+    {
+      "vendor": "pgAdmin",
+      "name": "pgAdmin 3",
+      "aliases": [
+        "1.22.2"
+      ],
+      "category": "05 - Прикладное программное обеспечение / Прикладное программное обеспечение общего назначения",
+      "status": "active",
+      "licenses": []
+    },
+    {
+      "vendor": "PostGIS",
+      "name": "pgRouting",
+      "aliases": [
+        "4.0.1"
+      ],
+      "category": "04 - Средства разработки программного обеспечения / 04.03 - Библиотеки подпрограмм (SDK)",
+      "status": "active",
+      "licenses": []
+    },
+    {
+      "vendor": "PostGIS",
+      "name": "PostGIS",
+      "aliases": [
+        "3.5.0"
+      ],
+      "category": "04 - Средства разработки программного обеспечения / 04.03 - Библиотеки подпрограмм (SDK)",
+      "status": "active",
+      "licenses": []
+    },
+    {
+      "vendor": "Python Software Foundation",
+      "name": "Python",
+      "aliases": [
+        "3.13.4",
+        "3.10.5",
+        "3.14.7",
+        "3.13.7"
+      ],
+      "category": "04 - Средства разработки программного обеспечения / 04.04 - Среды разработки, тестирования и отладки",
+      "status": "active",
+      "licenses": []
+    },
+    {
+      "vendor": "Famatech",
+      "name": "Radmin",
+      "aliases": [
+        "Radmin",
+        "Radmin Server",
+        "Radmin Viewer"
+      ],
+      "category": "04 - Средства разработки программного обеспечения",
+      "status": "banned",
+      "licenses": [],
+      "demo": true
+    },
+    {
+      "vendor": "Tortoise",
+      "name": "TortoiseHg",
+      "aliases": [
+        "5.8"
+      ],
+      "category": "04 - Средства разработки программного обеспечения / 04.02 - Средства версионного контроля исходного кода",
+      "status": "active",
+      "licenses": []
+    },
+    {
+      "vendor": "Tortoise",
+      "name": "TortoiseSVN",
+      "aliases": [
+        "1.14.1"
+      ],
+      "category": "04 - Средства разработки программного обеспечения / 04.02 - Средства версионного контроля исходного кода",
+      "status": "active",
+      "licenses": []
+    },
+    {
+      "vendor": "Oracle",
+      "name": "VirtualBox",
+      "aliases": [
+        "7.1.6",
+        "6.1.16",
+        "6.1.48"
+      ],
+      "category": "02 - Системное программное обеспечение / 02.05 - Средства обеспечения облачных и распределенных вычислений, средства виртуализации и системы хранения данных",
+      "status": "active",
+      "licenses": []
+    },
+    {
+      "vendor": "Oracle",
+      "name": "VirtualBox , VBoxGuestAdditions",
+      "aliases": [
+        "7.2.8",
+        "6.1.50",
+        "7.1.6"
+      ],
+      "category": "02 - Системное программное обеспечение / 02.05 - Средства обеспечения облачных и распределенных вычислений, средства виртуализации и системы хранения данных",
+      "status": "active",
+      "licenses": []
+    }
+  ],
+  "licenses": [
+    {
+      "metric": "per_device",
+      "quantity": 100,
+      "expiresAt": "2027-12-31",
+      "notes": "demo"
+    },
+    {
+      "metric": "per_user",
+      "quantity": 50,
+      "expiresAt": "2027-12-31",
+      "notes": "demo"
+    }
+  ]
+}
