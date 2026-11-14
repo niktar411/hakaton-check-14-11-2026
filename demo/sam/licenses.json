@@ -1,0 +1,38 @@
+{
+  "_meta": {
+    "demo": true,
+    "dataset_date": "2026-11-14",
+    "disclaimer": "Демонстрационные обезличенные данные. Исходная инвентаризация очищена от серийников; устройства заменены на PC-0001…PC-0187. Купленные места, цены и last_used_at синтетические.",
+    "seed": 20261114
+  },
+  "licenses": [
+    {
+      "id": "lic-microsoft office",
+      "product_id": "Microsoft Office",
+      "product_name": "Microsoft Office",
+      "vendor": "Microsoft",
+      "metric": "device",
+      "seats_total": 100,
+      "seats_active": 99,
+      "unit_price_rub": 48000,
+      "total_price_rub": 4800000,
+      "purchased_at": "2025-03-01",
+      "currency": "RUB",
+      "demo": true
+    },
+    {
+      "id": "lic-microsoft project",
+      "product_id": "Microsoft Project",
+      "product_name": "Microsoft Project",
+      "vendor": "Microsoft",
+      "metric": "user",
+      "seats_total": 50,
+      "seats_active": 10,
+      "unit_price_rub": 62000,
+      "total_price_rub": 3100000,
+      "purchased_at": "2025-03-01",
+      "currency": "RUB",
+      "demo": true
+    }
+  ]
+}

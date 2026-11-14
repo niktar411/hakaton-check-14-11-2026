@@ -35,8 +35,6 @@ import SamCatalogPage from "@/features/sam/SamCatalogPage";
 import SamLicensesPage from "@/features/sam/SamLicensesPage";
 import SamInventoryPage from "@/features/sam/SamInventoryPage";
 import SamCompliancePage from "@/features/sam/SamCompliancePage";
-import SamProductPage from "@/features/sam/SamProductPage";
-import SamHostPage from "@/features/sam/SamHostPage";
 import SamMatchingPage from "@/features/sam/SamMatchingPage";
 import SamAssistantPage from "@/features/sam/SamAssistantPage";
 import { SiteConfigProvider } from "@/app/site-config";
@@ -255,10 +253,8 @@ if (root) {
 				<Route path="/sam" component={SamLayout}>
 					<Route path="/" component={SamDashboardPage} />
 					<Route path="/catalog" component={SamCatalogPage} />
-					<Route path="/catalog/:id" component={SamProductPage} />
 					<Route path="/licenses" component={SamLicensesPage} />
 					<Route path="/inventory" component={SamInventoryPage} />
-					<Route path="/inventory/:id" component={SamHostPage} />
 					<Route path="/compliance" component={SamCompliancePage} />
 					<Route path="/matching" component={SamMatchingPage} />
 					<Route path="/assistant" component={SamAssistantPage} />
