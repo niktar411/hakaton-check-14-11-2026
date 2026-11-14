@@ -16,7 +16,7 @@ import { LocalLoginForm } from "@/features/auth/LocalLoginForm";
 import { formatDate } from "@/shared/lib/format";
 import { Button } from "@/shared/ui/Button";
 import { Markdown } from "@/shared/ui/Markdown";
-import { EmptyState, LoadingState } from "@/shared/ui/State";
+import { EmptyState, ErrorState, LoadingState } from "@/shared/ui/State";
 import { useToast } from "@/shared/ui/Toast";
 import { AgentRunCard } from "./AgentRunCard";
 import { ChatModeTabs } from "./ChatModeTabs";
@@ -152,6 +152,7 @@ export default function ChatPage() {
 	let streamController: AbortController | undefined;
 	let messageList: HTMLDivElement | undefined;
 	let messagesEnd: HTMLDivElement | undefined;
+	let liveThinking: HTMLDivElement | undefined;
 
 	const [session, { refetch: refetchSession }] = createResource(async () => {
 		try {
@@ -377,6 +378,11 @@ export default function ChatPage() {
 		queueMicrotask(() => {
 			if (!messageList) return;
 			messageList.scrollTop = messageList.scrollHeight;
+			// The reasoning body is its own scroll container; keep its tail in
+			// view too so the stream reads continuously while it grows.
+			if (liveThinking?.isConnected) {
+				liveThinking.scrollTop = liveThinking.scrollHeight;
+			}
 		});
 	});
 
@@ -839,9 +845,23 @@ export default function ChatPage() {
 						>
 							<Show when={!agentMode()}>
 							<Show
-								when={displayMessages().length > 0}
-								fallback={<EmptyState message={m.chatEmpty()} />}
+								when={
+									selected() === 0 ||
+									(!history.loading && !history.error) ||
+									displayMessages().length > 0
+								}
+								fallback={
+									history.error ? (
+										<ErrorState onRetry={() => void refetchHistory()} />
+									) : (
+										<LoadingState />
+									)
+								}
 							>
+								<Show
+									when={displayMessages().length > 0}
+									fallback={<EmptyState message={m.chatEmpty()} />}
+								>
 								<Index each={displayMessages()}>
 									{(message) => (
 										<article
@@ -876,7 +896,13 @@ export default function ChatPage() {
 														</span>
 														<span class={s.thinkingChevron} aria-hidden="true" />
 													</summary>
-													<div class={s.thinkingBody}>
+													<div
+													class={s.thinkingBody}
+													ref={(element) => {
+														if (!(message().streaming && !message().content)) return;
+														liveThinking = element;
+													}}
+												>
 														<Show
 															when={message().reasoning}
 															fallback={
@@ -913,6 +939,7 @@ export default function ChatPage() {
 										</article>
 									)}
 								</Index>
+								</Show>
 							</Show>
 							</Show>
 							<Show when={agentMode()}>
