@@ -116,8 +116,8 @@ func run(ctx context.Context, dsn, dir string, force bool) error {
 		}
 	}
 
-	ids := make(map[string]int64, len(catalogSeed.Products))
-	for _, product := range catalogSeed.Products {
+	ids := make(map[string]int64, len(catalogSeed.Seed.Products))
+	for _, product := range catalogSeed.Seed.Products {
 		status := statuses[strings.ToLower(product.Name)]
 		if status == "" {
 			status = "active"
@@ -138,7 +138,7 @@ func run(ctx context.Context, dsn, dir string, force bool) error {
 	}
 
 	aliasCount := 0
-	for _, product := range catalogSeed.Products {
+	for _, product := range catalogSeed.Seed.Products {
 		productID := ids[strings.ToLower(product.Name)]
 		aliases := append([]string{product.Name}, product.Aliases...)
 		for _, alias := range aliases {
@@ -216,7 +216,7 @@ func run(ctx context.Context, dsn, dir string, force bool) error {
 		return fmt.Errorf("commit: %w", err)
 	}
 	slog.InfoContext(ctx, "sam demo data loaded",
-		"products", len(catalogSeed.Products), "aliases", aliasCount,
+		"products", len(catalogSeed.Seed.Products), "aliases", aliasCount,
 		"licenses", licenseCount, "installations", inserted,
 		"catalog_issues", len(catalogSeed.Issues))
 	return nil
