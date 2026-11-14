@@ -1,3 +1,4 @@
+import { A } from "@solidjs/router";
 import type { JSX } from "solid-js";
 import * as m from "@/paraglide/messages";
 import s from "./LegalPage.module.css";
@@ -16,6 +17,11 @@ function LegalPage(props: {
 	return (
 		<main class={s.page}>
 			<article class={s.inner}>
+			<nav class={s.back}>
+				<A href="/" aria-label={m.legalBack()}>
+					{"←"} {m.legalBack()}
+				</A>
+			</nav>
 			<header class={s.header}>
 				<p class={s.eyebrow}>{m.legalUpdated()}</p>
 				<h1 class={s.title}>{props.title}</h1>

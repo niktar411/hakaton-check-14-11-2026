@@ -4,6 +4,24 @@
 	flex-direction: column;
 }
 
+.back {
+	margin: 0 0 calc(-1 * var(--space-4));
+}
+
+.back a {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-1);
+	color: var(--text-muted);
+	font-size: var(--text-sm);
+	text-decoration: none;
+}
+
+.back a:hover {
+	color: var(--text);
+	text-decoration: underline;
+}
+
 .inner {
 	display: flex;
 	width: 100%;

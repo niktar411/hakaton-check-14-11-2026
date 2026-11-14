@@ -175,7 +175,11 @@ function App(props: { children?: JSX.Element }) {
 			location.pathname === "/team" ||
 			location.pathname === "/questions" ||
 			location.pathname === "/sam" ||
-			location.pathname.startsWith("/sam/"));
+			location.pathname.startsWith("/sam/") ||
+			location.pathname === "/terms" ||
+			location.pathname === "/policy" ||
+			location.pathname === "/consent" ||
+			location.pathname === "/cookies");
 	createEffect(() => {
 		document.documentElement.toggleAttribute("data-mono", monoPage());
 	});
