@@ -14,7 +14,6 @@ import (
 	"github.com/jackc/pgx/v5"
 	db "hackathon/internal/db/sqlc"
 	"hackathon/internal/gitlab"
-	"hackathon/internal/projectfacts"
 )
 
 const chatGeneralContextKey = "chat_general_context"
@@ -81,7 +80,7 @@ func composeChatInstruction(phase, agents, project, general, personal string) st
 	if phase == "ready" {
 		base = solutionInstruction
 	}
-	parts := []string{base, accessInstruction, projectfacts.StackFacts}
+	parts := []string{base, accessInstruction}
 	if strings.TrimSpace(agents) != "" {
 		parts = append(parts, "Информация о проекте из AGENTS.md (файл на сервере):\n"+strings.TrimSpace(agents))
 	}

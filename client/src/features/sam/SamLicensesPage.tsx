@@ -1,4 +1,4 @@
-import { For } from "solid-js";
+import { createResource, For } from "solid-js";
 import * as m from "@/paraglide/messages";
 import { api, unwrap } from "@/shared/api";
 import type { components } from "@/shared/api/schema";
@@ -10,7 +10,7 @@ import {
 	SamPageHeader,
 } from "./SamPage";
 import s from "./SamPage.module.css";
-import { createSamResource, SamPageState } from "./SamPageState";
+import { SamPageState } from "./SamPageState";
 import {
 	licenseKindLabel,
 	licenseStatusLabel,
@@ -20,7 +20,7 @@ import {
 type License = components["schemas"]["License"];
 
 export default function SamLicensesPage() {
-	const { resource: licenses, refetch } = createSamResource<License[]>(async () =>
+	const [licenses, { refetch }] = createResource(async () =>
 		unwrap(await api.GET("/api/public/sam/licenses")) ?? [],
 	);
 	return (
