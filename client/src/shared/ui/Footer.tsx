@@ -19,7 +19,7 @@ export function Footer(props: {
 						</>
 					}
 				>
-					<A href="/">{m.teamPageTitle()}</A>
+					<A href="/team">{m.teamPageTitle()}</A>
 				</Show>
 				<A href="/terms">{m.footerTerms()}</A>
 				<A href="/policy">{m.footerPolicy()}</A>

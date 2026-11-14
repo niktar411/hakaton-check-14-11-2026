@@ -65,8 +65,8 @@ const CookiesPage = lazyPage(() =>
 function PublicNavigation() {
 	return (
 		<nav class="flex flex-wrap gap-x-5 gap-y-2" aria-label={m.mainNavigation()}>
-			<A href="/">{m.teamPageTitle()}</A>
-			<A href="/sam">{m.samNavigation()}</A>
+			<A href="/team">{m.teamPageTitle()}</A>
+			<A href="/">{m.samNavigation()}</A>
 		</nav>
 	);
 }
@@ -193,12 +193,10 @@ function App(props: { children?: JSX.Element }) {
 		document.documentElement.toggleAttribute("data-mono", monoPage());
 	});
 	createEffect(() => {
-		// The public site is one page: old question, plan and team URLs open it.
-		if (
-			location.pathname === "/questions" ||
-			location.pathname === "/team"
-		) {
-			navigate("/", { replace: true });
+		// The public site is one page: the legacy questions URL opens the
+		// team page at /team (the root now hosts the SAM registry).
+		if (location.pathname === "/questions") {
+			navigate("/team", { replace: true });
 		}
 	});
 	createEffect(() => {
@@ -249,7 +247,7 @@ function App(props: { children?: JSX.Element }) {
 									<A class="text-text text-xl font-bold no-underline" href="/admin">
 										{m.administrationPageTitle()}
 									</A>
-									<A href="/">{m.publicSite()}</A>
+									<A href="/team">{m.publicSite()}</A>
 								</header>
 								{props.children}
 							</div>
@@ -303,7 +301,18 @@ if (root) {
 	render(
 		() => (
 			<Router root={App}>
-				<Route path="/" component={TeamPage} />
+				<Route path="/" component={SamLayout}>
+					<Route path="/" component={SamDashboardPage} />
+					<Route path="/catalog" component={SamCatalogPage} />
+					<Route path="/catalog/:id" component={SamProductPage} />
+					<Route path="/licenses" component={SamLicensesPage} />
+					<Route path="/inventory" component={SamInventoryPage} />
+					<Route path="/inventory/:id" component={SamHostPage} />
+					<Route path="/compliance" component={SamCompliancePage} />
+					<Route path="/matching" component={SamMatchingPage} />
+					<Route path="/assistant" component={SamAssistantPage} />
+				</Route>
+				<Route path="/team" component={TeamPage} />
 				<Route path="/planner" component={PlannerPage} />
 				<Route path="/chat" component={ChatPage} />
 				<Route path="/deployments" component={TeamDeploymentsPage} />

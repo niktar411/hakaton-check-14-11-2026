@@ -24,8 +24,8 @@ type publicPage struct {
 
 func (s *Service) publicPages() []publicPage {
 	return []publicPage{
-		{Path: "/", Title: "Хакатон: продукт команды", Description: "Публичная информация о проекте, ответы DeepSeek и реальный план разработки команды."},
-		{Path: "/questions", Title: "Вопросы о проекте", Description: "Ответы DeepSeek по проверяемому контексту проекта и ссылки только на страницы сайта."},
+		{Path: "/", Title: "SAM: реестр программного обеспечения", Description: "Учёт и комплаенс ПО: каталог, лицензии, инвентаризация, риски и AI-ассистент."},
+		{Path: "/team", Title: "Драконы: продукт команды", Description: "Публичная информация о проекте, ответы DeepSeek и реальный план разработки команды."},
 		{Path: "/planner", Title: "План команды", Description: "Публичный план работ с реальным прогрессом Merge Request и CI GitLab."},
 		{Path: "/sam", Title: "SAM: обзор", Description: "Сводка по программным активам, лицензиям, инвентаризации и рискам."},
 		{Path: "/sam/catalog", Title: "SAM: каталог", Description: "Каталог программных продуктов, лицензий и обнаруженных установок."},

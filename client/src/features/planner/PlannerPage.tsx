@@ -731,24 +731,27 @@ export default function PlannerPage() {
 	const [starting, setStarting] = createSignal(false);
 	const [planner, { refetch }] = createResource(
 		async (): Promise<PlannerView> => {
+			type Me = components["schemas"]["Identity"];
+			let me: Me | null = null;
 			try {
-				const me = unwrap(await api.GET("/api/me"));
-				try {
-					return {
-						team: true,
-						username: me.username,
-						csrf: me.csrf,
-						blocks: unwrap(await api.GET("/api/planner")) ?? [],
-					};
-				} catch {
-					// Fall through to the public projection if the session expired.
-				}
+				me = unwrap(await api.GET("/api/me")) as Me;
 			} catch {
 				// Anonymous visitor.
 			}
+			if (!me) {
+				return {
+					team: false,
+					blocks: unwrap(await api.GET("/api/public/planner")) ?? [],
+				};
+			}
+			// The session is alive: a failing team projection must surface as
+			// an error with a retry — silently degrading to the read-only
+			// board is what made the planner look frozen and reloading.
 			return {
-				team: false,
-				blocks: unwrap(await api.GET("/api/public/planner")) ?? [],
+				team: true,
+				username: me.username,
+				csrf: me.csrf,
+				blocks: unwrap(await api.GET("/api/planner")) ?? [],
 			};
 		},
 	);

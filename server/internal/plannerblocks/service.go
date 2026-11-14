@@ -1,4 +1,4 @@
-package plannerblocks
+﻿package plannerblocks
 
 import (
 	"context"
@@ -24,6 +24,7 @@ import (
 const (
 	publicListLimit          int32 = 200
 	maxConcurrentGitLabCalls       = 8
+	listCacheTTL                   = 30 * time.Second
 	gitLabRequestError             = "gitlab.merge_request_unavailable"
 	gitLabApprovalsError           = "gitlab.approvals_unavailable"
 	gitLabProgressError            = "gitlab.progress_unavailable"
@@ -76,6 +77,13 @@ type Service struct {
 	// notifier is optional: when set, a block whose merge request is observed
 	// as merged for the first time produces a chat notification.
 	notifier notifications.Notifier
+	// listCache memoizes the most recent GitLab-backed snapshot. The client
+	// polls every 15 seconds; without the cache each poll re-runs dozens of
+	// GitLab lookups and the next poll aborts them mid-flight (context
+	// canceled), leaving completion transitions half-done. Mutations
+	// invalidate the cache so state changes are never served stale.
+	listCache   []PlannerBlock
+	listCacheAt time.Time
 }
 
 // SetNotifier attaches a chat notification sink. Safe to call before serving;
@@ -97,6 +105,15 @@ func newService(store Store, gitLab GitLab, config Config) *Service {
 // List returns a bounded team snapshot. Failure of one GitLab lookup affects
 // only that block and never replaces a known state with fabricated progress.
 func (s *Service) List(ctx context.Context) ([]PlannerBlock, error) {
+	s.mu.Lock()
+	if s.listCache != nil && time.Since(s.listCacheAt) < listCacheTTL {
+		out := make([]PlannerBlock, len(s.listCache))
+		copy(out, s.listCache)
+		s.mu.Unlock()
+		return out, nil
+	}
+	s.mu.Unlock()
+
 	rows, err := s.store.ListPlannerBlocks(ctx, db.ListPlannerBlocksParams{Limit: publicListLimit})
 	if err != nil {
 		return nil, fmt.Errorf("list planner blocks: %w", err)
@@ -121,7 +138,22 @@ func (s *Service) List(ctx context.Context) ([]PlannerBlock, error) {
 		}(i)
 	}
 	wg.Wait()
+
+	// Only a fully successful snapshot is cached: an aborted request leaves
+	// the previous snapshot in place and the next poll retries.
+	s.mu.Lock()
+	s.listCache = blocks
+	s.listCacheAt = time.Now()
+	s.mu.Unlock()
 	return blocks, nil
+}
+
+// invalidateListCache drops the memoized snapshot after any mutation so the
+// next read always reflects the new state.
+func (s *Service) invalidateListCache() {
+	s.mu.Lock()
+	s.listCache = nil
+	s.mu.Unlock()
 }
 
 // Snapshot returns the plan without calling GitLab. The chat project context
@@ -211,9 +243,11 @@ func (s *Service) populateProgress(ctx context.Context, block *PlannerBlock) {
 	block.Progress = progressForMergeRequest(mergeRequest)
 	if block.Progress.State == ProgressDone {
 		// Block 5: enqueue the auto-pull prompt; block 8: record the chat
-		// notification. Both sinks deduplicate their events.
-		s.fanOutCompletion(ctx, *block, mergeRequest.WebURL)
-		s.notifyBlockDone(ctx, block)
+		// notification. Both sinks deduplicate their events. The transition
+		// must survive an aborted HTTP request, hence WithoutCancel.
+		detached := context.WithoutCancel(ctx)
+		s.fanOutCompletion(detached, *block, mergeRequest.WebURL)
+		s.notifyBlockDone(detached, block)
 	}
 	if block.Progress.State != ProgressReview {
 		return
@@ -316,6 +350,7 @@ func progressForMergeRequest(mergeRequest gitlab.MergeRequest) Progress {
 // Start marks a block as in progress. A team member may start only a block
 // they own; the AI worker uses the same ownership check through StartForOwner.
 func (s *Service) Start(ctx context.Context, id int64) (PlannerBlock, error) {
+	s.invalidateListCache()
 	principal, err := identity.FromContext(ctx)
 	if err != nil {
 		return PlannerBlock{}, err
@@ -324,6 +359,7 @@ func (s *Service) Start(ctx context.Context, id int64) (PlannerBlock, error) {
 }
 
 func (s *Service) StartForOwner(ctx context.Context, id int64, username string) (PlannerBlock, error) {
+	s.invalidateListCache()
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	existing, err := s.store.GetPlannerBlock(ctx, id)
@@ -381,6 +417,7 @@ func (s *Service) ListOwned(ctx context.Context, username string) ([]PlannerBloc
 
 // Create authorizes the HTTP actor before allocating a position or writing.
 func (s *Service) Create(ctx context.Context, input CreateInput) (PlannerBlock, error) {
+	s.invalidateListCache()
 	actor, err := identity.RequireAdmin(ctx, s.config.AdminUser, s.config.AdminIP)
 	if err != nil {
 		return PlannerBlock{}, err
@@ -398,6 +435,7 @@ func (s *Service) CreateForAI(ctx context.Context, actor identity.Principal, inp
 }
 
 func (s *Service) create(ctx context.Context, actor identity.Principal, input CreateInput) (PlannerBlock, error) {
+	s.invalidateListCache()
 	input, err := normalizeInput(input)
 	if err != nil {
 		return PlannerBlock{}, err
@@ -444,6 +482,7 @@ func (s *Service) create(ctx context.Context, actor identity.Principal, input Cr
 // Update replaces mutable fields. Omitting position preserves the current one;
 // omitting branch or mrIid clears those fields, consistent with PUT semantics.
 func (s *Service) Update(ctx context.Context, id int64, input CreateInput) (PlannerBlock, error) {
+	s.invalidateListCache()
 	if _, err := identity.RequireAdmin(ctx, s.config.AdminUser, s.config.AdminIP); err != nil {
 		return PlannerBlock{}, err
 	}
@@ -499,6 +538,7 @@ func (s *Service) Update(ctx context.Context, id int64, input CreateInput) (Plan
 }
 
 func (s *Service) Delete(ctx context.Context, id int64) error {
+	s.invalidateListCache()
 	if _, err := identity.RequireAdmin(ctx, s.config.AdminUser, s.config.AdminIP); err != nil {
 		return err
 	}

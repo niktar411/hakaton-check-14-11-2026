@@ -18,7 +18,7 @@ function LegalPage(props: {
 		<main class={s.page}>
 			<article class={s.inner}>
 			<nav class={s.back}>
-				<A href="/" aria-label={m.legalBack()}>
+				<A href="/team" aria-label={m.legalBack()}>
 					{"←"} {m.legalBack()}
 				</A>
 			</nav>
