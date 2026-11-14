@@ -32,7 +32,7 @@ var stopWords = map[string]bool{
 	"с": true, "сколько": true, "со": true, "так": true, "там": true, "те": true,
 	"то": true, "только": true, "у": true, "уже": true, "что": true, "чтобы": true,
 	"это": true, "я": true, "найди": true, "найти": true,
-	"список": true, "всё": true, "общий": true, "общая": true,
+	"список": true, "всё": true, "всего": true, "итого": true, "общий": true, "общая": true,
 	"отчет": true, "отчёт": true, "сводка": true, "данные": true, "данных": true,
 	"продукт": true, "продукта": true, "продуктов": true, "продукты": true,
 	"лицензия": true, "лицензии": true, "лицензий": true, "лицензию": true,
@@ -152,19 +152,20 @@ func (s *Service) fallback(ctx context.Context, prompt string) (string, []string
 			if err != nil {
 				return "", nil, storageError(ctx, "load SAM product balance", err)
 			}
-			if len(rows) > 0 {
-				var answer strings.Builder
-				fmt.Fprintf(&answer, "Баланс мест по запросу «%s»:\n", term)
-				for _, row := range rows {
-					fmt.Fprintf(&answer, "- %s: оплачено %d мест, установлено %d, свободно %d.", row.Name, row.LicensedSeats, row.Installed, row.AvailableSeats)
-					if expiry := valueString(row.NearestExpiry); expiry != "" {
-						fmt.Fprintf(&answer, " Ближайшее истечение: %s.", expiry)
-					}
-					answer.WriteString("\n")
-				}
-				answer.WriteString("Источник: sam_products/sam_licenses/sam_installations (product_balance).")
-				return answer.String(), []string{"sam_products/sam_licenses/sam_installations (product_balance)"}, nil
+			if len(rows) == 0 {
+				return fmt.Sprintf("Продукт «%s» не найден в sam_products.\nИсточник: sam_products (product_balance).", term), []string{"sam_products (product_balance)"}, nil
 			}
+			var answer strings.Builder
+			fmt.Fprintf(&answer, "Баланс мест по запросу «%s»:\n", term)
+			for _, row := range rows {
+				fmt.Fprintf(&answer, "- %s: оплачено %d мест, установлено %d, свободно %d.", row.Name, row.LicensedSeats, row.Installed, row.AvailableSeats)
+				if expiry := valueString(row.NearestExpiry); expiry != "" {
+					fmt.Fprintf(&answer, " Ближайшее истечение: %s.", expiry)
+				}
+				answer.WriteString("\n")
+			}
+			answer.WriteString("Источник: sam_products/sam_licenses/sam_installations (product_balance).")
+			return answer.String(), []string{"sam_products/sam_licenses/sam_installations (product_balance)"}, nil
 		}
 		rows, err := s.store.SamLicenseSummary(ctx)
 		if err != nil {
@@ -193,12 +194,11 @@ func (s *Service) fallback(ctx context.Context, prompt string) (string, []string
 			if err != nil {
 				return "", nil, storageError(ctx, "resolve SAM product", err)
 			}
-			if len(products) > 0 {
-				productID = products[0].ID
-				term = products[0].Name
-			} else {
-				term = ""
+			if len(products) == 0 {
+				return fmt.Sprintf("Продукт «%s» не найден в sam_products.\nИсточник: sam_products (find_installations).", term), []string{"sam_products (find_installations)"}, nil
 			}
+			productID = products[0].ID
+			term = products[0].Name
 		}
 		rows, err := s.store.SamFindInstallations(ctx, db.SamFindInstallationsParams{ProductID: productID, Query: "", Limit: 20})
 		if err != nil {
