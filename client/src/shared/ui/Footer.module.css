@@ -39,17 +39,6 @@
 	font-size: var(--text-sm);
 }
 
-.credit {
-	margin: calc(-1 * var(--space-2)) 0 0;
-	color: var(--text-muted);
-	font-size: 10px;
-}
-
-.credit a {
-	color: inherit;
-	text-decoration: none;
-}
-
 .credit a:hover {
 	text-decoration: underline;
 }

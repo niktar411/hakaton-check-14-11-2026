@@ -5,7 +5,9 @@ import { api, unwrap } from "@/shared/api";
 import type { components } from "@/shared/api/schema";
 import { formatMoney, formatNumber } from "@/shared/lib/format";
 import { Button } from "@/shared/ui/Button";
-import { SamBadge, SamPageHeader } from "./SamPage";
+import { SamBadge } from "./SamPage";
+import { SamDocHeader, SamSectionBand } from "./SamLayout";
+import { formatDay } from "@/shared/lib/format";
 import s from "./SamDashboardPage.module.css";
 import { createSamResource, SamPageState } from "./SamPageState";
 import {
@@ -128,9 +130,17 @@ export default function SamDashboardPage() {
 
 	return (
 		<>
-			<SamPageHeader
+			<SamDocHeader
+				eyebrow={m.samDocEyebrow()}
 				title={m.samDashboardPageTitle()}
 				lead={m.samDashboardLead()}
+				meta={[
+					{ label: m.samMetaDate(), value: formatDay(new Date().toISOString()) },
+					{ label: m.samMetaSource(), value: m.samMetaSourceValue() },
+					{ label: m.samMetaDevices(), value: formatNumber(data()?.summary.devices ?? 0) },
+					{ label: m.samMetaRows(), value: formatNumber(data()?.summary.installations ?? 0) },
+					{ label: m.samMetaOwner(), value: m.samMetaOwnerValue() },
+				]}
 			/>
 			<SamPageState
 				data={data}
@@ -140,7 +150,12 @@ export default function SamDashboardPage() {
 			>
 				{(value) => (
 					<div class={s.page}>
-						<section class={s.kpis} aria-label={m.samDashboardPageTitle()}>
+						<SamSectionBand
+							num="01"
+							title={m.samBandOverview()}
+							meta={m.samBandOverviewMeta()}
+						/>
+						<section class={s.kpis} aria-label={m.samBandOverview()}>
 							<A class={s.kpi} href="/sam/inventory">
 								<span class={s.kpiValue}>{formatNumber(value.summary.devices)}</span>
 								<span class={s.kpiLabel}>{m.samKpiHosts()}</span>
@@ -217,8 +232,8 @@ export default function SamDashboardPage() {
 									</strong>
 								</div>
 							</div>
+							<SamSectionBand num="02" title={m.samRecommendations()} />
 							<div class={s.recommendations}>
-								<h2>{m.samRecommendations()}</h2>
 								<ul>
 									<For each={value.summary.recommendations ?? []}>
 										{(item) => <li>{item}</li>}
@@ -229,7 +244,7 @@ export default function SamDashboardPage() {
 
 						<section class={s.charts}>
 							<article class={s.chart}>
-								<h2>{m.samChartStatuses()}</h2>
+								<SamSectionBand num="03" title={m.samChartStatuses()} />
 								<Show
 									when={maxStatus() > 0}
 									fallback={<p class={s.chartEmpty}>{m.samChartEmpty()}</p>}
@@ -259,7 +274,7 @@ export default function SamDashboardPage() {
 								</Show>
 							</article>
 							<article class={s.chart}>
-								<h2>{m.samChartCategories()}</h2>
+								<SamSectionBand num="04" title={m.samChartCategories()} />
 								<Show
 									when={maxCategory() > 0}
 									fallback={<p class={s.chartEmpty}>{m.samChartEmpty()}</p>}
@@ -292,12 +307,11 @@ export default function SamDashboardPage() {
 						</section>
 
 						<section class={s.section}>
-							<div class={s.sectionHeader}>
-								<div>
-									<h2>{m.samTopRisks()}</h2>
-									<p>{m.samCostAtRiskHint()}</p>
-								</div>
-							</div>
+							<SamSectionBand
+								num="05"
+								title={m.samTopRisks()}
+								meta={m.samCostAtRiskHint()}
+							/>
 							<div class={s.filters}>
 								<FilterGroup
 									label={m.samFilterCategory()}
@@ -379,11 +393,12 @@ export default function SamDashboardPage() {
 						</section>
 
 						<section class={s.section}>
+							<SamSectionBand
+								num="06"
+								title={m.samBalanceTitle()}
+								meta={m.samBalanceHint()}
+							/>
 							<div class={s.sectionHeader}>
-								<div>
-									<h2>{m.samBalanceTitle()}</h2>
-									<p>{m.samBalanceHint()}</p>
-								</div>
 								<A class={s.sectionLink} href="/sam/compliance">
 									{m.samCompliancePageTitle()}
 								</A>

@@ -52,14 +52,12 @@
 	font-weight: 600;
 }
 
-/* Section band — чёрная полоса с выходом за левую границу */
+/* Section band — чёрная полоса по ширине контента */
 .secBand {
 	display: flex;
 	align-items: center;
 	gap: var(--space-3);
-	margin-left: calc(50% - 50vw);
-	margin-right: 0;
-	padding: var(--space-2) 0 var(--space-2) max(var(--space-6), calc(50vw - var(--content-max) / 2 + var(--space-6)));
+	padding: var(--space-2) var(--space-4);
 	background: var(--text);
 	color: var(--bg);
 }
@@ -92,6 +90,127 @@
 	text-align: right;
 }
 
+/* Document header — «Документ SAM · обезличенная выгрузка» */
+.docHead {
+	margin: 0 0 var(--space-5);
+}
+
+.docEyebrow {
+	margin: 0 0 var(--space-2);
+	color: var(--text-muted);
+	font-size: var(--text-xs);
+	font-weight: 700;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+}
+
+.docTitle {
+	margin: 0 0 var(--space-2);
+	max-width: 22ch;
+	color: var(--text);
+	font-size: clamp(30px, 5vw, 44px);
+	font-weight: 800;
+	letter-spacing: -0.03em;
+	line-height: 1.08;
+}
+
+.docLead {
+	margin: 0;
+	max-width: 72ch;
+	color: var(--text-muted);
+	font-size: var(--text-md);
+	line-height: 1.55;
+}
+
+.docMeta {
+	display: grid;
+	grid-template-columns: repeat(5, minmax(0, 1fr));
+	margin: var(--space-5) 0 0;
+	border: 1px solid var(--border);
+	background: var(--surface);
+}
+
+.docMetaItem {
+	padding: var(--space-3) var(--space-4);
+	border-right: 1px solid var(--border);
+}
+
+.docMetaItem:last-child {
+	border-right: none;
+}
+
+.docMetaLabel {
+	display: block;
+	margin: 0 0 var(--space-1);
+	color: var(--text-muted);
+	font-size: 10px;
+	font-weight: 700;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+}
+
+.docMetaValue {
+	display: block;
+	color: var(--text);
+	font-size: var(--text-md);
+	font-weight: 700;
+}
+
+@media (max-width: 760px) {
+	.docMeta {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+
+	.docMetaItem:nth-child(2n) {
+		border-right: none;
+	}
+
+	.docMetaItem {
+		border-bottom: 1px solid var(--border);
+	}
+}
+
+/* Печать: документ без навигации и баннеров */
+@media print {
+	.secBand,
+	.secNum {
+		background: none;
+		color: var(--text);
+	}
+
+	.nav,
+	.disclaimer,
+	.topRow {
+		display: none;
+	}
+}
+
+.topRow {
+	display: flex;
+	justify-content: flex-end;
+	gap: var(--space-2);
+	margin-bottom: calc(-1 * var(--space-2));
+}
+
+.printBtn {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-2);
+	padding: var(--space-2) var(--space-4);
+	border: 1px solid var(--border);
+	border-radius: 0;
+	background: var(--text);
+	color: var(--bg);
+	font: inherit;
+	font-size: var(--text-sm);
+	font-weight: 600;
+	cursor: pointer;
+}
+
+.printBtn:hover {
+	opacity: 0.85;
+}
+
 /* Square pagination */
 .pageBtn {
 	width: 30px;
@@ -122,6 +241,26 @@
 }
 
 /* Thin scrollbar */
+.samRoot {
+	/* Цветные статусы и риски внутри SAM: монохромная тема сайта не должна
+	   глушить семантику бейджей (запрещено/актуально/высокий риск). */
+	--danger: #b3261e;
+	--danger-hover: #7f1d1d;
+	--success: #15803d;
+	--warning: #a3560b;
+	--warning-bg: #fdf0d9;
+	--info-bg: #e8eefc;
+}
+
+:global([data-theme="dark"]) .samRoot {
+	--danger: #ff6b61;
+	--danger-hover: #ff5a50;
+	--success: #4ade80;
+	--warning: #ffb84d;
+	--warning-bg: rgba(255, 147, 0, 0.16);
+	--info-bg: rgba(79, 143, 238, 0.16);
+}
+
 .samRoot {
 	scrollbar-width: thin;
 	scrollbar-color: var(--divider) transparent;

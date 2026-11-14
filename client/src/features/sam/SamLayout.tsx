@@ -33,6 +33,11 @@ export function SamSectionBand(props: {
 export function SamLayout(props: { children?: JSX.Element }) {
 	return (
 		<div classList={{ [s.page]: true, [s.samRoot]: true }}>
+			<div class={s.topRow}>
+				<button type="button" class={s.printBtn} onClick={() => window.print()}>
+					{m.samPrint()}
+				</button>
+			</div>
 			<aside class={s.disclaimer}>
 				<strong>{m.samDemoDisclaimer()}</strong>
 				<span>{m.samDemoDisclaimerDetails()}</span>
@@ -54,5 +59,35 @@ export function SamLayout(props: { children?: JSX.Element }) {
 			</nav>
 			<main>{props.children}</main>
 		</div>
+	);
+}
+
+/**
+ * Document-style header from the demo report: uppercase eyebrow, large
+ * title, lead paragraph and a five-cell meta strip (дата, источник,
+ * устройства, строки, ответственный).
+ */
+export function SamDocHeader(props: {
+	eyebrow: string;
+	title: string;
+	lead: string;
+	meta: { label: string; value: string }[];
+}) {
+	return (
+		<header class={s.docHead}>
+			<p class={s.docEyebrow}>{props.eyebrow}</p>
+			<h1 class={s.docTitle}>{props.title}</h1>
+			<p class={s.docLead}>{props.lead}</p>
+			<dl class={s.docMeta}>
+				<For each={props.meta}>
+					{(item) => (
+						<div class={s.docMetaItem}>
+							<dt class={s.docMetaLabel}>{item.label}</dt>
+							<dd class={s.docMetaValue}>{item.value}</dd>
+						</div>
+					)}
+				</For>
+			</dl>
+		</header>
 	);
 }
