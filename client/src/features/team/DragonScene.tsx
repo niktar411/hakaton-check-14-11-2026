@@ -1,4 +1,3 @@
-import * as m from "@/paraglide/messages";
 import { cx } from "@/shared/lib/cx";
 import { DRAGON_HEAD_PATH } from "@/shared/ui/DragonMark";
 import s from "./DragonScene.module.css";
@@ -31,14 +30,6 @@ export function DragonScene(props: { class?: string }) {
 				</defs>
 				<path class={s.head} d={DRAGON_HEAD_PATH} />
 			</svg>
-			<a
-				class={s.credit}
-				href="https://game-icons.net/1x1/delapouite/dragon-head.html"
-				target="_blank"
-				rel="noopener noreferrer"
-			>
-				{m.teamDragonCredit()}
-			</a>
 		</div>
 	);
 }

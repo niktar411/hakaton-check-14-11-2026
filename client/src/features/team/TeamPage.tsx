@@ -180,18 +180,11 @@ export default function TeamPage() {
 			</section>
 
 			<section id="team" class={s.section} aria-labelledby="team-people-title">
-				<header class={s.sectionHeader}>
-					<p class={s.sectionLabel}>
-						<span class={s.sectionIndex} aria-hidden="true">
-							02
-						</span>
-						{m.teamTeamLabel()}
-					</p>
+				<div class={s.teamHeading}>
+					<span class={s.teamHeadingLine} aria-hidden="true" />
 					<h2 id="team-people-title">{m.teamTeamTitle()}</h2>
-					<p class={s.sectionText}>
-						{team.summary ?? m.teamTeamDescription()}
-					</p>
-				</header>
+					<span class={s.teamHeadingLine} aria-hidden="true" />
+				</div>
 
 				<Show
 					when={team.members.length > 0}
@@ -212,10 +205,26 @@ export default function TeamPage() {
 										onClick={() => setSelectedMember(member)}
 									>
 										<span class={s.memberPhoto} aria-hidden="true">
-											<DragonMark class={s.memberWatermark} />
-											<span class={s.memberInitials}>
-												{initials(member.name)}
-											</span>
+											<Show
+												when={member.photo}
+												fallback={
+													<>
+														<DragonMark class={s.memberWatermark} />
+														<span class={s.memberInitials}>
+															{initials(member.name)}
+														</span>
+													</>
+												}
+											>
+												{(photo) => (
+													<img
+														class={s.memberPhotoImage}
+														src={photo()}
+														alt=""
+														loading="lazy"
+													/>
+												)}
+											</Show>
 										</span>
 										<span class={s.memberCardBody}>
 											<span class={s.memberName}>{member.name}</span>
@@ -269,7 +278,19 @@ export default function TeamPage() {
 				<Show when={selectedMember()}>
 					{(member) => (
 						<div class={s.memberDialog}>
-							<p class={s.memberDialogRole}>{member().role}</p>
+							<div class={s.memberDialogTop}>
+								<Show when={member().photo}>
+									{(photo) => (
+										<img
+											class={s.memberDialogPhoto}
+											src={photo()}
+											alt=""
+											loading="lazy"
+										/>
+									)}
+								</Show>
+								<p class={s.memberDialogRole}>{member().role}</p>
+							</div>
 							<Show when={member().quote}>
 								{(quote) => (
 									<blockquote class={s.memberQuote}>

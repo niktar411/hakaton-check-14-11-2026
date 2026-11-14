@@ -1,3 +1,19 @@
 .root {
 	min-width: 0;
 }
+
+/* Tailwind's container scale is intentionally removed in this project, so the
+ * dialog gets its compact width and surface here instead of a non-existent
+ * max-w-2xl utility. */
+.dialog {
+	box-sizing: border-box;
+	width: min(calc(100% - 24px), 720px);
+	max-height: calc(100dvh - 24px);
+	margin: auto;
+	padding: var(--space-5);
+	overflow-y: auto;
+	border: 1px solid var(--border);
+	border-radius: var(--radius-md);
+	background: var(--surface);
+	color: var(--text);
+}

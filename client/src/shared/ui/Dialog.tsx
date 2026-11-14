@@ -1,6 +1,7 @@
 import { createEffect, onCleanup, type JSX } from "solid-js";
 import * as m from "@/paraglide/messages";
 import { Button } from "@/shared/ui/Button";
+import s from "./Dialog.module.css";
 
 export function Dialog(props: {
 	open: boolean;
@@ -22,7 +23,7 @@ export function Dialog(props: {
 				event.preventDefault();
 				props.onClose();
 			}}
-			class="border-border bg-surface text-text m-auto box-border max-h-dvh w-full max-w-2xl overflow-y-auto rounded-md border p-5"
+			class={s.dialog}
 			data-elevated
 		>
 			<div class="mb-4 flex items-start justify-between gap-4">
