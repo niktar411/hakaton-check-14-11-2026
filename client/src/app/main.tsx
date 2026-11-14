@@ -244,7 +244,7 @@ function App(props: { children?: JSX.Element }) {
 						when={!adminArea() || publicAdminLogin()}
 						fallback={
 							<div class="mx-auto flex min-h-dvh w-full max-w-7xl flex-col gap-6 p-4 md:p-8">
-								<header class={s.header}>
+								<header classList={{ [s.header]: true, [s.adminHeader]: true }}>
 									<A class="text-text text-xl font-bold no-underline" href="/admin">
 										{m.administrationPageTitle()}
 									</A>
@@ -258,7 +258,11 @@ function App(props: { children?: JSX.Element }) {
 							<a href="#main-content" class="focus:bg-surface focus:text-text sr-only focus:not-sr-only focus:absolute focus:z-50 focus:p-2">
 								{m.skipToContent()}
 							</a>
-							<header classList={{ [s.header]: true, [s.teamHeader]: teamArea() }}>
+							<header classList={{
+								[s.header]: true,
+								[s.teamHeader]: teamArea(),
+								[s.publicHeader]: !teamArea(),
+							}}>
 								<A class="text-text inline-flex items-center gap-2 text-xl font-bold no-underline" href="/">
 									<DragonMark class="size-8" />
 									{m.appTitle()}
