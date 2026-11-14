@@ -18,6 +18,7 @@ import (
 	"hackathon/internal/localaccounts"
 	"hackathon/internal/plannerblocks"
 	"hackathon/internal/questions"
+	"hackathon/internal/sam/assistant"
 )
 
 func APIConfig() huma.Config {
@@ -71,6 +72,7 @@ func (s *Service) Router() http.Handler {
 		Register(api, s)
 		localaccounts.RegisterAdmin(api, s.accounts)
 		questions.RegisterAdmin(api, s.questions)
+		assistant.Register(api, s.samAssistant)
 		plannerblocks.RegisterTeam(api, s.planner)
 		plannerblocks.RegisterAdmin(api, s.planner)
 		codingtasks.Register(api, s.coding)
@@ -125,6 +127,7 @@ func WriteOpenAPI(ctx context.Context, path string) error {
 	localaccounts.RegisterAdmin(api, nil)
 	questions.RegisterPublic(api, nil)
 	questions.RegisterAdmin(api, nil)
+	assistant.Register(api, nil)
 	plannerblocks.Register(api, nil)
 	codingtasks.Register(api, nil)
 	deployments.Register(api, nil)
