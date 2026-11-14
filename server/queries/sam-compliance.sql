@@ -190,7 +190,7 @@ JOIN sam_products p ON p.id = i.product_id
 WHERE i.product_id = $1::bigint
   AND i.status = 'installed'
   AND coalesce(nullif(i.device_name, ''), 'installation:' || i.id) IS NOT NULL
-GROUP BY i.device_name, p.status
+GROUP BY i.device_name, p.id, p.status
 ORDER BY i.device_name;
 
 -- name: GetSamHost :one
