@@ -97,6 +97,19 @@ type ChatHistory struct {
 	Phase    string    `json:"phase"`
 	Messages []Message `json:"messages"`
 }
+
+// ChatUpdate describes one completed planner block delivered to a member as a
+// chat prompt. Every member receives exactly one update per block.
+type ChatUpdate struct {
+	ID          int64     `json:"id"`
+	BlockID     int64     `json:"blockId"`
+	Title       string    `json:"title"`
+	Branch      string    `json:"branch"`
+	MRURL       string    `json:"mrUrl"`
+	OwnerName   string    `json:"ownerName"`
+	Description string    `json:"description"`
+	CompletedAt time.Time `json:"completedAt"`
+}
 type meOutput struct{ Body Identity }
 type dashboardOutput struct{ Body Dashboard }
 type usageInput struct {
@@ -132,3 +145,8 @@ type chatHistoryInput struct {
 	ID int64 `path:"id" minimum:"1"`
 }
 type chatHistoryOutput struct{ Body ChatHistory }
+type chatUpdatesOutput struct{ Body []ChatUpdate }
+type chatUpdatePullInput struct {
+	ID int64 `path:"id" minimum:"1"`
+}
+type chatUpdatePullOutput struct{ Body ChatUpdate }

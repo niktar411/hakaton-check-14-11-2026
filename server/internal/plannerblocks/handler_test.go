@@ -30,6 +30,7 @@ type fakeStore struct {
 	createCalls []db.CreatePlannerBlockParams
 	updateCalls int
 	deleteCalls int
+	prompts     [][2]int64
 }
 
 func newFakeStore() *fakeStore {
@@ -191,6 +192,46 @@ func (s *fakeStore) GetLocalAccountByID(_ context.Context, id int64) (db.LocalAc
 	return account, nil
 }
 
+func (s *fakeStore) SetPlannerBlockCompleted(_ context.Context, id int64) (int64, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	block, ok := s.blocks[id]
+	if !ok {
+		return 0, pgx.ErrNoRows
+	}
+	if !block.CompletedAt.Valid {
+		block.CompletedAt = pgtype.Timestamptz{Time: time.Now().UTC(), Valid: true}
+		s.blocks[id] = block
+		return id, nil
+	}
+	return 0, pgx.ErrNoRows
+}
+
+func (s *fakeStore) ListChatPromptRecipients(_ context.Context, owner string) ([]string, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	recipients := make([]string, 0)
+	for _, account := range s.accounts {
+		if account.Username != owner {
+			recipients = append(recipients, account.Username)
+		}
+	}
+	return recipients, nil
+}
+
+func (s *fakeStore) CreateChatPromptIfAbsent(_ context.Context, arg db.CreateChatPromptIfAbsentParams) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	key := [2]int64{arg.BlockID, int64(len(arg.Username))}
+	for _, seen := range s.prompts {
+		if seen == key {
+			return nil
+		}
+	}
+	s.prompts = append(s.prompts, key)
+	return nil
+}
+
 type fakeGitLab struct {
 	mu               sync.Mutex
 	mergeRequests    map[int64]gitlab.MergeRequest
@@ -325,6 +366,43 @@ func TestPublicListIsCompactAndKeepsRealProgress(t *testing.T) {
 	}
 	if client.mergeRequestCall != 1 {
 		t.Fatalf("GitLab called %d times, want only the block with an MR", client.mergeRequestCall)
+	}
+}
+
+// TestMergedBlockPromptsEachMemberOnce verifies the acceptance criteria: when
+// a block's merge request is merged, every member except the owner receives
+// exactly one chat prompt, and repeated polling never duplicates it.
+func TestMergedBlockPromptsEachMemberOnce(t *testing.T) {
+	svc, store, client := newTestService()
+	store.blocks[1] = db.PlannerBlock{
+		ID: 1, Title: "Catalog", OwnerID: 1, Position: 1,
+		Branch: "task/17-sam-catalog", MergeRequestIid: pgtype.Int8{Int64: 7, Valid: true},
+	}
+	client.mergeRequests[7] = gitlab.MergeRequest{
+		IID: 7, State: "merged", WebURL: "https://gitlab.example/mr/7",
+		HeadPipeline: gitlab.Pipeline{Status: "success"},
+	}
+
+	blocks, err := svc.List(t.Context())
+	if err != nil {
+		t.Fatalf("list: %v", err)
+	}
+	if blocks[0].Progress.State != ProgressDone {
+		t.Fatalf("progress state = %s, want done", blocks[0].Progress.State)
+	}
+	if got := len(store.prompts); got != 1 {
+		t.Fatalf("prompts after first list = %d, want 1 for the second member", got)
+	}
+
+	// A second observation of the same merged block must not enqueue anything.
+	if _, err := svc.List(t.Context()); err != nil {
+		t.Fatalf("second list: %v", err)
+	}
+	if got := len(store.prompts); got != 1 {
+		t.Fatalf("prompts after repeated list = %d, want still 1", got)
+	}
+	if store.blocks[1].CompletedAt.Valid == false {
+		t.Fatal("completed_at was not recorded on the merged block")
 	}
 }
 
