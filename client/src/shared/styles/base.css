@@ -74,38 +74,26 @@
     }
   }
 
-  /* One consistent radial color wave for the first and every later toggle. */
-  html.theme-wave *,
-  html.theme-wave body {
-    transition:
-      background-color 1.5s ease,
-      color 1.5s ease,
-      border-color 1.5s ease,
-      box-shadow 1.5s ease,
-      fill 1.5s ease,
-      stroke 1.5s ease;
+  /* Круговая волна раскрывает новую тему от переключателя. */
+  html.theme-wave::view-transition-old(root) {
+    animation: theme-wave-old 1.3s ease-out both;
   }
 
-  html.theme-wave::after {
-    position: fixed;
-    z-index: 1000;
-    top: var(--theme-wave-y, 50vh);
-    left: var(--theme-wave-x, 50vw);
-    width: 20px;
-    height: 20px;
-    border: 2px solid var(--primary);
-    border-radius: 50%;
-    box-shadow: 0 0 0 1px var(--bg);
-    content: "";
-    pointer-events: none;
-    transform: translate(-50%, -50%) scale(0.1);
-    animation: theme-wave-ripple 1.5s ease-out both;
+  html.theme-wave::view-transition-new(root) {
+    z-index: 1;
+    animation: theme-wave-reveal 1.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+    clip-path: circle(0 at var(--theme-wave-x, 50vw) var(--theme-wave-y, 50vh));
   }
 
-  @keyframes theme-wave-ripple {
+  @keyframes theme-wave-old {
     to {
-      opacity: 0;
-      transform: translate(-50%, -50%) scale(100);
+      opacity: 0.92;
+    }
+  }
+
+  @keyframes theme-wave-reveal {
+    to {
+      clip-path: circle(150vmax at var(--theme-wave-x, 50vw) var(--theme-wave-y, 50vh));
     }
   }
 
