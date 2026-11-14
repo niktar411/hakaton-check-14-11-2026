@@ -20,6 +20,8 @@ import { Button } from "@/shared/ui/Button";
 import { Footer } from "@/shared/ui/Footer";
 import { LoadingState } from "@/shared/ui/State";
 import { Toast } from "@/shared/ui/Toast";
+import { CookieBanner } from "@/shared/ui/CookieBanner";
+import { ConsentPage, CookiesPage, PolicyPage, TermsPage } from "@/features/legal/LegalPage";
 import { ThemeToggle } from "@/app/theme";
 import { TeamLoginPage } from "@/features/auth/TeamLoginPage";
 import ChatPage from "@/features/chat/ChatPage";
@@ -173,6 +175,7 @@ function App(props: { children?: JSX.Element }) {
 			}}
 		>
 			<Toast />
+			<CookieBanner />
 			<Show
 				when={!gateLoading()}
 				fallback={
@@ -259,6 +262,10 @@ if (root) {
 					<Route path="/matching" component={SamMatchingPage} />
 					<Route path="/assistant" component={SamAssistantPage} />
 				</Route>
+				<Route path="/terms" component={TermsPage} />
+				<Route path="/policy" component={PolicyPage} />
+				<Route path="/consent" component={ConsentPage} />
+				<Route path="/cookies" component={CookiesPage} />
 				<Route path="/coding" component={CodingPage} />
 				<Route path="/admin/login" component={AdminLoginPage} />
 				<Route path="/admin" component={AdministrationPage} />

@@ -1,6 +1,7 @@
 import { A } from "@solidjs/router";
 import { For, type JSX } from "solid-js";
 import * as m from "@/paraglide/messages";
+import { SamNotifications } from "./SamNotifications";
 import s from "./SamLayout.module.css";
 
 const sections = [
@@ -17,6 +18,11 @@ const sections = [
 export function SamLayout(props: { children?: JSX.Element }) {
 	return (
 		<div class={s.page}>
+			<aside class={s.disclaimer} data-tone="warning">
+				<strong>{m.samDemoDisclaimer()}</strong>
+				<span>{m.samDemoDisclaimerDetails()}</span>
+			</aside>
+			<SamNotifications />
 			<nav class={s.nav} aria-label={m.samSectionNavigation()}>
 				<For each={sections}>
 					{(section) => (
