@@ -661,5 +661,7 @@
   "samMetaOwner": "Ответственный",
   "samMetaOwnerValue": "Отдел ИТ",
   "samBandOverview": "Сводка",
-  "samBandOverviewMeta": "Контрольные показатели выгрузки"
+  "samBandOverviewMeta": "Контрольные показатели выгрузки",
+  "chatNotifications": "Уведомления чата",
+  "chatNotificationAck": "Отлично"
 }

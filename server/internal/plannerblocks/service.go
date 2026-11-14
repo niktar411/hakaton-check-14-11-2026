@@ -18,6 +18,7 @@ import (
 	db "hackathon/internal/db/sqlc"
 	"hackathon/internal/gitlab"
 	"hackathon/internal/identity"
+	"hackathon/internal/notifications"
 )
 
 const (
@@ -72,6 +73,17 @@ type Service struct {
 	gitLab GitLab
 	config Config
 	mu     sync.Mutex
+	// notifier is optional: when set, a block whose merge request is observed
+	// as merged for the first time produces a chat notification.
+	notifier notifications.Notifier
+}
+
+// SetNotifier attaches a chat notification sink. Safe to call before serving;
+// the planner passes nil checks at the call sites.
+func (s *Service) SetNotifier(notifier notifications.Notifier) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.notifier = notifier
 }
 
 func NewService(pool *pgxpool.Pool, gitLab GitLab, config Config) *Service {
@@ -198,7 +210,10 @@ func (s *Service) populateProgress(ctx context.Context, block *PlannerBlock) {
 	block.MRURL = mergeRequest.WebURL
 	block.Progress = progressForMergeRequest(mergeRequest)
 	if block.Progress.State == ProgressDone {
+		// Block 5: enqueue the auto-pull prompt; block 8: record the chat
+		// notification. Both sinks deduplicate their events.
 		s.fanOutCompletion(ctx, *block, mergeRequest.WebURL)
+		s.notifyBlockDone(ctx, block)
 	}
 	if block.Progress.State != ProgressReview {
 		return
@@ -220,6 +235,23 @@ func (s *Service) populateProgress(ctx context.Context, block *PlannerBlock) {
 		ApprovalsLeft: approvals.ApprovalsLeft,
 		ApprovedBy:    approvedBy,
 	}
+}
+
+// notifyBlockDone reports an observed merge to the chat notification sink.
+// The planner recomputes progress on every read; the sink deduplicates events,
+// so repeated observations never create duplicate notifications.
+func (s *Service) notifyBlockDone(ctx context.Context, block *PlannerBlock) {
+	s.mu.Lock()
+	notifier := s.notifier
+	s.mu.Unlock()
+	if notifier == nil {
+		return
+	}
+	owner := ""
+	if block.Owner.Username != "" {
+		owner = block.Owner.Username
+	}
+	notifier.BlockCompleted(ctx, block.ID, block.Title, owner)
 }
 
 func initialProgress(startedAt pgtype.Timestamptz) Progress {

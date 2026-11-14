@@ -194,6 +194,7 @@ func (s *Service) execute(ctx context.Context, task db.CodingTask, account db.Lo
 					}
 					return failed, nil
 				}
+				s.notifyMergeRequestCreated(execCtx, task.ID, task.Branch, mergeRequest.WebURL)
 				return updated, nil
 			}
 			if execCtx.Err() != nil {
@@ -202,6 +203,19 @@ func (s *Service) execute(ctx context.Context, task db.CodingTask, account db.Lo
 		}
 	}
 	return s.fail(execCtx, task.ID, "model_iteration_limit_exceeded")
+}
+
+// notifyMergeRequestCreated reports a verified merge request to the chat
+// notification sink. The sink deduplicates events per task, so repeated tool
+// calls for the same task never create duplicate notifications.
+func (s *Service) notifyMergeRequestCreated(ctx context.Context, taskID int64, branch, mergeRequestURL string) {
+	s.locksMu.Lock()
+	notifier := s.notifier
+	s.locksMu.Unlock()
+	if notifier == nil {
+		return
+	}
+	notifier.MergeRequestCreated(ctx, taskID, branch, mergeRequestURL)
 }
 
 func executionFailure(ctx context.Context, fallback string) string {

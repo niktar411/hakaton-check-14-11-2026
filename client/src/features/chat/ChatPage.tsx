@@ -26,6 +26,7 @@ import s from "./ChatPage.module.css";
 
 type ChatSummary = components["schemas"]["ChatSummary"];
 type ChatHistory = components["schemas"]["ChatHistory"];
+type ChatNotification = components["schemas"]["ChatNotification"];
 type Identity = components["schemas"]["Identity"];
 type CodingTask = components["schemas"]["CodingTask"];
 type CodingTaskDetails = components["schemas"]["CodingTaskDetails"];
@@ -193,6 +194,41 @@ export default function ChatPage() {
 			);
 		},
 	);
+
+	// Team events (completed blocks, created merge requests) arrive in the
+	// chat as notifications. Unacknowledged ones stay visible until the
+	// member confirms them.
+	const [notifications, { refetch: refetchNotifications }] = createResource(
+		() => (session.loading ? undefined : session() ? "auth" : "anon"),
+		async (mode): Promise<ChatNotification[]> => {
+			if (mode !== "auth") return [];
+			return (
+				unwrap(
+					await api.GET("/api/chat/notifications", {
+						params: { query: { limit: 10, offset: 0 } },
+					}),
+				) ?? []
+			);
+		},
+	);
+	const [dismissed, setDismissed] = createSignal<ReadonlySet<number>>(new Set());
+	const visibleNotifications = createMemo(() =>
+		(notifications() ?? []).filter(
+			(notification) =>
+				!notification.acknowledgedAt && !dismissed().has(notification.id),
+		),
+	);
+	async function acknowledgeNotification(id: number) {
+		setDismissed((previous) => new Set(previous).add(id));
+		try {
+			await api.POST("/api/chat/notifications/{id}/ack", {
+				headers: csrfHeaders(session()?.csrf),
+				params: { path: { id } },
+			});
+		} finally {
+			refetchNotifications();
+		}
+	}
 
 	// createResource keeps its previous value when the source becomes falsy,
 	// so a new chat would still show the last conversation's messages. Only
@@ -362,6 +398,12 @@ export default function ChatPage() {
 	onMount(() => {
 		resizeComposer();
 		void requestMicrophonePermission();
+		// Team events are delivered to the chat asynchronously; poll for new
+		// notifications while the page is open.
+		const notificationsTimer = window.setInterval(() => {
+			refetchNotifications();
+		}, 30000);
+		onCleanup(() => window.clearInterval(notificationsTimer));
 	});
 	onCleanup(() => {
 		recognition?.stop();
@@ -834,6 +876,27 @@ export default function ChatPage() {
 							busy={updateBusy()}
 							onPull={(update) => void pullUpdate(update)}
 						/>
+						<Show when={visibleNotifications().length > 0}>
+							<section class={s.notifications} aria-label={m.chatNotifications()}>
+								<For each={visibleNotifications()}>
+									{(notification) => (
+										<article class={s.notification} data-kind={notification.kind}>
+											<div class={s.notificationText}>
+												<strong>{notification.title}</strong>
+												<p>{notification.body}</p>
+												<time>{formatDate(notification.createdAt)}</time>
+											</div>
+											<Button
+												variant="secondary"
+												onClick={() => void acknowledgeNotification(notification.id)}
+											>
+												{m.chatNotificationAck()}
+											</Button>
+										</article>
+									)}
+								</For>
+							</section>
+						</Show>
 						<div
 							class={s.messages}
 							ref={messageList}

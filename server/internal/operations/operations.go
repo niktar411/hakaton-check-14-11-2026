@@ -22,6 +22,7 @@ import (
 	"hackathon/internal/infra/metrics"
 	"hackathon/internal/llm"
 	"hackathon/internal/localaccounts"
+	"hackathon/internal/notifications"
 	"hackathon/internal/plannerblocks"
 	"hackathon/internal/questions"
 	"hackathon/internal/sam"
@@ -43,6 +44,7 @@ type Service struct {
 	mu            sync.Mutex
 	activeUsers   map[string]bool
 	accounts      *localaccounts.Service
+	notifications *notifications.Service
 	questions     *questions.Service
 	planner       *plannerblocks.Service
 	sam           *sam.Service
@@ -64,8 +66,10 @@ func NewService(pool *pgxpool.Pool, c Config) *Service {
 	gitLab := gitlab.NewClient(gitlab.Config{URL: c.GitLabURL, Token: c.GitLabToken, Project: c.GitLabProject, Provider: c.Provider}, s.http)
 	s.gitLab = gitLab
 	s.accounts = localaccounts.NewService(pool, localaccounts.Config{PublicURL: c.PublicURL, PlannerURL: c.PlannerURL, AIURL: c.AIURL, AdminUser: c.AdminUser, AdminIP: c.AdminIP, SecureCookies: strings.HasPrefix(c.PublicURL, "https://")})
+	s.notifications = notifications.NewService(pool)
 	s.questions = questions.NewService(pool, s.model, questions.Config{PublicBaseURL: c.PublicURL, PlannerBaseURL: c.PlannerURL, AdminUser: c.AdminUser, AdminIP: c.AdminIP})
 	s.planner = plannerblocks.NewService(pool, gitLab, plannerblocks.Config{AdminUser: c.AdminUser, AdminIP: c.AdminIP})
+	s.planner.SetNotifier(s.notifications)
 	modelGuard := guard.NewLimiter(2, 1)
 	s.sam = sam.NewService(pool)
 	s.samAssistant = assistant.NewService(pool, s.model, modelGuard)
@@ -78,6 +82,7 @@ func NewService(pool *pgxpool.Pool, c Config) *Service {
 		worker = httpWorker
 	}
 	s.coding = codingtasks.NewService(s.db, s.model, worker, gitLab, codingtasks.Config{AdminUser: c.AdminUser, AdminIP: c.AdminIP, WorkerURL: c.WorkerURL, WorkerToken: c.WorkerToken, AsyncExecution: true})
+	s.coding.SetNotifier(s.notifications)
 	orchestrator := deployments.Orchestrator(deployments.NewOrchestrator(deployments.Config{AgentURL: c.AgentURL, AgentToken: c.AgentToken}, s.http))
 	if c.WorkerAgentURL != "" && c.WorkerAgentToken != "" {
 		workerOrchestrator := deployments.NewOrchestrator(deployments.Config{AgentURL: c.WorkerAgentURL, AgentToken: c.WorkerAgentToken}, s.http)

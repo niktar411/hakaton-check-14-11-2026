@@ -150,3 +150,22 @@ type chatUpdatePullInput struct {
 	ID int64 `path:"id" minimum:"1"`
 }
 type chatUpdatePullOutput struct{ Body ChatUpdate }
+
+// ChatNotification is one team event shown in the chat thread.
+type ChatNotification struct {
+	ID             int64      `json:"id"`
+	Kind           string     `json:"kind"`
+	Title          string     `json:"title"`
+	Body           string     `json:"body"`
+	CreatedAt      time.Time  `json:"createdAt"`
+	AcknowledgedAt *time.Time `json:"acknowledgedAt,omitempty"`
+}
+type chatNotificationsInput struct {
+	Limit  int32 `query:"limit" minimum:"1" maximum:"50" default:"20"`
+	Offset int32 `query:"offset" minimum:"0" default:"0"`
+}
+type chatNotificationsOutput struct{ Body []ChatNotification }
+type chatNotificationAckInput struct {
+	ID int64 `path:"id" minimum:"1"`
+}
+type chatNotificationAckOutput struct{ Body struct{} }

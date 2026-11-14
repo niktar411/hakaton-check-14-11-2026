@@ -16,6 +16,7 @@ import (
 	"hackathon/internal/gitlab"
 	"hackathon/internal/identity"
 	"hackathon/internal/llm"
+	"hackathon/internal/notifications"
 )
 
 var (
@@ -79,6 +80,7 @@ type Service struct {
 
 	adminPlanner     AdminPlanner
 	adminDeployments AdminDeployments
+	notifier         notifications.Notifier
 	locksMu          sync.Mutex
 	locks            map[int64]*taskLock
 	execSlots        chan struct{}

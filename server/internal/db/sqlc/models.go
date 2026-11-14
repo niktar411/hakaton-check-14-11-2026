@@ -32,6 +32,17 @@ type ChatChangePrompt struct {
 	CreatedAt pgtype.Timestamptz `json:"created_at"`
 }
 
+type ChatNotification struct {
+	ID             int64              `json:"id"`
+	UserID         int64              `json:"user_id"`
+	Kind           string             `json:"kind"`
+	DedupKey       string             `json:"dedup_key"`
+	Title          string             `json:"title"`
+	Body           string             `json:"body"`
+	CreatedAt      pgtype.Timestamptz `json:"created_at"`
+	AcknowledgedAt pgtype.Timestamptz `json:"acknowledged_at"`
+}
+
 type CodingMessage struct {
 	ID        int64              `json:"id"`
 	TaskID    int64              `json:"task_id"`

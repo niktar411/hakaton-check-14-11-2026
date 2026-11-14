@@ -85,4 +85,14 @@ func Register(api huma.API, s *Service) {
 		}
 		return &chatUpdatePullOutput{Body: *out}, nil
 	})
+	huma.Register(api, huma.Operation{OperationID: "chat-notifications", Method: http.MethodGet, Path: "/api/chat/notifications"}, func(ctx context.Context, in *chatNotificationsInput) (*chatNotificationsOutput, error) {
+		out, err := s.ChatNotifications(ctx, in.Limit, in.Offset)
+		if err != nil {
+			return nil, err
+		}
+		return &chatNotificationsOutput{Body: out}, nil
+	})
+	huma.Register(api, huma.Operation{OperationID: "chat-notification-ack", Method: http.MethodPost, Path: "/api/chat/notifications/{id}/ack"}, func(ctx context.Context, in *chatNotificationAckInput) (*chatNotificationAckOutput, error) {
+		return s.AcknowledgeChatNotification(ctx, in.ID)
+	})
 }

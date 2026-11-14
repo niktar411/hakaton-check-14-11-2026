@@ -8,6 +8,7 @@ import (
 
 	"hackathon/internal/deployments"
 	"hackathon/internal/identity"
+	"hackathon/internal/notifications"
 	"hackathon/internal/plannerblocks"
 )
 
@@ -32,6 +33,14 @@ type AdminDeployments interface {
 func (s *Service) SetAdminTools(planner AdminPlanner, deployment AdminDeployments) {
 	s.adminPlanner = planner
 	s.adminDeployments = deployment
+}
+
+// SetNotifier attaches an optional chat notification sink; when set, a task
+// whose tool call created a verified merge request produces an event.
+func (s *Service) SetNotifier(notifier notifications.Notifier) {
+	s.locksMu.Lock()
+	defer s.locksMu.Unlock()
+	s.notifier = notifier
 }
 
 func isAdminOperation(operation string) bool {

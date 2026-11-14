@@ -454,6 +454,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/chat/notifications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["chat-notifications"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/chat/notifications/{id}/ack": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["chat-notification-ack"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/chat/updates": {
         parameters: {
             query?: never;
@@ -1333,6 +1365,25 @@ export interface components {
             id: number;
             prompt: string;
             requestId: string;
+        };
+        ChatNotification: {
+            /** Format: date-time */
+            acknowledgedAt?: string;
+            body: string;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: int64 */
+            id: number;
+            kind: string;
+            title: string;
+        };
+        ChatNotificationAckOutputBody: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/ChatNotificationAckOutputBody.json
+             */
+            readonly $schema?: string;
         };
         ChatResult: {
             /**
@@ -3479,6 +3530,69 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ChatHistory"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "chat-notifications": {
+        parameters: {
+            query?: {
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChatNotification"][] | null;
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "chat-notification-ack": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChatNotificationAckOutputBody"];
                 };
             };
             /** @description Error */
