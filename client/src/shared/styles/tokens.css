@@ -49,6 +49,10 @@
   --success: #16a34a;
   --warning: #ff9300;
   --warning-bg: #fff1da;
+  /* Dragon breath is the only warm-color accent on the otherwise monochrome team mark. */
+  --dragon-fire-core: #fff3a6;
+  --dragon-fire-mid: #ff9d32;
+  --dragon-fire-edge: #e4472b;
   --info-bg: #dae8ff;
   --overlay: rgba(0, 0, 0, 0.45);
   /* РџРѕРґР»РѕР¶РєР° РїРѕРґ Р±РµР»С‹РјРё РєР°СЂС‚РѕС‡РєР°РјРё РЅР° С‚РµР»РµС„РѕРЅРµ: Р±Р»РѕРєРё С‡РёС‚Р°СЋС‚СЃСЏ Р±РµР· С‚РѕР»СЃС‚С‹С… СЂР°РјРѕРє. */
@@ -87,6 +91,9 @@
   --success: #34c85f;
   --warning: #ffb84d;
   --warning-bg: rgba(255, 147, 0, 0.16);
+  --dragon-fire-core: #fff3a6;
+  --dragon-fire-mid: #ff9d32;
+  --dragon-fire-edge: #e4472b;
   --info-bg: rgba(79, 143, 238, 0.16);
   --danger-hover: #ff5a50;
   /* Р¤РѕРЅ В«РІС‹РґРµР»РµРЅРЅРѕРіРѕВ» СЃРѕСЃС‚РѕСЏРЅРёСЏ Р±РµР· СЃРІРµС‚Р»С‹С… РїСЏС‚РµРЅ РЅР° С‚С‘РјРЅС‹С… РєР°СЂС‚РѕС‡РєР°С…. */

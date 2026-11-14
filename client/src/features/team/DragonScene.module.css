@@ -60,6 +60,100 @@
 	fill: url(#team-dragon-mono);
 }
 
+.fireCore {
+	stop-color: var(--dragon-fire-core);
+}
+
+.fireMid {
+	stop-color: var(--dragon-fire-mid);
+}
+
+.fireEdge {
+	stop-color: var(--dragon-fire-edge);
+}
+
+.mouthOpening {
+	fill: var(--surface-2);
+	opacity: 0;
+	transform-box: view-box;
+	transform-origin: 384px 320px;
+	animation: dragon-open 12s ease-in-out infinite;
+}
+
+.flameOuter,
+.flameInner {
+	opacity: 0;
+	transform-box: view-box;
+	transform-origin: 408px 330px;
+}
+
+.flameOuter {
+	fill: url(#team-dragon-fire);
+	filter: drop-shadow(0 0 5px color-mix(in srgb, var(--dragon-fire-mid) 60%, transparent));
+	animation: dragon-fire 12s ease-in-out infinite;
+}
+
+.flameInner {
+	fill: var(--dragon-fire-core);
+	opacity: 0;
+	animation: dragon-fire-core 12s ease-in-out infinite;
+}
+
+@keyframes dragon-open {
+	0%,
+	24%,
+	83%,
+	100% {
+		opacity: 0;
+		scale: 1 0.08;
+	}
+	42%,
+	65% {
+		opacity: 1;
+		scale: 1 1;
+	}
+}
+
+@keyframes dragon-fire {
+	0%,
+	42%,
+	65%,
+	100% {
+		opacity: 0;
+		scale: 0.15 0.55;
+	}
+	46% {
+		opacity: 0.95;
+		scale: 0.78 0.86;
+	}
+	51% {
+		opacity: 1;
+		scale: 1 1;
+	}
+	60% {
+		opacity: 0.8;
+		scale: 0.9 0.92;
+	}
+}
+
+@keyframes dragon-fire-core {
+	0%,
+	45%,
+	64%,
+	100% {
+		opacity: 0;
+		scale: 0.1 0.5;
+	}
+	50% {
+		opacity: 1;
+		scale: 0.9 0.8;
+	}
+	58% {
+		opacity: 0.9;
+		scale: 1 1;
+	}
+}
+
 @keyframes dragon-float {
 	0%,
 	100% {
@@ -103,7 +197,16 @@
 @media (prefers-reduced-motion: reduce) {
 	.dragon,
 	.ring,
-	.halo {
+	.halo,
+	.mouthOpening,
+	.flameOuter,
+	.flameInner {
 		animation: none;
+	}
+
+	.mouthOpening,
+	.flameOuter,
+	.flameInner {
+		opacity: 0;
 	}
 }
