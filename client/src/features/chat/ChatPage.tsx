@@ -362,6 +362,7 @@ export default function ChatPage() {
 		// Follow the growing answer while the model is streaming, but stop as
 		// soon as the reader scrolls up to inspect an earlier message.
 		displayMessages();
+		agentTask();
 		if (!followStream() || !messageList) return;
 		queueMicrotask(() => {
 			if (!messageList) return;
