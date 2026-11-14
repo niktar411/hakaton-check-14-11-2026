@@ -1,189 +1,94 @@
--- name: SearchSamProducts :many
-SELECT p.*
-FROM sam_products p
-WHERE p.name ILIKE '%' || sqlc.arg('query')::text || '%'
-   OR p.vendor ILIKE '%' || sqlc.arg('query')::text || '%'
-   OR EXISTS (
-       SELECT 1 FROM sam_product_aliases a
-       WHERE a.product_id = p.id
-         AND (a.alias ILIKE '%' || sqlc.arg('query')::text || '%' OR a.normalized_alias LIKE '%' || lower(sqlc.arg('query')::text) || '%')
-   )
-ORDER BY p.name, p.id
-LIMIT sqlc.arg('limit')::int;
+-- name: SamDashboard :one
+SELECT
+    (SELECT count(*) FROM sam_products)::bigint AS products,
+    (SELECT count(*) FROM sam_assets)::bigint AS assets,
+    (SELECT count(*) FROM sam_licenses)::bigint AS licenses,
+    (SELECT coalesce(sum(seats_total), 0) FROM sam_licenses)::bigint AS seats_total,
+    (SELECT coalesce(sum(seats_used), 0) FROM sam_licenses)::bigint AS seats_used,
+    (SELECT count(*) FROM sam_findings WHERE status <> 'resolved')::bigint AS open_findings,
+    (SELECT count(*) FROM sam_matches WHERE status = 'suggested')::bigint AS pending_matches,
+    (SELECT count(*) FROM sam_licenses
+        WHERE valid_until IS NOT NULL
+          AND valid_until >= current_date
+          AND valid_until <= current_date + 30)::bigint AS expiring_licenses,
+    (SELECT count(*) FROM sam_installations WHERE product_id IS NULL)::bigint AS unlicensed_installations;
 
 -- name: ListSamProducts :many
-SELECT *
-FROM sam_products
-WHERE sqlc.arg('status')::text = '' OR status = sqlc.arg('status')::text
-ORDER BY name, id
-LIMIT sqlc.arg('limit')::int;
-
--- name: SamProductBalances :many
 SELECT p.id,
        p.name,
        p.vendor,
-       p.version,
        p.category,
-       p.status,
-       coalesce(licensed.seats, 0)::bigint AS licensed_seats,
-       coalesce(licensed.expired_seats, 0)::bigint AS expired_seats,
-       (
-           SELECT count(*) FROM sam_installations i
-           WHERE i.product_id = p.id AND i.status = 'installed'
-       )::bigint AS installed,
-       greatest(
-           coalesce(licensed.seats, 0) - (
-               SELECT count(*) FROM sam_installations i
-               WHERE i.product_id = p.id AND i.status = 'installed'
-           ),
-           0
-       )::bigint AS available_seats,
-       licensed.nearest_expiry
+       p.updated_at,
+       (SELECT count(*) FROM sam_licenses l WHERE l.product_id = p.id)::bigint AS license_count,
+       (SELECT count(*) FROM sam_installations i WHERE i.product_id = p.id)::bigint AS installation_count
 FROM sam_products p
-LEFT JOIN LATERAL (
-    SELECT coalesce(sum(l.seats) FILTER (
-               WHERE l.status = 'active' AND (l.expires_at IS NULL OR l.expires_at >= current_date)
-           ), 0)::bigint AS seats,
-           coalesce(sum(l.seats) FILTER (
-               WHERE l.status = 'active' AND l.expires_at < current_date
-           ), 0)::bigint AS expired_seats,
-           min(l.expires_at) FILTER (
-               WHERE l.status = 'active' AND (l.expires_at IS NULL OR l.expires_at >= current_date)
-           ) AS nearest_expiry
-    FROM sam_licenses l
-    WHERE l.product_id = p.id
-) licensed ON true
-WHERE p.name ILIKE '%' || sqlc.arg('query')::text || '%'
-   OR p.vendor ILIKE '%' || sqlc.arg('query')::text || '%'
-   OR EXISTS (
-       SELECT 1 FROM sam_product_aliases a
-       WHERE a.product_id = p.id
-         AND (a.alias ILIKE '%' || sqlc.arg('query')::text || '%' OR a.normalized_alias LIKE '%' || lower(sqlc.arg('query')::text) || '%')
-   )
-ORDER BY p.name, p.id
-LIMIT sqlc.arg('limit')::int;
+ORDER BY lower(p.name), p.id
+LIMIT $1 OFFSET $2;
 
--- name: SamFindInstallations :many
-SELECT i.id,
-       i.raw_name,
-       i.version,
-       i.status,
-       i.last_seen_at,
-       coalesce(p.name, '')::text AS product_name
-FROM sam_installations i
-LEFT JOIN sam_products p ON p.id = i.product_id
-WHERE i.status = 'installed'
-  AND (NOT sqlc.arg('unmatched')::boolean OR i.product_id IS NULL)
-  AND (sqlc.arg('product_id')::bigint = 0 OR i.product_id = sqlc.arg('product_id')::bigint)
-  AND (sqlc.arg('query')::text = '' OR i.raw_name ILIKE '%' || sqlc.arg('query')::text || '%')
-ORDER BY i.last_seen_at DESC, i.id
-LIMIT sqlc.arg('limit')::int;
-
--- name: SamLicenseSummary :many
-SELECT l.license_type,
-       count(*)::bigint AS licenses,
-       coalesce(sum(l.seats), 0)::bigint AS seats,
-       count(*) FILTER (WHERE l.expires_at IS NOT NULL AND l.expires_at < current_date)::bigint AS expired,
-       count(DISTINCT l.product_id)::bigint AS products,
-       coalesce(sum(l.seats * l.cost_per_seat), 0)::bigint AS annual_cost
+-- name: ListSamLicenses :many
+SELECT l.id,
+       p.name AS product_name,
+       p.vendor AS product_vendor,
+       l.kind,
+       l.seats_total,
+       l.seats_used,
+       l.valid_until,
+       CASE
+           WHEN l.valid_until IS NULL THEN 'active'
+           WHEN l.valid_until < current_date THEN 'expired'
+           WHEN l.valid_until <= current_date + 30 THEN 'expiring'
+           ELSE 'active'
+       END::text AS status
 FROM sam_licenses l
-WHERE l.status = 'active'
-GROUP BY l.license_type
-ORDER BY l.license_type;
+JOIN sam_products p ON p.id = l.product_id
+ORDER BY l.valid_until NULLS LAST, lower(p.name), l.id
+LIMIT $1 OFFSET $2;
 
--- name: SamTopRisks :many
-SELECT risk, severity, affected, detail
-FROM sam_risk_overview
-ORDER BY CASE severity WHEN 'high' THEN 0 WHEN 'medium' THEN 1 ELSE 2 END, affected DESC, risk
-LIMIT sqlc.arg('limit')::int;
+-- name: ListSamAssets :many
+SELECT a.id,
+       a.hostname,
+       a.platform,
+       a.owner,
+       a.last_seen_at,
+       (SELECT count(*) FROM sam_installations i WHERE i.asset_id = a.id)::bigint AS software_count
+FROM sam_assets a
+ORDER BY lower(a.hostname), a.id
+LIMIT $1 OFFSET $2;
 
--- name: SamUnmatchedNames :many
-SELECT raw_name,
-       count(*)::bigint AS installations,
-       count(DISTINCT device_name)::bigint AS devices,
-       max(last_seen_at) AS last_seen
-FROM sam_installations
-WHERE product_id IS NULL AND status = 'installed'
-GROUP BY raw_name
-ORDER BY installations DESC, raw_name
-LIMIT sqlc.arg('limit')::int;
+-- name: ListSamFindings :many
+SELECT f.id,
+       f.code,
+       f.severity,
+       f.status,
+       f.details,
+       f.detected_at,
+       coalesce(p.name, '') AS product_name,
+       coalesce(a.hostname, '') AS asset_hostname
+FROM sam_findings f
+LEFT JOIN sam_products p ON p.id = f.product_id
+LEFT JOIN sam_assets a ON a.id = f.asset_id
+ORDER BY CASE f.severity
+             WHEN 'critical' THEN 0
+             WHEN 'high' THEN 1
+             WHEN 'medium' THEN 2
+             ELSE 3
+         END,
+         f.detected_at DESC,
+         f.id DESC
+LIMIT $1 OFFSET $2;
 
--- name: SamProductCount :one
-SELECT count(*)::bigint AS count
-FROM sam_products p
-WHERE (sqlc.arg('status')::text = '' OR p.status = sqlc.arg('status')::text)
-  AND (
-      sqlc.arg('query')::text = ''
-      OR p.name ILIKE '%' || sqlc.arg('query')::text || '%'
-      OR p.vendor ILIKE '%' || sqlc.arg('query')::text || '%'
-      OR EXISTS (
-          SELECT 1 FROM sam_product_aliases a
-          WHERE a.product_id = p.id
-            AND (a.alias ILIKE '%' || sqlc.arg('query')::text || '%'
-                 OR a.normalized_alias LIKE '%' || lower(sqlc.arg('query')::text) || '%')
-      )
-  );
-
--- name: SamInstallationCount :one
-SELECT count(*)::bigint AS count
-FROM sam_installations i
-WHERE i.status = 'installed'
-  AND (NOT sqlc.arg('unmatched')::boolean OR i.product_id IS NULL)
-  AND (sqlc.arg('product_id')::bigint = 0 OR i.product_id = sqlc.arg('product_id')::bigint)
-  AND (sqlc.arg('query')::text = '' OR i.raw_name ILIKE '%' || sqlc.arg('query')::text || '%');
-
--- name: SamOverview :one
-SELECT
-    (SELECT count(*) FROM sam_products)::bigint AS products,
-    (SELECT count(*) FROM sam_products WHERE status = 'active')::bigint AS active_products,
-    (SELECT count(*) FROM sam_installations WHERE status = 'installed')::bigint AS installations,
-    (SELECT count(*) FROM sam_installations WHERE product_id IS NULL AND status = 'installed')::bigint AS unmatched_installations,
-    (SELECT count(*) FROM sam_licenses WHERE status = 'active')::bigint AS active_licenses,
-    (SELECT coalesce(sum(seats), 0) FROM sam_licenses WHERE status = 'active')::bigint AS licensed_seats,
-    (SELECT count(*) FROM sam_licenses WHERE status = 'active' AND expires_at IS NOT NULL AND expires_at < current_date)::bigint AS expired_licenses;
-
--- name: CreateSamAIConversation :one
-INSERT INTO sam_ai_conversations(actor, mode)
-VALUES ($1, $2)
-RETURNING *;
-
--- name: GetSamAIConversation :one
-SELECT *
-FROM sam_ai_conversations
-WHERE id = $1 AND actor = $2 AND mode = $3;
-
--- name: ListSamAIConversations :many
-SELECT c.*,
-       coalesce((
-           SELECT m.content FROM sam_ai_messages m
-           WHERE m.conversation_id = c.id AND m.role = 'user'
-           ORDER BY m.id LIMIT 1
-       ), '')::text AS title,
-       (
-           SELECT count(*) FROM sam_ai_messages m
-           WHERE m.conversation_id = c.id
-       )::bigint AS message_count
-FROM sam_ai_conversations c
-WHERE c.actor = $1 AND c.mode = $2
-ORDER BY c.updated_at DESC, c.id DESC
-LIMIT $3 OFFSET $4;
-
--- name: ListSamAIMessages :many
-SELECT *
-FROM sam_ai_messages
-WHERE conversation_id = $1
-ORDER BY id
-LIMIT 200;
-
--- name: AddSamAIMessage :exec
-INSERT INTO sam_ai_messages(conversation_id, role, content, tool_name)
-VALUES ($1, $2, $3, $4);
-
--- name: TouchSamAIConversation :exec
-UPDATE sam_ai_conversations SET updated_at = now() WHERE id = $1;
-
--- name: DeleteEmptySamAIConversations :exec
-DELETE FROM sam_ai_conversations
-WHERE actor = $1 AND mode = $2
-  AND created_at < now() - interval '10 minutes'
-  AND NOT EXISTS (SELECT 1 FROM sam_ai_messages WHERE sam_ai_messages.conversation_id = sam_ai_conversations.id);
+-- name: ListSamMatches :many
+SELECT m.id,
+       i.detected_name,
+       i.version,
+       a.hostname AS asset_hostname,
+       coalesce(p.name, '') AS product_name,
+       m.confidence,
+       m.status,
+       m.created_at
+FROM sam_matches m
+JOIN sam_installations i ON i.id = m.installation_id
+JOIN sam_assets a ON a.id = i.asset_id
+LEFT JOIN sam_products p ON p.id = m.product_id
+ORDER BY m.created_at DESC, m.id DESC
+LIMIT $1 OFFSET $2;

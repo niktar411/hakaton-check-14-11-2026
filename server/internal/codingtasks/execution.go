@@ -13,7 +13,6 @@ import (
 	"hackathon/internal/gitlab"
 	"hackathon/internal/identity"
 	"hackathon/internal/llm"
-	"hackathon/internal/plannerblocks"
 )
 
 const (
@@ -62,14 +61,7 @@ func (s *Service) execute(ctx context.Context, task db.CodingTask, account db.Lo
 	}
 	principal, principalErr := identity.FromContext(ctx)
 	adminTools := principalErr == nil && identity.IsAdmin(principal, s.config.AdminUser, s.config.AdminIP)
-	var owned []plannerblocks.PlannerBlock
-	if s.adminPlanner != nil {
-		owned, err = s.adminPlanner.ListOwned(execCtx, account.Username)
-		if err != nil {
-			return db.CodingTask{}, fmt.Errorf("load owned planner blocks: %w", err)
-		}
-	}
-	messages := []llm.Message{{Role: "system", Content: executionPrompt(account, task.ID, adminTools, owned)}}
+	messages := []llm.Message{{Role: "system", Content: executionPrompt(account, task.ID, adminTools)}}
 	historyBytes := 0
 	for _, row := range history {
 		if row.Role != "user" && row.Role != "assistant" {
@@ -85,7 +77,7 @@ func (s *Service) execute(ctx context.Context, task db.CodingTask, account db.Lo
 	checks := make(map[string]bool)
 	totalCalls := 0
 	for iteration := 0; iteration < maxModelIterations; iteration++ {
-		response, modelErr := s.model.Complete(execCtx, llm.Request{Messages: messages, Tools: modelTools(adminTools), MaxTokens: 4096, Actor: account.Username, RequestID: fmt.Sprintf("coding-execute-%d-%d", task.ID, iteration), Session: fmt.Sprintf("coding-%d", task.ID)})
+		response, modelErr := s.model.Complete(execCtx, llm.Request{Messages: messages, Tools: modelTools(adminTools), MaxTokens: 4096, Actor: account.Username, RequestID: fmt.Sprintf("coding-execute-%d-%d", task.ID, iteration)})
 		if modelErr != nil {
 			return s.fail(execCtx, task.ID, executionFailure(execCtx, "model_execution_failed"))
 		}
@@ -117,22 +109,6 @@ func (s *Service) execute(ctx context.Context, task db.CodingTask, account db.Lo
 			input, parseErr := parseToolCall(task.ID, call)
 			if parseErr != nil {
 				content, err := s.persistTool(execCtx, task.ID, callID, operation, nil, ToolOutput{OK: false, Error: "invalid_tool_arguments"})
-				if err != nil {
-					return db.CodingTask{}, err
-				}
-				messages = append(messages, llm.Message{Role: "tool", ToolCallID: callID, Name: operation, Content: content})
-				continue
-			}
-			if operation == ToolStartPlannerBlock {
-				output := ToolOutput{OK: false, Error: "planner_unavailable"}
-				if s.adminPlanner != nil {
-					if _, startErr := s.adminPlanner.StartForOwner(execCtx, input.PlannerBlockID, account.Username); startErr != nil {
-						output = ToolOutput{OK: false, Error: "planner_start_failed"}
-					} else {
-						output = ToolOutput{OK: true}
-					}
-				}
-				content, err := s.persistTool(execCtx, task.ID, callID, operation, &input, output)
 				if err != nil {
 					return db.CodingTask{}, err
 				}
@@ -365,14 +341,6 @@ func parseToolCall(taskID int64, call llm.ToolCall) (ToolInput, error) {
 			return ToolInput{}, ErrInvalid
 		}
 		return validParsedInput(call.Function.Name, ToolInput{TaskID: taskID, Title: *args.Title, Description: *args.Description})
-	case ToolStartPlannerBlock:
-		var args struct {
-			PlannerBlockID *int64 `json:"plannerBlockId"`
-		}
-		if err := decodeArguments(call.Function.Arguments, &args); err != nil || args.PlannerBlockID == nil || *args.PlannerBlockID < 1 {
-			return ToolInput{}, ErrInvalid
-		}
-		return ToolInput{TaskID: taskID, PlannerBlockID: *args.PlannerBlockID}, nil
 	case ToolCreatePlannerBlock:
 		var args struct {
 			Title       *string `json:"title"`

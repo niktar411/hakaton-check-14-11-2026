@@ -39,8 +39,6 @@ services:
       MIHOMO_CONFIG_PATH: /app/infra/mihomo/hackathon.yaml
       WORKER_URL: http://orchestrator:8080
       WORKER_TOKEN: ${ORCHESTRATOR_TOKEN:?set ORCHESTRATOR_TOKEN}
-    volumes:
-      - ./AGENTS.md:/app/AGENTS.md:ro
     expose: ["4000"]
     depends_on:
       postgres: {condition: service_healthy}

@@ -32,7 +32,10 @@ func TestPublicRoutesDoNotRequireAuthentication(t *testing.T) {
 		t.Fatalf("unexpected public URLs: %#v", config)
 	}
 	wantRegistry := []Link{
-		{Title: "Команда", Path: "/"},
+		{Title: "Главная", Path: "/"},
+		{Title: "Вопросы и ответы", Path: "/questions"},
+		{Title: "Планировщик", Path: "/planner"},
+		{Title: "Внешний планировщик", Path: "https://planner.example"},
 	}
 	if !reflect.DeepEqual(config.Links, wantRegistry) {
 		t.Fatalf("link registry = %#v, want %#v", config.Links, wantRegistry)

@@ -2,7 +2,6 @@ package identity
 
 import (
 	"context"
-	"strings"
 
 	"github.com/danielgtaylor/huma/v2"
 	db "hackathon/internal/db/sqlc"
@@ -39,27 +38,10 @@ func FromContext(ctx context.Context) (Principal, error) {
 	return principal, nil
 }
 
-// IsAdmin accepts one or more comma-separated administrator addresses. The
-// list lets the same administrator use both the legacy WireGuard profile and
-// the current team proxy without weakening the exact-address check.
 func IsAdmin(principal Principal, adminUser, adminIP string) bool {
 	return principal.AuthKind == "local" && principal.Account.Enabled &&
 		principal.Account.Role == "admin" && principal.Account.Username == adminUser &&
-		principal.Session.Username == adminUser && AdminAddressAllowed(principal.IP, adminIP)
-}
-
-// AdminAddressAllowed reports whether actual is one of the comma-separated
-// administrator addresses.
-func AdminAddressAllowed(actual, allowed string) bool {
-	if actual == "" {
-		return false
-	}
-	for _, candidate := range strings.Split(allowed, ",") {
-		if actual == strings.TrimSpace(candidate) {
-			return true
-		}
-	}
-	return false
+		principal.Session.Username == adminUser && principal.IP == adminIP
 }
 
 func RequireAdmin(ctx context.Context, adminUser, adminIP string) (Principal, error) {

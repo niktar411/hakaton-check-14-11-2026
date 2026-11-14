@@ -134,32 +134,6 @@ func (q *Queries) CreateSession(ctx context.Context, arg CreateSessionParams) er
 	return err
 }
 
-const deleteConversation = `-- name: DeleteConversation :exec
-DELETE FROM conversations WHERE id=$1 AND username=$2
-`
-
-type DeleteConversationParams struct {
-	ID       int64  `json:"id"`
-	Username string `json:"username"`
-}
-
-func (q *Queries) DeleteConversation(ctx context.Context, arg DeleteConversationParams) error {
-	_, err := q.db.Exec(ctx, deleteConversation, arg.ID, arg.Username)
-	return err
-}
-
-const deleteEmptyConversations = `-- name: DeleteEmptyConversations :exec
-DELETE FROM conversations
-WHERE username=$1
-  AND created_at < now() - interval '10 minutes'
-  AND NOT EXISTS (SELECT 1 FROM messages WHERE messages.conversation_id=conversations.id)
-`
-
-func (q *Queries) DeleteEmptyConversations(ctx context.Context, username string) error {
-	_, err := q.db.Exec(ctx, deleteEmptyConversations, username)
-	return err
-}
-
 const deleteSession = `-- name: DeleteSession :exec
 DELETE FROM sessions WHERE id=$1
 `

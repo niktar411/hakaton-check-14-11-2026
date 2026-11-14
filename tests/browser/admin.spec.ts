@@ -124,17 +124,13 @@ test("every administration section renders real data states", async ({ page }) =
 	await expect(page.getByRole("heading", { name: "Задачи разработки" })).toBeVisible();
 	await expect(page.getByText("Задач пока нет.")).toBeVisible();
 
-	await page.getByRole("button", { name: "Контексты", exact: true }).click();
-	await expect(page.getByRole("heading", { name: "Контексты", exact: true })).toBeVisible();
-	await expect(page.getByRole("heading", { name: "Контекст публичных ответов" })).toBeVisible();
-	await expect(page.getByRole("heading", { name: "Личные контексты участников" })).toBeVisible();
-	await page.getByRole("button", { name: /Администратор.*admin/ }).click();
-	await expect(page.getByLabel("Персональный контекст")).toBeVisible();
-	await expect(page.getByRole("button", { name: "Сохранить" }).last()).toBeVisible();
+	await page.getByRole("button", { name: "Контекст ответов", exact: true }).click();
+	await expect(page.getByRole("heading", { name: "Контекст ответов" })).toBeVisible();
+	await expect(page.getByRole("button", { name: "Сохранить" })).toBeVisible();
 	await expect(page.getByText("Публичных вопросов пока не было")).toBeVisible();
 
-	await page.getByRole("button", { name: "Ключ OpenCode", exact: true }).click();
-	await expect(page.getByRole("heading", { name: "Ключ OpenCode" })).toBeVisible();
+	await page.getByRole("button", { name: "Ключ DeepSeek", exact: true }).click();
+	await expect(page.getByRole("heading", { name: "Ключ DeepSeek" })).toBeVisible();
 	await expect(page.getByText("Ключ модели настроен")).toBeVisible();
 
 	await page.getByRole("button", { name: "Mihomo", exact: true }).click();

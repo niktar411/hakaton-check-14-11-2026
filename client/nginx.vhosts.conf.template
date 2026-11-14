@@ -12,9 +12,8 @@ server {
 }
 server {
     listen 80;
-    server_name ${PUBLIC_SERVER_NAME} ${PLANNER_SERVER_NAME} ai.cool-domain.online;
-    location ^~ /.well-known/acme-challenge/ { root /var/www/certbot; }
-    location / { return 308 https://$host$request_uri; }
+    server_name ${PUBLIC_SERVER_NAME} ${PLANNER_SERVER_NAME};
+    return 308 https://$host$request_uri;
 }
 
 server {
@@ -34,37 +33,13 @@ server {
         include /etc/nginx/snippets/proxy.conf;
         proxy_pass http://hackathon_api/sitemap.xml;
     }
-    location = /api/chat/stream {
-        include /etc/nginx/snippets/proxy-stream.conf;
-        proxy_pass http://hackathon_api;
-    }
-    location ^~ /api/ {
+    location /api/ {
         include /etc/nginx/snippets/proxy.conf;
         proxy_pass http://hackathon_api;
     }
-    location ^~ /auth/ {
+    location /auth/ {
         include /etc/nginx/snippets/proxy.conf;
         proxy_pass http://hackathon_api;
-    }
-    location ^~ /gitea/ {
-        # Gitea owns this subpath. Do not inherit the portal CSP: it blocks
-        # Gitea's inline styles and scripts.
-        add_header X-Content-Type-Options "nosniff" always;
-        add_header Referrer-Policy "no-referrer" always;
-        add_header X-Frame-Options "SAMEORIGIN" always;
-        proxy_pass http://10.77.0.1/;
-        proxy_http_version 1.1;
-        proxy_set_header Host $host;
-        proxy_set_header X-Forwarded-Proto https;
-        proxy_set_header X-Forwarded-Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection "upgrade";
-        proxy_buffering off;
-        proxy_read_timeout 600s;
-        proxy_send_timeout 600s;
-        client_max_body_size 64m;
     }
     location ~* (?:^|/)(?:\.|.*(?:credential|secret|password).*) { return 404; }
     location ~* \.(?:pem|key|p12|pfx|jks|keystore|kdbx|ovpn)$ { return 404; }
@@ -86,11 +61,11 @@ server {
     server_name ${PLANNER_SERVER_NAME};
     root /usr/share/nginx/html;
     index index.html;
+    include /etc/nginx/snippets/tls.conf;
+    include /etc/nginx/snippets/security-headers.conf;
 
     # The planner host is a dedicated plan page, not the main landing.
     location = / { return 302 /planner; }
-    include /etc/nginx/snippets/tls.conf;
-    include /etc/nginx/snippets/security-headers.conf;
 
     location = /health {
         include /etc/nginx/snippets/proxy.conf;
@@ -112,87 +87,11 @@ server {
         include /etc/nginx/snippets/proxy.conf;
         proxy_pass http://hackathon_api;
     }
-    location = /api/me {
-        include /etc/nginx/snippets/proxy.conf;
-        proxy_pass http://hackathon_api;
-    }
-    location = /api/planner {
-        include /etc/nginx/snippets/proxy.conf;
-        proxy_pass http://hackathon_api;
-    }
-    location = /api/auth/local-login {
-        include /etc/nginx/snippets/proxy.conf;
-        proxy_pass http://hackathon_api;
-    }
-    location = /api/logout {
-        include /etc/nginx/snippets/proxy.conf;
-        proxy_pass http://hackathon_api;
-    }
-    location = /api/chat/stream {
-        include /etc/nginx/snippets/proxy-stream.conf;
-        proxy_pass http://hackathon_api;
-    }
-    location /api/chat {
-        include /etc/nginx/snippets/proxy.conf;
-        proxy_pass http://hackathon_api;
-    }
-    location ^~ /api/deployments {
-        include /etc/nginx/snippets/proxy.conf;
-        proxy_pass http://hackathon_api;
-    }
-    location ^~ /api/ { return 404; }
-    location ^~ /auth/ { return 404; }
+    location /api/ { return 404; }
+    location /auth/ { return 404; }
     location ^~ /admin { return 404; }
     location ^~ /coding { return 404; }
     location ~* (?:^|/)(?:\.|.*(?:credential|secret|password).*) { return 404; }
-    location ~* \.(?:pem|key|p12|pfx|jks|keystore|kdbx|ovpn)$ { return 404; }
-    location /assets/ {
-        expires 1y;
-        add_header Cache-Control "public, immutable" always;
-        try_files $uri =404;
-    }
-    location = /index.html {
-        add_header Cache-Control "no-store" always;
-        include /etc/nginx/snippets/security-headers.conf;
-    }
-    location / { try_files $uri $uri/ /index.html; }
-}
-
-server {
-    listen 443 ssl;
-    http2 on;
-    server_name ai.cool-domain.online;
-    root /usr/share/nginx/html;
-    index index.html;
-    include /etc/nginx/snippets/tls.conf;
-    include /etc/nginx/snippets/security-headers.conf;
-
-    # The AI host opens directly on the team chat page.
-    location = / { return 302 /chat; }
-    location = /health {
-        include /etc/nginx/snippets/proxy.conf;
-        proxy_pass http://hackathon_api/health;
-    }
-    location = /sitemap.xml {
-        include /etc/nginx/snippets/proxy.conf;
-        proxy_pass http://hackathon_api/sitemap.xml;
-    }
-    location = /api/chat/stream {
-        include /etc/nginx/snippets/proxy-stream.conf;
-        proxy_pass http://hackathon_api;
-    }
-    location ^~ /api/ {
-        include /etc/nginx/snippets/proxy.conf;
-        proxy_pass http://hackathon_api;
-    }
-    location ^~ /auth/ {
-        include /etc/nginx/snippets/proxy.conf;
-        proxy_pass http://hackathon_api;
-    }
-    location ^~ /admin { return 404; }
-    location ^~ /coding { return 404; }
-    location ~* (?:^|/)\.(?!well-known(?:/|$)) { return 404; }
-    location ~* (?:^|/)(?:credentials?|secrets?|passwords?)\.(?:txt|json|ya?ml|env|conf|ini|log)$ { return 404; }
     location ~* \.(?:pem|key|p12|pfx|jks|keystore|kdbx|ovpn)$ { return 404; }
     location /assets/ {
         expires 1y;

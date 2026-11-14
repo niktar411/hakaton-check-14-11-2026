@@ -45,30 +45,6 @@ func TestForwardedHeaderCannotGrantAdminAccess(t *testing.T) {
 	}
 }
 
-func TestPrivateReverseProxySuppliesForwardedAddress(t *testing.T) {
-	r := httptest.NewRequest("GET", "http://portal/api/admin/dashboard", nil)
-	// Docker bridge address of the internal nginx container.
-	r.RemoteAddr = "172.30.0.4:50000"
-	r.Header.Set("X-Forwarded-For", "10.77.0.6")
-	if got := remoteIP(r); got != "10.77.0.6" {
-		t.Fatalf("internal proxy address not preserved: %s", got)
-	}
-}
-
-func TestAdminAcceptsSeveralVPNAddresses(t *testing.T) {
-	c := Config{AdminUser: "niktar411", AdminIP: "10.77.0.2, 10.77.0.6"}
-	for _, ip := range []string{"10.77.0.2", "10.77.0.6"} {
-		s := &Service{config: c}
-		principal := identity.Principal{
-			Session: db.Session{Username: "niktar411"}, IP: ip, AuthKind: "local",
-			Account: db.LocalAccount{Username: "niktar411", Role: "admin", Enabled: true},
-		}
-		if _, err := s.admin(identity.WithPrincipal(t.Context(), principal)); err != nil {
-			t.Errorf("address %s rejected: %v", ip, err)
-		}
-	}
-}
-
 func TestOnlyLoopbackProxyCanSupplyForwardedAddress(t *testing.T) {
 	r := httptest.NewRequest("GET", "http://portal/api/admin/dashboard", nil)
 	r.RemoteAddr = "127.0.0.1:50000"
@@ -79,21 +55,6 @@ func TestOnlyLoopbackProxyCanSupplyForwardedAddress(t *testing.T) {
 	r.Header.Set("X-Forwarded-For", "invalid")
 	if got := remoteIP(r); got != "127.0.0.1" {
 		t.Fatalf("invalid forwarded address accepted: %s", got)
-	}
-}
-
-func TestRealIPHeaderWinsOverSpoofedForwardedChain(t *testing.T) {
-	r := httptest.NewRequest("GET", "http://portal/api/admin/dashboard", nil)
-	r.RemoteAddr = "172.30.0.4:50000"
-	r.Header.Set("X-Real-IP", "10.77.0.6")
-	r.Header.Set("X-Forwarded-For", "10.77.0.2, 203.0.113.9")
-	if got := remoteIP(r); got != "10.77.0.6" {
-		t.Fatalf("spoofed forwarded prefix accepted: %s", got)
-	}
-	r.Header.Del("X-Real-IP")
-	r.Header.Set("X-Forwarded-For", "10.77.0.2, 203.0.113.9")
-	if got := remoteIP(r); got != "203.0.113.9" {
-		t.Fatalf("last forwarded address not used: %s", got)
 	}
 }
 

@@ -40,18 +40,17 @@ type Progress struct {
 // PlannerBlock is the full team planner representation. It is returned only to
 // an authenticated team member; the public summary never includes these fields.
 type PlannerBlock struct {
-	ID          int64      `json:"id"`
-	Title       string     `json:"title"`
-	Description string     `json:"description"`
-	Position    int32      `json:"position"`
-	Owner       Owner      `json:"owner"`
-	Branch      string     `json:"branch"`
-	MRIID       *int64     `json:"mrIid"`
-	MRURL       string     `json:"mrUrl"`
-	ParentID    *int64     `json:"parentId"`
-	StartedAt   *time.Time `json:"startedAt,omitempty"`
-	UpdatedAt   time.Time  `json:"updatedAt"`
-	Progress    Progress   `json:"progress"`
+	ID          int64     `json:"id"`
+	Title       string    `json:"title"`
+	Description string    `json:"description"`
+	Position    int32     `json:"position"`
+	Owner       Owner     `json:"owner"`
+	Branch      string    `json:"branch"`
+	MRIID       *int64    `json:"mrIid"`
+	MRURL       string    `json:"mrUrl"`
+	ParentID    *int64    `json:"parentId"`
+	UpdatedAt   time.Time `json:"updatedAt"`
+	Progress    Progress  `json:"progress"`
 }
 
 // PublicProgress is the only progress information exposed without a team
@@ -93,10 +92,6 @@ type updatePlannerBlockInput struct {
 }
 
 type deletePlannerBlockInput struct {
-	ID int64 `path:"id" minimum:"1"`
-}
-
-type startPlannerBlockInput struct {
 	ID int64 `path:"id" minimum:"1"`
 }
 

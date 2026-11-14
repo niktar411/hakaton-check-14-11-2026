@@ -1,4 +1,4 @@
-import { createEffect, createResource, createSignal, For, onCleanup, Show } from "solid-js";
+import { createEffect, createResource, createSignal, For, Show } from "solid-js";
 import * as m from "@/paraglide/messages";
 import { api, csrfHeaders, isAuthError, unwrap } from "@/shared/api";
 import type { components } from "@/shared/api/schema";
@@ -64,12 +64,6 @@ export default function CodingPage() {
 		if (!rows.some((item) => item.id === selectedId())) {
 			setSelectedId(rows[0]?.id);
 		}
-	});
-
-	createEffect(() => {
-		if (!tasks()?.some((item) => item.phase === "running")) return;
-		const timer = window.setInterval(() => void refetch(), 5000);
-		onCleanup(() => window.clearInterval(timer));
 	});
 
 	async function createTask(event: SubmitEvent) {
