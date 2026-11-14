@@ -77,7 +77,7 @@
 	opacity: 0;
 	transform-box: view-box;
 	transform-origin: 384px 320px;
-	animation: dragon-open 8s ease-in-out infinite;
+	animation: dragon-open 7s ease-in-out infinite;
 }
 
 .flameOuter,
@@ -90,25 +90,25 @@
 .flameOuter {
 	fill: url(#team-dragon-fire);
 	filter: drop-shadow(0 0 5px color-mix(in srgb, var(--dragon-fire-mid) 60%, transparent));
-	animation: dragon-fire 8s ease-in-out infinite;
+	animation: dragon-fire 7s ease-in-out infinite;
 }
 
 .flameInner {
 	fill: var(--dragon-fire-core);
 	opacity: 0;
-	animation: dragon-fire-core 8s ease-in-out infinite;
+	animation: dragon-fire-core 7s ease-in-out infinite;
 }
 
 @keyframes dragon-open {
 	0%,
-	24%,
-	83%,
+	20%,
+	88%,
 	100% {
 		opacity: 0;
 		scale: 1 0.08;
 	}
-	42%,
-	65% {
+	45%,
+	68% {
 		opacity: 1;
 		scale: 1 1;
 	}
@@ -116,21 +116,21 @@
 
 @keyframes dragon-fire {
 	0%,
-	42%,
-	65%,
+	45%,
+	68%,
 	100% {
 		opacity: 0;
 		scale: 0.15 0.55;
 	}
-	46% {
+	49% {
 		opacity: 0.95;
 		scale: 0.78 0.86;
 	}
-	51% {
+	56% {
 		opacity: 1;
 		scale: 1 1;
 	}
-	60% {
+	63% {
 		opacity: 0.8;
 		scale: 0.9 0.92;
 	}
@@ -138,17 +138,17 @@
 
 @keyframes dragon-fire-core {
 	0%,
-	45%,
-	64%,
+	48%,
+	67%,
 	100% {
 		opacity: 0;
 		scale: 0.1 0.5;
 	}
-	50% {
+	52% {
 		opacity: 1;
 		scale: 0.9 0.8;
 	}
-	58% {
+	64% {
 		opacity: 0.9;
 		scale: 1 1;
 	}
