@@ -1,4 +1,10 @@
-import { A, Route, Router, useLocation } from "@solidjs/router";
+import {
+	A,
+	Route,
+	Router,
+	useLocation,
+	useNavigate,
+} from "@solidjs/router";
 import {
 	createEffect,
 	createResource,
@@ -16,22 +22,19 @@ import { LoadingState } from "@/shared/ui/State";
 import { Toast } from "@/shared/ui/Toast";
 import { ThemeToggle } from "@/app/theme";
 import { TeamLoginPage } from "@/features/auth/TeamLoginPage";
-import LandingPage from "@/features/public/LandingPage";
-import QuestionsPage from "@/features/questions/QuestionsPage";
 import ChatPage from "@/features/chat/ChatPage";
 import TeamDeploymentsPage from "@/features/deployments/TeamDeploymentsPage";
 import PlannerPage from "@/features/planner/PlannerPage";
+import TeamPage from "@/features/team/TeamPage";
 import CodingPage from "@/features/coding/CodingPage";
 import AdminLoginPage from "@/features/administration/AdminLoginPage";
 import AdministrationPage from "@/features/administration/AdministrationPage";
 import { SiteConfigProvider } from "@/app/site-config";
 
-function PublicNavigation(props: { publicUrl?: string }) {
+function PublicNavigation() {
 	return (
 		<nav class="flex flex-wrap gap-x-5 gap-y-2" aria-label={m.mainNavigation()}>
-			<a href={props.publicUrl ?? "/"}>{m.footerHome()}</a>
-			<A href="/questions">{m.questionsPageTitle()}</A>
-			<A href="/planner">{m.plannerPageTitle()}</A>
+			<A href="/">{m.teamPageTitle()}</A>
 		</nav>
 	);
 }
@@ -67,6 +70,7 @@ function LogoutButton(props: { csrf?: string; onLoggedOut: () => void }) {
 
 function App(props: { children?: JSX.Element }) {
 	const location = useLocation();
+	const navigate = useNavigate();
 	const [config, { refetch }] = createResource(async () =>
 		unwrap(await api.GET("/api/public/site-config")),
 	);
@@ -121,7 +125,24 @@ function App(props: { children?: JSX.Element }) {
 	const privateArea = () =>
 		adminArea() ||
 		location.pathname === "/coding" ||
-		location.pathname.startsWith("/coding/");
+		location.pathname.startsWith("/coding/") ||
+		location.pathname === "/planner" ||
+		location.pathname.startsWith("/planner/");
+	createEffect(() => {
+		// The public site is one page: old question, plan and team URLs open it.
+		if (
+			location.pathname === "/questions" ||
+			location.pathname === "/team"
+		) {
+			navigate("/", { replace: true });
+		}
+	});
+	createEffect(() => {
+		// The team host keeps its planner as the entry point.
+		if (!config.loading && plannerHost() && location.pathname === "/") {
+			navigate("/planner", { replace: true });
+		}
+	});
 	createEffect(() => {
 		const robots = document.querySelector('meta[name="robots"]');
 		if (robots) {
@@ -182,11 +203,7 @@ function App(props: { children?: JSX.Element }) {
 									{m.appTitle()}
 								</A>
 								<div class="flex flex-wrap items-center gap-4">
-									<Show when={plannerHost()} fallback={
-										<PublicNavigation
-											publicUrl={config.error ? undefined : config()?.publicBaseUrl}
-										/>
-									}>
+									<Show when={plannerHost()} fallback={<PublicNavigation />}>
 										<TeamNavigation />
 									</Show>
 									<ThemeToggle />
@@ -203,8 +220,6 @@ function App(props: { children?: JSX.Element }) {
 								<Footer
 									team={plannerHost()}
 									borderless={plannerArea()}
-									publicUrl={config.error ? undefined : config()?.publicBaseUrl}
-									plannerUrl={config.error ? undefined : config()?.plannerBaseUrl}
 								/>
 							</Show>
 						</div>
@@ -220,8 +235,7 @@ if (root) {
 	render(
 		() => (
 			<Router root={App}>
-				<Route path="/" component={LandingPage} />
-				<Route path="/questions" component={QuestionsPage} />
+				<Route path="/" component={TeamPage} />
 				<Route path="/planner" component={PlannerPage} />
 				<Route path="/chat" component={ChatPage} />
 				<Route path="/deployments" component={TeamDeploymentsPage} />

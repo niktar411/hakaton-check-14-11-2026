@@ -75,6 +75,62 @@
 	cursor: grabbing;
 }
 
+.zoomControls {
+	position: absolute;
+	z-index: 4;
+	top: var(--space-3);
+	right: var(--space-3);
+	display: flex;
+	min-width: 0;
+	gap: var(--space-1);
+	margin: 0;
+	padding: var(--space-1);
+	border: 1px solid var(--border);
+	border-radius: var(--radius-full);
+	background: var(--surface);
+	box-shadow: 0 4px 14px color-mix(in srgb, var(--text) 12%, transparent);
+}
+
+.zoomButton {
+	display: grid;
+	width: 32px;
+	height: 32px;
+	place-items: center;
+	padding: 0;
+	border: 0;
+	border-radius: 50%;
+	background: transparent;
+	color: var(--text);
+	cursor: pointer;
+	font-size: var(--text-lg);
+	line-height: 1;
+	transition:
+		background var(--dur) var(--ease),
+		color var(--dur) var(--ease);
+}
+
+.zoomButton:hover {
+	background: var(--surface-2);
+	color: var(--primary);
+}
+
+.boardContained {
+	position: relative;
+	flex: 0 0 auto;
+	height: clamp(360px, 56vh, 540px);
+	overflow: hidden;
+	border: 1px solid var(--border);
+	border-radius: var(--radius-md);
+	background: var(--surface);
+	box-shadow: 0 18px 46px color-mix(in srgb, var(--text) 9%, transparent);
+}
+
+.boardContained .board {
+	min-height: 0;
+	height: auto;
+	flex: 1 1 auto;
+}
+
 .world {
 	position: absolute;
 	top: 0;
@@ -468,6 +524,22 @@
 	padding: var(--space-3);
 	border-radius: var(--radius-sm);
 	background: var(--warning-bg);
+}
+
+@media (max-width: 720px) {
+	.zoomButton {
+		width: 40px;
+		height: 40px;
+	}
+
+	.boardContained {
+		height: clamp(320px, 48vh, 460px);
+	}
+
+	.boardContained .board {
+		/* Vertical swipes scroll the page; horizontal drags pan the board. */
+		touch-action: pan-y;
+	}
 }
 
 @media (max-width: 640px) {

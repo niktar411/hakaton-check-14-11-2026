@@ -4,8 +4,6 @@ import * as m from "@/paraglide/messages";
 import s from "./Footer.module.css";
 
 export function Footer(props: {
-	plannerUrl?: string;
-	publicUrl?: string;
 	team?: boolean;
 	borderless?: boolean;
 }) {
@@ -21,16 +19,7 @@ export function Footer(props: {
 						</>
 					}
 				>
-					<a href={props.publicUrl ?? "/"}>{m.footerHome()}</a>
-					<A href="/questions">{m.questionsPageTitle()}</A>
-					<A href="/planner">{m.plannerPageTitle()}</A>
-					<Show when={props.plannerUrl}>
-						{(url) => (
-							<a href={url()} target="_blank" rel="noopener noreferrer">
-								{m.openPlanner()}
-							</a>
-						)}
-					</Show>
+					<A href="/">{m.teamPageTitle()}</A>
 				</Show>
 			</nav>
 			<p class={s.note}>

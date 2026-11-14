@@ -46,6 +46,10 @@ server {
         include /etc/nginx/snippets/proxy.conf;
         proxy_pass http://hackathon_api;
     }
+    # The public site is one page: old question, plan and team URLs open it.
+    location = /questions { return 302 /; }
+    location = /planner { return 302 /; }
+    location = /team { return 302 /; }
     location ~* (?:^|/)(?:\.|.*(?:credential|secret|password).*) { return 404; }
     location ~* \.(?:pem|key|p12|pfx|jks|keystore|kdbx|ovpn)$ { return 404; }
     location /assets/ {

@@ -11,6 +11,7 @@ server/tmp
 docs
 *.md
 !AGENTS.md
+!README.md
 .env
 .env.*
 deploy/*.env

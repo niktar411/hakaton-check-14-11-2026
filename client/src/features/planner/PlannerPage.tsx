@@ -1,3 +1,4 @@
+import { useNavigate } from "@solidjs/router";
 import {
 	createEffect,
 	createMemo,
@@ -387,10 +388,12 @@ function PlannerNode(props: {
 	);
 }
 
-function PlannerBoard(props: {
+export function PlannerBoard(props: {
 	blocks: AnyBlock[];
 	team: boolean;
 	onSelect: (block: AnyBlock) => void;
+	contained?: boolean;
+	wheelZoom?: boolean;
 }) {
 	const [board, setBoard] = createSignal<HTMLDivElement>();
 	const [zoom, setZoom] = createSignal(1);
@@ -449,27 +452,33 @@ function PlannerBoard(props: {
 		const rect = element.getBoundingClientRect();
 		if (rect.width < 32 || rect.height < 32) return;
 		const current = layout();
+		const minX = Math.min(
+			...current.nodes.map((node) => node.x - current.cardWidth / 2),
+		);
 		const maxX = Math.max(
-			...current.nodes.map(
-				(node) => Math.abs(node.x - current.rootX) + current.cardWidth / 2,
-			),
+			...current.nodes.map((node) => node.x + current.cardWidth / 2),
+		);
+		const minY = Math.min(
+			...current.nodes.map((node) => node.y - current.cardHeight / 2),
 		);
 		const maxY = Math.max(
-			...current.nodes.map(
-				(node) => Math.abs(node.y - current.rootY) + current.cardHeight / 2,
-			),
+			...current.nodes.map((node) => node.y + current.cardHeight / 2),
 		);
+		const width = Math.max(1, maxX - minX);
+		const height = Math.max(1, maxY - minY);
 		const allZoom = Math.max(
 			0.12,
-			Math.min((rect.width - 96) / (maxX * 2), (rect.height - 96) / (maxY * 2), 1.4),
+			Math.min((rect.width - 96) / width, (rect.height - 96) / height, 1.4),
 		);
 		// Open at a readable scale around the centre. "Show all" zooms out far
 		// enough to see every branch; the wheel and +/- go in both directions.
 		const next = showAll ? allZoom : Math.max(allZoom, 0.8);
+		const centerX = showAll ? (minX + maxX) / 2 : current.rootX;
+		const centerY = showAll ? (minY + maxY) / 2 : current.rootY;
 		setZoom(next);
 		setPan({
-			x: rect.width / 2 - current.rootX * next,
-			y: rect.height / 2 - current.rootY * next,
+			x: rect.width / 2 - centerX * next,
+			y: rect.height / 2 - centerY * next,
 		});
 	};
 
@@ -496,10 +505,13 @@ function PlannerBoard(props: {
 			event.preventDefault();
 			zoomBy(event.deltaY < 0 ? 1.12 : 0.89, event.clientX, event.clientY);
 		};
-		element.addEventListener("wheel", wheel, { passive: false });
-		const observer = new ResizeObserver(() => fit());
+		if (props.wheelZoom !== false) {
+			element.addEventListener("wheel", wheel, { passive: false });
+		}
+		const resetView = () => fit();
+		const observer = new ResizeObserver(resetView);
 		observer.observe(element);
-		fit();
+		resetView();
 		onCleanup(() => {
 			element.removeEventListener("wheel", wheel);
 			observer.disconnect();
@@ -551,7 +563,11 @@ function PlannerBoard(props: {
 	};
 
 	return (
-		<section class={s.boardSection} aria-label={m.plannerBoard()}>
+		<section
+			class={s.boardSection}
+			classList={{ [s.boardContained]: props.contained === true }}
+			aria-label={m.plannerBoard()}
+		>
 			<div
 				class={s.board}
 				ref={setBoard}
@@ -562,6 +578,38 @@ function PlannerBoard(props: {
 				onPointerCancel={pointerUp}
 				onPointerLeave={pointerLeave}
 			>
+				<fieldset
+					class={s.zoomControls}
+					aria-label={m.plannerZoomControls()}
+				>
+					<button
+						type="button"
+						class={s.zoomButton}
+						aria-label={m.plannerZoomOut()}
+						title={m.plannerZoomOut()}
+						onClick={() => zoomBy(0.86)}
+					>
+						−
+					</button>
+					<button
+						type="button"
+						class={s.zoomButton}
+						aria-label={m.plannerZoomIn()}
+						title={m.plannerZoomIn()}
+						onClick={() => zoomBy(1.16)}
+					>
+						+
+					</button>
+					<button
+						type="button"
+						class={s.zoomButton}
+						aria-label={m.plannerFit()}
+						title={m.plannerFit()}
+						onClick={() => fit(true)}
+					>
+						⤢
+					</button>
+				</fieldset>
 				<div
 					class={s.world}
 					style={{
@@ -690,6 +738,7 @@ function PlannerBoard(props: {
 
 export default function PlannerPage() {
 	const toast = useToast();
+	const navigate = useNavigate();
 	const [selected, setSelected] = createSignal<AnyBlock>();
 	const [starting, setStarting] = createSignal(false);
 	const [planner, { refetch }] = createResource(
@@ -720,6 +769,12 @@ export default function PlannerPage() {
 		const view = planner();
 		return view?.team ? view.username : "";
 	};
+	createEffect(() => {
+		// Anonymous visitors get the plan inside the single public page.
+		if (!planner.loading && !team()) {
+			navigate("/", { replace: true });
+		}
+	});
 	async function startWork(block: AnyBlock) {
 		if (starting()) return;
 		setStarting(true);

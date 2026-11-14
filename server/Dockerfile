@@ -2,7 +2,7 @@ FROM oven/bun:1.4.2-debian AS client-build
 WORKDIR /src
 COPY package.json bun.lock ./
 RUN bun install --frozen-lockfile
-COPY tsconfig.json biome.json ./
+COPY tsconfig.json biome.json README.md ./
 COPY client ./client
 RUN bun run build:client
 

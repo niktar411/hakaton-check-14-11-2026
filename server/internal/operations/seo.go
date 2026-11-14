@@ -24,9 +24,8 @@ type publicPage struct {
 
 func (s *Service) publicPages() []publicPage {
 	return []publicPage{
-		{Path: "/", Title: "Хакатон: продукт команды", Description: "Публичная информация о проекте, ответы DeepSeek и реальный план разработки команды."},
-		{Path: "/questions", Title: "Вопросы о проекте", Description: "Ответы DeepSeek по проверяемому контексту проекта и ссылки только на страницы сайта."},
-		{Path: "/planner", Title: "План команды", Description: "Публичный план работ с реальным прогрессом Merge Request и CI GitLab."},
+		{Path: "/", Title: "Команда: план, ИИ-помощник и участники", Description: "План работ, ИИ-помощник по материалам проекта и состав команды на одной странице."},
+		{Path: "/planner", Title: "План команды", Description: "План работ команды с реальным прогрессом Merge Request и CI GitLab.", Private: true},
 		{Path: "/coding", Title: "Разработка с DeepSeek", Description: "Закрытая зона участников: локальный вход и разработка с обязательным уточнением каждой задачи.", Private: true},
 	}
 }
@@ -73,16 +72,14 @@ func xmlEscape(value string) string {
 
 func (s *Service) robots(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-	writePublic(r, w, "User-agent: *\nAllow: /\nDisallow: /admin\nDisallow: /coding\nDisallow: /api/\nSitemap: "+s.config.PublicURL+"/sitemap.xml\n")
+	writePublic(r, w, "User-agent: *\nAllow: /\nDisallow: /admin\nDisallow: /coding\nDisallow: /planner\nDisallow: /api/\nSitemap: "+s.config.PublicURL+"/sitemap.xml\n")
 }
 
 func (s *Service) llms(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-	text := "# Хакатон\n\n> Публичный сайт проекта и проверяемый план команды.\n\n" +
-		"Основная информация, вопросы и план доступны без регистрации. Администрирование и изменения кода требуют локального входа.\n\n" +
-		"## Проект\n- [Главная](" + s.config.PublicURL + "): описание проекта и возможностей.\n" +
-		"- [Вопросы](" + s.config.PublicURL + "/questions): ответы по редактируемому проверенному контексту.\n" +
-		"- [План](" + s.config.PlannerURL + "/planner): этапы работ и время обновления.\n" +
+	text := "# Хакатон\n\n> Единая страница команды: план, состав и ИИ-помощник.\n\n" +
+		"Страница команды доступна без регистрации. Администрирование и изменения кода требуют локального входа.\n\n" +
+		"## Проект\n- [Команда](" + s.config.PublicURL + "): публичный план, ИИ-помощник и состав команды.\n" +
 		"Зона разработки с DeepSeek доступна только участникам команды после локального входа.\n"
 	writePublic(r, w, text)
 }
@@ -101,7 +98,7 @@ func (s *Service) serveIndex(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	content := string(data)
-	if strings.HasPrefix(r.URL.Path, "/admin") || r.URL.Path == "/coding" {
+	if strings.HasPrefix(r.URL.Path, "/admin") || r.URL.Path == "/coding" || r.URL.Path == "/planner" {
 		content = robotsPattern.ReplaceAllString(content, `<meta name="robots" content="noindex,nofollow"/>`)
 	} else {
 		content = robotsPattern.ReplaceAllString(content, `<meta name="robots" content="index,follow"/>`)
