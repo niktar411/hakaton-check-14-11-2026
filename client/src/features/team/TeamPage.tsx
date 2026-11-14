@@ -347,6 +347,14 @@ export default function TeamPage() {
 								</div>
 							</div>
 
+							<Show when={member().quote}>
+								{(quote) => (
+									<blockquote class={s.memberQuote}>
+										<p>«{quote()}»</p>
+									</blockquote>
+								)}
+							</Show>
+
 							<div class={s.memberDivider} />
 
 							<div class={s.memberAbout}>
