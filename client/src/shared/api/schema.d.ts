@@ -454,38 +454,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/chat/updates": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["chat-updates"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/chat/updates/{id}/pull": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["chat-update-pull"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/coding/tasks": {
         parameters: {
             query?: never;
@@ -1354,25 +1322,6 @@ export interface components {
             /** Format: int64 */
             messageCount: number;
             phase: string;
-            title: string;
-        };
-        ChatUpdate: {
-            /**
-             * Format: uri
-             * @description A URL to the JSON Schema for this object.
-             * @example https://example.com/ChatUpdate.json
-             */
-            readonly $schema?: string;
-            /** Format: int64 */
-            blockId: number;
-            branch: string;
-            /** Format: date-time */
-            completedAt: string;
-            description: string;
-            /** Format: int64 */
-            id: number;
-            mrUrl: string;
-            ownerName: string;
             title: string;
         };
         CodingMessage: {
@@ -3479,66 +3428,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ChatHistory"];
-                };
-            };
-            /** @description Error */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["ErrorModel"];
-                };
-            };
-        };
-    };
-    "chat-updates": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ChatUpdate"][] | null;
-                };
-            };
-            /** @description Error */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["ErrorModel"];
-                };
-            };
-        };
-    };
-    "chat-update-pull": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ChatUpdate"];
                 };
             };
             /** @description Error */

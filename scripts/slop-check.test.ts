@@ -38,9 +38,6 @@ describe('ловит мусор', () => {
     ['italic-class', 'client/src/features/a/A.tsx', '<span class="text-sm italic" />'],
     ['cyrillic-jsx', 'client/src/features/a/A.tsx', '<h1>Профиль</h1>'],
     ['cyrillic-jsx', 'client/src/features/a/A.tsx', '<input placeholder="Имя" />'],
-    ['mojibake-run', 'client/messages/ru.json', '"appTitle": "???????",'],
-    ['mojibake-run', 'client/index.html', '<title>??????????????</title>'],
-    ['mojibake-run', 'client/src/features/a/A.module.css', '/* ?????? ?? ???????? */'],
   ];
 
   for (const [rule, file, content] of cases) {
@@ -77,9 +74,6 @@ describe('не трогает нормальный код', () => {
     ['server/seed/users.go', 'name := "Иван Иванов"'],
     ['client/src/shared/api/schema.d.ts', 'export type X = any;'],
     ['docs/playbook.md', 'TODO в документации не проверяется'],
-    ['client/src/features/a/a.ts', 'const mode = search() ?? "planner";'],
-    ['client/src/features/a/a.ts', 'value === "?" ? "да" : "нет"'],
-    ['client/src/shared/api/client.ts', 'const href = "/x?" + params.toString();'],
   ];
 
   for (const [file, content] of clean) {

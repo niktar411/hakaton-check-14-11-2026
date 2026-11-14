@@ -19,12 +19,7 @@ server {
 
 server {
     listen 443 ssl;
-    # QUIC/HTTP3: reuseport is declared once per port (this block); the other
-    # TLS servers join the same UDP listener. Requires UDP 443 reachable.
-    listen 443 quic reuseport;
     http2 on;
-    http3 on;
-    add_header Alt-Svc 'h3=":443"; ma=86400' always;
     server_name ${PUBLIC_SERVER_NAME};
     root /usr/share/nginx/html;
     index index.html;
@@ -78,11 +73,6 @@ server {
         add_header Cache-Control "public, immutable" always;
         try_files $uri =404;
     }
-    # Static icons and identity files: served unchanged for weeks.
-    location ~* ^/(?:dragon|logo)[^/]*\.(?:svg|png)$ {
-        expires 30d;
-        try_files $uri =404;
-    }
     location = /index.html {
         add_header Cache-Control "no-store" always;
         include /etc/nginx/snippets/security-headers.conf;
@@ -92,10 +82,7 @@ server {
 
 server {
     listen 443 ssl;
-    listen 443 quic;
     http2 on;
-    http3 on;
-    add_header Alt-Svc 'h3=":443"; ma=86400' always;
     server_name ${PLANNER_SERVER_NAME};
     root /usr/share/nginx/html;
     index index.html;
@@ -168,11 +155,6 @@ server {
         add_header Cache-Control "public, immutable" always;
         try_files $uri =404;
     }
-    # Static icons and identity files: served unchanged for weeks.
-    location ~* ^/(?:dragon|logo)[^/]*\.(?:svg|png)$ {
-        expires 30d;
-        try_files $uri =404;
-    }
     location = /index.html {
         add_header Cache-Control "no-store" always;
         include /etc/nginx/snippets/security-headers.conf;
@@ -182,10 +164,7 @@ server {
 
 server {
     listen 443 ssl;
-    listen 443 quic;
     http2 on;
-    http3 on;
-    add_header Alt-Svc 'h3=":443"; ma=86400' always;
     server_name ai.cool-domain.online;
     root /usr/share/nginx/html;
     index index.html;
@@ -224,11 +203,6 @@ server {
         add_header Cache-Control "public, immutable" always;
         try_files $uri =404;
     }
-    # Static icons and identity files: served unchanged for weeks.
-    location ~* ^/(?:dragon|logo)[^/]*\.(?:svg|png)$ {
-        expires 30d;
-        try_files $uri =404;
-    }
     location = /index.html {
         add_header Cache-Control "no-store" always;
         include /etc/nginx/snippets/security-headers.conf;
@@ -238,9 +212,7 @@ server {
 
 server {
     listen 443 ssl default_server;
-    listen 443 quic;
     http2 on;
-    http3 on;
     server_name _;
     include /etc/nginx/snippets/tls.conf;
     return 444;

@@ -11,6 +11,6 @@
     "noEmit": true,
     "allowImportingTsExtensions": true
   },
-  "include": ["scripts/**/*.ts", ".claude/**/*.ts", "client/vite-plugins/**/*.ts"],
+  "include": ["scripts/**/*.ts", ".claude/**/*.ts"],
   "exclude": ["scripts/templates/**"]
 }

@@ -11,12 +11,13 @@
 	display: flex;
 	flex-direction: column;
 	gap: var(--space-1);
-	padding: var(--space-3) var(--space-4);
-	border: 1px solid var(--warning);
-	border-radius: var(--radius-sm);
-	background: var(--warning-bg);
+	padding: var(--space-2) var(--space-4);
+	border: 1px solid var(--border);
+	border-left: 3px solid var(--text);
+	border-radius: var(--radius-xs);
+	background: var(--surface);
 	color: var(--text);
-	font-size: var(--text-sm);
+	font-size: var(--text-xs);
 }
 
 .disclaimer span {
@@ -46,7 +47,101 @@
 }
 
 .linkActive {
-	background: var(--info-bg);
-	color: var(--text);
+	background: var(--text);
+	color: var(--bg);
 	font-weight: 600;
+}
+
+/* Section band — чёрная полоса с выходом за левую границу */
+.secBand {
+	display: flex;
+	align-items: center;
+	gap: var(--space-3);
+	margin-left: calc(50% - 50vw);
+	margin-right: 0;
+	padding: var(--space-2) 0 var(--space-2) max(var(--space-6), calc(50vw - var(--content-max) / 2 + var(--space-6)));
+	background: var(--text);
+	color: var(--bg);
+}
+
+.secNum {
+	display: inline-grid;
+	place-items: center;
+	width: 26px;
+	height: 26px;
+	border: 1px solid rgba(255, 255, 255, 0.45);
+	background: transparent;
+	color: inherit;
+	font-size: 10px;
+	font-weight: 700;
+	flex: none;
+}
+
+.secTitle {
+	margin: 0;
+	color: inherit;
+	font-size: 19px;
+	font-weight: 700;
+	letter-spacing: -0.025em;
+}
+
+.secMeta {
+	margin: 0 0 0 auto;
+	color: var(--text-muted);
+	font-size: var(--text-xs);
+	text-align: right;
+}
+
+/* Square pagination */
+.pageBtn {
+	width: 30px;
+	height: 30px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	padding: 0;
+	border: 1px solid var(--border);
+	border-radius: 0;
+	background: var(--surface);
+	color: var(--text);
+	font: inherit;
+	font-size: 12px;
+	font-weight: 600;
+	line-height: 1;
+	cursor: pointer;
+}
+
+.pageBtn:hover {
+	border-color: var(--text);
+}
+
+.pageBtnActive {
+	background: var(--text);
+	border-color: var(--text);
+	color: var(--bg);
+}
+
+/* Thin scrollbar */
+.samRoot {
+	scrollbar-width: thin;
+	scrollbar-color: var(--divider) transparent;
+}
+
+.samRoot ::-webkit-scrollbar {
+	width: 8px;
+	height: 8px;
+}
+
+.samRoot ::-webkit-scrollbar-track {
+	background: transparent;
+}
+
+.samRoot ::-webkit-scrollbar-thumb {
+	background: var(--divider);
+	border: 2px solid transparent;
+	background-clip: padding-box;
+}
+
+.samRoot ::-webkit-scrollbar-corner {
+	background: transparent;
 }

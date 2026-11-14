@@ -1,15 +1,13 @@
 import { For, type JSX } from "solid-js";
-import * as m from "@/paraglide/messages";
 import s from "./SamPage.module.css";
 
 export type SamTone = "neutral" | "info" | "warning" | "danger" | "success";
 
 export function SamPageHeader(props: { title: string; lead: string }) {
 	return (
-		<header class={s.header}>
-			<p class={s.eyebrow}>{m.samEyebrow()}</p>
-			<h1>{props.title}</h1>
-			<p class={s.lead}>{props.lead}</p>
+		<header class={s.secBand}>
+			<h1 class={s.secTitle}>{props.title}</h1>
+			<p class={s.secLead}>{props.lead}</p>
 		</header>
 	);
 }
