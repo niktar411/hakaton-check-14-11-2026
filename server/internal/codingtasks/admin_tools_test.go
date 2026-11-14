@@ -39,6 +39,12 @@ func (d *recordingDeployments) Run(_ context.Context, _ identity.Principal, acti
 	return deployments.Deployment{ID: 9, Action: action, Target: target, Status: "completed"}, nil
 }
 
+func (d *recordingDeployments) Merge(_ context.Context, iid int64, sha string) (deployments.MergeResult, error) {
+	d.calls++
+	d.action = "merge"
+	return deployments.MergeResult{IID: iid, SHA: sha, State: "merged", Merged: true}, nil
+}
+
 func confirmedAdminContext(ctx context.Context) context.Context {
 	return identity.WithPrincipal(ctx, identity.Principal{
 		AuthKind: "local", IP: "10.77.0.2",

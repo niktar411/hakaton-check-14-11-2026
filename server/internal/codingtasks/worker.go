@@ -48,6 +48,7 @@ type ToolInput struct {
 	Position       *int32 `json:"position,omitempty"`
 	Branch         string `json:"branch,omitempty"`
 	MRIID          *int64 `json:"mrIid,omitempty"`
+	SHA            string `json:"sha,omitempty"`
 	Action         string `json:"action,omitempty"`
 	Target         string `json:"target,omitempty"`
 }

@@ -72,6 +72,7 @@ services:
     ports:
       - "${PUBLIC_HTTP_BIND:-0.0.0.0}:80:80"
       - "${PUBLIC_HTTPS_BIND:-0.0.0.0}:443:443"
+      - "${PUBLIC_GITEA_BIND:-0.0.0.0}:8443:8443"
     volumes:
       - ${TLS_CERTIFICATE_FILE:-/etc/hackathon/tls/tls.crt}:/etc/nginx/tls/tls.crt:ro
       - ${TLS_KEY_FILE:-/etc/hackathon/tls/tls.key}:/etc/nginx/tls/tls.key:ro

@@ -20,7 +20,7 @@ func clarificationPrompt(account db.LocalAccount) string {
 func executionPrompt(account db.LocalAccount, taskID int64, adminTools bool, owned []plannerblocks.PlannerBlock) string {
 	instruction := executionInstruction
 	if adminTools {
-		instruction += " Для этой подтверждённой задачи администратора доступны create_planner_block и operate_service. Через operate_service разрешены только start, stop, restart и временные БД; production-операции выполняет ограниченный агент с резервной копией, health-check и откатом. Произвольные команды и прямой merge/deploy в обход GitLab запрещены."
+		instruction += " Для этой подтверждённой задачи администратора доступны create_planner_block, operate_service и merge_merge_request. После успешного create_merge_request можешь вызвать merge_merge_request с его IID: это создаст approval и сольёт MR, после чего production deploy запустится webhook-ом. Через operate_service разрешены start, stop, restart и временные БД. Произвольные команды и прямой deploy в обход merge/CI запрещены."
 	}
 	instruction = fmt.Sprintf("%s\nТекущий taskId: %d. В create_merge_request разрешён только этот taskId.", instruction, taskID)
 	if len(owned) > 0 {
@@ -92,6 +92,12 @@ func modelTools(adminTools bool) []llm.Tool {
 					"action": map[string]any{"type": "string", "enum": []string{"start", "stop", "restart", "create_test_database", "drop_test_database"}},
 					"target": map[string]any{"type": "string", "enum": []string{"production", "coding", "review", "test"}},
 				}, "required": []string{"action", "target"}, "additionalProperties": false,
+			}),
+			tool(ToolMergeMergeRequest, "Merge an already created merge request after successful checks. Admin only; production deploy follows the webhook.", map[string]any{
+				"type": "object", "properties": map[string]any{
+					"mrIid": map[string]any{"type": "integer", "minimum": 1},
+					"sha":   map[string]any{"type": "string", "maxLength": 64},
+				}, "required": []string{"mrIid"}, "additionalProperties": false,
 			}),
 		)
 	}

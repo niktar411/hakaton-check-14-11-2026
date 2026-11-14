@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"hackathon/internal/deployments"
 	"hackathon/internal/identity"
@@ -14,6 +15,7 @@ const (
 	ToolCreatePlannerBlock = "create_planner_block"
 	ToolStartPlannerBlock  = "start_planner_block"
 	ToolOperateService     = "operate_service"
+	ToolMergeMergeRequest  = "merge_merge_request"
 )
 
 type AdminPlanner interface {
@@ -24,6 +26,7 @@ type AdminPlanner interface {
 
 type AdminDeployments interface {
 	Run(ctx context.Context, principal identity.Principal, action, target, release string) (deployments.Deployment, error)
+	Merge(ctx context.Context, iid int64, sha string) (deployments.MergeResult, error)
 }
 
 func (s *Service) SetAdminTools(planner AdminPlanner, deployment AdminDeployments) {
@@ -32,7 +35,7 @@ func (s *Service) SetAdminTools(planner AdminPlanner, deployment AdminDeployment
 }
 
 func isAdminOperation(operation string) bool {
-	return operation == ToolCreatePlannerBlock || operation == ToolOperateService
+	return operation == ToolCreatePlannerBlock || operation == ToolOperateService || operation == ToolMergeMergeRequest
 }
 
 func (s *Service) callAdminOperation(ctx context.Context, operation string, input ToolInput) (ToolOutput, error) {
@@ -55,6 +58,19 @@ func (s *Service) callAdminOperation(ctx context.Context, operation string, inpu
 			return ToolOutput{OK: false, Error: "invalid_service_operation"}, nil
 		}
 		result, err = s.adminDeployments.Run(ctx, principal, input.Action, input.Target, "")
+	case ToolMergeMergeRequest:
+		if s.adminDeployments == nil || input.MRIID == nil || *input.MRIID < 1 {
+			return ToolOutput{OK: false, Error: "invalid_merge_request"}, nil
+		}
+		sha := strings.TrimSpace(input.SHA)
+		if sha == "" && s.gitLab != nil {
+			mergeRequest, lookupErr := s.gitLab.MergeRequestByIID(ctx, *input.MRIID)
+			if lookupErr != nil {
+				return ToolOutput{OK: false, Error: "merge_request_unavailable"}, nil
+			}
+			sha = mergeRequest.SHA
+		}
+		result, err = s.adminDeployments.Merge(ctx, *input.MRIID, sha)
 	default:
 		return ToolOutput{OK: false, Error: "invalid_admin_operation"}, nil
 	}
