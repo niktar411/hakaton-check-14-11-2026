@@ -20,6 +20,8 @@ import { Button } from "@/shared/ui/Button";
 import { Footer } from "@/shared/ui/Footer";
 import { LoadingState } from "@/shared/ui/State";
 import { Toast } from "@/shared/ui/Toast";
+import { CookieBanner } from "@/shared/ui/CookieBanner";
+import { ConsentPage, CookiesPage, PolicyPage, TermsPage } from "@/features/legal/LegalPage";
 import { ThemeToggle } from "@/app/theme";
 import { TeamLoginPage } from "@/features/auth/TeamLoginPage";
 import ChatPage from "@/features/chat/ChatPage";
@@ -35,6 +37,8 @@ import SamCatalogPage from "@/features/sam/SamCatalogPage";
 import SamLicensesPage from "@/features/sam/SamLicensesPage";
 import SamInventoryPage from "@/features/sam/SamInventoryPage";
 import SamCompliancePage from "@/features/sam/SamCompliancePage";
+import SamProductPage from "@/features/sam/SamProductPage";
+import SamHostPage from "@/features/sam/SamHostPage";
 import SamMatchingPage from "@/features/sam/SamMatchingPage";
 import SamAssistantPage from "@/features/sam/SamAssistantPage";
 import { SiteConfigProvider } from "@/app/site-config";
@@ -173,6 +177,7 @@ function App(props: { children?: JSX.Element }) {
 			}}
 		>
 			<Toast />
+			<CookieBanner />
 			<Show
 				when={!gateLoading()}
 				fallback={
@@ -253,12 +258,18 @@ if (root) {
 				<Route path="/sam" component={SamLayout}>
 					<Route path="/" component={SamDashboardPage} />
 					<Route path="/catalog" component={SamCatalogPage} />
+					<Route path="/catalog/:id" component={SamProductPage} />
 					<Route path="/licenses" component={SamLicensesPage} />
 					<Route path="/inventory" component={SamInventoryPage} />
+					<Route path="/inventory/:id" component={SamHostPage} />
 					<Route path="/compliance" component={SamCompliancePage} />
 					<Route path="/matching" component={SamMatchingPage} />
 					<Route path="/assistant" component={SamAssistantPage} />
 				</Route>
+				<Route path="/terms" component={TermsPage} />
+				<Route path="/policy" component={PolicyPage} />
+				<Route path="/consent" component={ConsentPage} />
+				<Route path="/cookies" component={CookiesPage} />
 				<Route path="/coding" component={CodingPage} />
 				<Route path="/admin/login" component={AdminLoginPage} />
 				<Route path="/admin" component={AdministrationPage} />
