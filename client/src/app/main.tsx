@@ -20,7 +20,6 @@ import { Button } from "@/shared/ui/Button";
 import { Footer } from "@/shared/ui/Footer";
 import { LoadingState } from "@/shared/ui/State";
 import { Toast } from "@/shared/ui/Toast";
-import { DragonMark } from "@/shared/ui/DragonMark";
 import { ThemeToggle } from "@/app/theme";
 import { TeamLoginPage } from "@/features/auth/TeamLoginPage";
 import ChatPage from "@/features/chat/ChatPage";
@@ -36,8 +35,6 @@ import SamCatalogPage from "@/features/sam/SamCatalogPage";
 import SamLicensesPage from "@/features/sam/SamLicensesPage";
 import SamInventoryPage from "@/features/sam/SamInventoryPage";
 import SamCompliancePage from "@/features/sam/SamCompliancePage";
-import SamProductPage from "@/features/sam/SamProductPage";
-import SamHostPage from "@/features/sam/SamHostPage";
 import SamMatchingPage from "@/features/sam/SamMatchingPage";
 import SamAssistantPage from "@/features/sam/SamAssistantPage";
 import { SiteConfigProvider } from "@/app/site-config";
@@ -142,16 +139,6 @@ function App(props: { children?: JSX.Element }) {
 		location.pathname.startsWith("/coding/") ||
 		location.pathname === "/planner" ||
 		location.pathname.startsWith("/planner/");
-	// The public team page is monochrome: the black-and-white palette keeps the
-	// focus on the plan, the team and the assistant instead of decoration.
-	const monoPage = () =>
-		!plannerHost() &&
-		(location.pathname === "/" ||
-			location.pathname === "/team" ||
-			location.pathname === "/questions");
-	createEffect(() => {
-		document.documentElement.toggleAttribute("data-mono", monoPage());
-	});
 	createEffect(() => {
 		// The public site is one page: old question, plan and team URLs open it.
 		if (
@@ -223,7 +210,7 @@ function App(props: { children?: JSX.Element }) {
 								}
 							>
 								<A class="text-text inline-flex items-center gap-2 text-xl font-bold no-underline" href="/">
-									<DragonMark class="size-8" />
+									<img class="size-8 rounded-full" src="/logo-192.png" alt="" />
 									{m.appTitle()}
 								</A>
 								<div class="flex flex-wrap items-center gap-4">
@@ -266,10 +253,8 @@ if (root) {
 				<Route path="/sam" component={SamLayout}>
 					<Route path="/" component={SamDashboardPage} />
 					<Route path="/catalog" component={SamCatalogPage} />
-					<Route path="/catalog/:id" component={SamProductPage} />
 					<Route path="/licenses" component={SamLicensesPage} />
 					<Route path="/inventory" component={SamInventoryPage} />
-					<Route path="/inventory/:id" component={SamHostPage} />
 					<Route path="/compliance" component={SamCompliancePage} />
 					<Route path="/matching" component={SamMatchingPage} />
 					<Route path="/assistant" component={SamAssistantPage} />

@@ -1,4 +1,4 @@
-import { For } from "solid-js";
+import { createResource, For } from "solid-js";
 import * as m from "@/paraglide/messages";
 import { api, unwrap } from "@/shared/api";
 import type { components } from "@/shared/api/schema";
@@ -10,13 +10,13 @@ import {
 	SamPageHeader,
 } from "./SamPage";
 import s from "./SamPage.module.css";
-import { createSamResource, SamPageState } from "./SamPageState";
+import { SamPageState } from "./SamPageState";
 import { matchStatusLabel, matchStatusTone } from "./labels";
 
 type Match = components["schemas"]["Match"];
 
 export default function SamMatchingPage() {
-	const { resource: matches, refetch } = createSamResource<Match[]>(async () =>
+	const [matches, { refetch }] = createResource(async () =>
 		unwrap(await api.GET("/api/public/sam/matching")) ?? [],
 	);
 	return (
