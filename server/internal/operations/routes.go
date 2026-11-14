@@ -61,6 +61,9 @@ func Register(api huma.API, s *Service) {
 		}
 		return &chatConversationsOutput{Body: out}, nil
 	})
+	huma.Register(api, huma.Operation{OperationID: "chat-agent", Method: http.MethodPost, Path: "/api/chat/agent", MaxBodyBytes: 20000}, func(ctx context.Context, in *chatAgentInput) (*chatAgentOutput, error) {
+		return s.ChatAgent(ctx, in)
+	})
 	huma.Register(api, huma.Operation{OperationID: "chat-history", Method: http.MethodGet, Path: "/api/chat/conversations/{id}"}, func(ctx context.Context, in *chatHistoryInput) (*chatHistoryOutput, error) {
 		out, err := s.ChatHistory(ctx, in.ID)
 		if err != nil {

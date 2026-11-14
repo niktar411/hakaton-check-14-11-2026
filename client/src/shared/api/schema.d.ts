@@ -406,6 +406,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/chat/agent": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["chat-agent"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/chat/conversations": {
         parameters: {
             query?: never;
@@ -718,6 +734,17 @@ export interface components {
             status: string;
             target: string;
             username: string;
+        };
+        ChatAgentInputBody: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/ChatAgentInputBody.json
+             */
+            readonly $schema?: string;
+            /** Format: int64 */
+            parentId?: number;
+            prompt: string;
         };
         ChatContextUpdateInputBody: {
             /**
@@ -2287,6 +2314,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ChatResult"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "chat-agent": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChatAgentInputBody"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CodingTask"];
                 };
             };
             /** @description Error */

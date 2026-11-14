@@ -63,7 +63,7 @@ func modelTools(adminTools bool) []llm.Tool {
 			"required": []string{"path", "content"}, "additionalProperties": false,
 		}),
 		tool(ToolRunCheck, "Run one named repository check.", map[string]any{
-			"type": "object", "properties": map[string]any{"check": map[string]any{"type": "string", "enum": []string{CheckBunCheck, CheckClientBuild, CheckServerTest, CheckServerVet}}},
+			"type": "object", "properties": map[string]any{"check": map[string]any{"type": "string", "enum": []string{CheckBunCheck, CheckClientBuild}}},
 			"required": []string{"check"}, "additionalProperties": false,
 		}),
 		tool(ToolCreateMergeRequest, "Commit and push the confirmed branch, then create a merge request after successful checks.", map[string]any{

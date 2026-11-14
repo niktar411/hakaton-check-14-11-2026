@@ -59,6 +59,7 @@ type Config struct {
 	GitLabAPIURL   string
 	GitLabProject  string
 	GitLabToken    string
+	GitLabProvider string
 	CodingImage    string
 	PostgresImage  string
 	BaseBranch     string
@@ -82,13 +83,14 @@ func ConfigFromEnv() Config {
 		GitLabAPIURL:   os.Getenv("GITLAB_API_URL"),
 		GitLabProject:  os.Getenv("GITLAB_PROJECT"),
 		GitLabToken:    os.Getenv("GITLAB_TOKEN"),
+		GitLabProvider: envOr("GIT_PROVIDER", "gitlab"),
 		CodingImage:    envOr("WORKER_CODING_IMAGE", "hackathon-worker-coding:local"),
 		PostgresImage:  envOr("WORKER_POSTGRES_IMAGE", "postgres:18.1-alpine3.22"),
 		BaseBranch:     envOr("WORKER_BASE_BRANCH", "main"),
 		ReviewURL:      envOr("WORKER_REVIEW_URL", "http://10.77.0.10:8080"),
 		ReviewBindIP:   envOr("WORKER_BIND_IP", "10.77.0.10"),
 		GitAskPass:     envOr("WORKER_GIT_ASKPASS", "/usr/local/bin/hackathon-git-askpass"),
-		CheckTimeout:   envInt("WORKER_CHECK_TIMEOUT", 105),
+		CheckTimeout:   envInt("WORKER_CHECK_TIMEOUT", 180),
 		ComposeFile:    envOr("WORKER_COMPOSE_FILE", "/opt/hackathon/docker-compose.worker.yml"),
 		ComposeEnv:     envOr("WORKER_COMPOSE_ENV_FILE", "/etc/hackathon/worker.env"),
 		MaxConcurrency: envInt("WORKER_MAX_CONCURRENCY", 3),
@@ -106,7 +108,7 @@ func (c Config) Validate() error {
 	if _, err := BranchName(c.BaseBranch); err != nil {
 		return err
 	}
-	if c.CheckTimeout < 10 || c.CheckTimeout > 110 || c.MaxConcurrency < 1 || c.MaxConcurrency > 4 {
+	if c.CheckTimeout < 10 || c.CheckTimeout > 240 || c.MaxConcurrency < 1 || c.MaxConcurrency > 4 {
 		return errors.New("worker limits are outside their safe range")
 	}
 	parsed, err := url.Parse(c.ReviewURL)
@@ -687,7 +689,7 @@ func (w *Worker) runCheck(id int64, body map[string]any) (map[string]any, error)
 		"docker", "run", "--rm", "--name", name, "--network", network,
 		"--read-only", "--cap-drop", "ALL", "--security-opt", "no-new-privileges",
 		"--pids-limit", "256", "--memory", "1150m", "--cpus", "0.65",
-		"--user", containerUser(), "--workdir", "/work/repository",
+		"--user", containerUser(), "--workdir", "/work",
 		"--tmpfs", "/work:rw,nosuid,nodev,size=1536m,mode=1777",
 		"--tmpfs", "/tmp:rw,nosuid,nodev,size=512m,mode=1777",
 		"--mount", "type=bind,src=" + workspace + ",dst=/source,readonly",
@@ -810,6 +812,9 @@ func (w *Worker) createMergeRequest(id int64, body map[string]any) (map[string]a
 	if strings.HasPrefix(base, "coding/task-") {
 		base = w.config.BaseBranch
 	}
+	if strings.EqualFold(w.config.GitLabProvider, "gitea") {
+		return w.createGiteaMergeRequest(branch, base, title, description)
+	}
 	payload, err := json.Marshal(map[string]any{
 		"source_branch": branch, "target_branch": base, "title": title,
 		"description": description, "remove_source_branch": true,
@@ -859,6 +864,62 @@ func (w *Worker) createMergeRequest(id int64, body map[string]any) (map[string]a
 	}
 	return map[string]any{
 		"mergeRequestIid": decoded.IID, "mergeRequestUrl": decoded.WebURL, "output": "merge request created",
+	}, nil
+}
+
+func escapeProjectPath(project string) string {
+	parts := strings.Split(strings.Trim(project, "/"), "/")
+	for index, part := range parts {
+		parts[index] = url.PathEscape(part)
+	}
+	return strings.Join(parts, "/")
+}
+
+func (w *Worker) createGiteaMergeRequest(source, base, title, description string) (map[string]any, error) {
+	payload, err := json.Marshal(map[string]string{
+		"head": source, "base": base, "title": title, "body": description,
+	})
+	if err != nil {
+		return nil, workerError("merge_request_failed", 503)
+	}
+	endpoint := strings.TrimRight(w.config.GitLabAPIURL, "/") + "/repos/" +
+		escapeProjectPath(w.config.GitLabProject) + "/pulls"
+	request, err := http.NewRequest(http.MethodPost, endpoint, strings.NewReader(string(payload)))
+	if err != nil {
+		return nil, workerError("merge_request_failed", 503)
+	}
+	request.Header.Set("Authorization", "token "+w.config.GitLabToken)
+	request.Header.Set("Content-Type", "application/json")
+	request.Header.Set("Accept", "application/json")
+	response, err := w.client.Do(request)
+	if err != nil {
+		return nil, workerError("merge_request_failed", 503)
+	}
+	defer response.Body.Close()
+	if response.StatusCode != http.StatusCreated {
+		return nil, workerError("merge_request_failed", 503)
+	}
+	content, err := io.ReadAll(io.LimitReader(response.Body, ResponseLimit+1))
+	if err != nil || len(content) > ResponseLimit {
+		return nil, workerError("merge_request_response_invalid", 503)
+	}
+	var decoded struct {
+		Number  int64  `json:"number"`
+		HTMLURL string `json:"html_url"`
+	}
+	if err := json.Unmarshal(content, &decoded); err != nil || decoded.Number < 1 || decoded.HTMLURL == "" {
+		return nil, workerError("merge_request_response_invalid", 503)
+	}
+	expected, err := url.Parse(w.config.GitLabAPIURL)
+	if err != nil {
+		return nil, workerError("gitlab_not_configured", 503)
+	}
+	actual, err := url.Parse(decoded.HTMLURL)
+	if err != nil || actual.Scheme != expected.Scheme || actual.Hostname() != expected.Hostname() || actual.User != nil {
+		return nil, workerError("merge_request_response_invalid", 503)
+	}
+	return map[string]any{
+		"mergeRequestIid": decoded.Number, "mergeRequestUrl": decoded.HTMLURL, "output": "merge request created",
 	}, nil
 }
 

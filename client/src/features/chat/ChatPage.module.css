@@ -435,6 +435,32 @@
 	height: 1px;
 }
 
+.agentRequest {
+	margin: 0;
+	color: var(--text-muted);
+	font-size: var(--text-sm);
+	white-space: pre-wrap;
+	overflow-wrap: anywhere;
+}
+
+.agentActivity {
+	margin: 0;
+	padding-left: var(--space-4);
+	color: var(--text-muted);
+	font-size: var(--text-xs);
+	white-space: normal;
+}
+
+.agentActivity li {
+	overflow-wrap: anywhere;
+}
+
+.agentHint {
+	margin: 0;
+	color: var(--text-muted);
+	font-size: var(--text-xs);
+}
+
 .thinking {
 	margin: 0 0 var(--space-3);
 	overflow: hidden;

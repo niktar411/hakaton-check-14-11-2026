@@ -17,11 +17,15 @@ import { formatDate } from "@/shared/lib/format";
 import { Button } from "@/shared/ui/Button";
 import { EmptyState, LoadingState } from "@/shared/ui/State";
 import { useToast } from "@/shared/ui/Toast";
+import { AgentRunCard } from "./AgentRunCard";
+import { ContextPopover, type ContextBreakdown } from "./ContextPopover";
 import s from "./ChatPage.module.css";
 
 type ChatSummary = components["schemas"]["ChatSummary"];
 type ChatHistory = components["schemas"]["ChatHistory"];
 type Identity = components["schemas"]["Identity"];
+type CodingTask = components["schemas"]["CodingTask"];
+type CodingTaskDetails = components["schemas"]["CodingTaskDetails"];
 
 type Attachment = {
 	id: string;
@@ -84,10 +88,6 @@ function isTextFile(file: File) {
 	);
 }
 
-function formatNumber(value: number) {
-	return value.toLocaleString("ru-RU");
-}
-
 function speechRecognitionConstructor() {
 	const target = window as Window & {
 		SpeechRecognition?: SpeechRecognitionConstructor;
@@ -138,6 +138,9 @@ export default function ChatPage() {
 	const [contextPinned, setContextPinned] = createSignal(false);
 	const [contextOpen, setContextOpen] = createSignal(false);
 	const [followStream, setFollowStream] = createSignal(true);
+	const [agentMode, setAgentMode] = createSignal(false);
+	const [agentTask, setAgentTask] = createSignal<CodingTaskDetails>();
+	const [agentPending, setAgentPending] = createSignal(false);
 	let contextCloseTimer: number | undefined;
 	let composer: HTMLTextAreaElement | undefined;
 	let filePicker: HTMLInputElement | undefined;
@@ -239,12 +242,43 @@ export default function ChatPage() {
 		setContextPinned(true);
 		setContextOpen(true);
 	}
+
+	async function sendAgent(prompt: string): Promise<boolean> {
+		if (agentPending() || !session()) return false;
+		setAgentPending(true);
+		try {
+			const created = unwrap(
+				await api.POST("/api/chat/agent", {
+					headers: csrfHeaders(session()?.csrf),
+					body: { prompt },
+				}),
+			) as CodingTask;
+			let details: CodingTaskDetails;
+			try {
+				details = unwrap(
+					await api.GET("/api/coding/tasks/{id}", {
+						params: { path: { id: created.id } },
+					}),
+				) as CodingTaskDetails;
+			} catch {
+				details = { ...created, messages: [] };
+			}
+			setAgentTask(details);
+			return true;
+		} catch (error) {
+			toast.show(chatError(error));
+			return false;
+		} finally {
+			setAgentPending(false);
+		}
+	}
+
 	const attachmentText = () =>
 		buildPrompt().length - text().trim().length;
 	const contextChars = () => contextText().length;
 	const contextTokens = () => Math.round(contextChars() / 4);
 	const contextPercent = () => Math.min(100, Math.round(contextChars() / 1000));
-	const contextBreakdown = createMemo(() => {
+	const contextBreakdown = createMemo<ContextBreakdown>(() => {
 		const list = messages();
 		const userChars = list
 			.filter((message) => message.role === "user")
@@ -277,11 +311,6 @@ export default function ChatPage() {
 			remaining: Math.max(0, 100000 - total),
 		};
 	});
-	const contextShare = (part: number) => {
-		const total = contextBreakdown().total;
-		if (total <= 0) return 0;
-		return Math.max(0, Math.min(100, (part / total) * 100));
-	};
 	const canConfirm = () =>
 		currentHistory()?.phase === "clarifying" && messages().length >= 2;
 	const canSend = () => buildPrompt().trim().length > 0;
@@ -346,6 +375,24 @@ export default function ChatPage() {
 			messageList.clientHeight;
 		setFollowStream(distance < 140);
 	}
+
+	createEffect(() => {
+		const task = agentTask();
+		if (task?.phase !== "running") return;
+		const timer = window.setInterval(async () => {
+			try {
+				const updated = unwrap(
+					await api.GET("/api/coding/tasks/{id}", {
+						params: { path: { id: task.id } },
+					}),
+				) as CodingTaskDetails;
+				setAgentTask(updated);
+			} catch {
+				// Keep the last state; the coding page remains the source of truth.
+			}
+		}, 4000);
+		onCleanup(() => window.clearInterval(timer));
+	});
 
 	async function addFiles(files: FileList | File[]) {
 		const selectedFiles = Array.from(files);
@@ -469,9 +516,28 @@ export default function ChatPage() {
 	async function send(confirm = false, override?: string) {
 		const useDraft = !override?.trim();
 		const prompt = override?.trim() || buildPrompt().trim() || (confirm ? m.confirmPrompt() : "");
-		if (!prompt || pending() || !session()) return;
+		if (!prompt || pending() || agentPending() || !session()) return;
 		if (Array.from(prompt).length > MAX_PROMPT_CHARS) {
 			toast.show(m.chatPromptTooLong());
+			return;
+		}
+		if (agentMode() && !confirm) {
+			const agentDraftText = text();
+			const agentDraftAttachments = attachments();
+			if (useDraft) {
+				setText("");
+				setAttachments([]);
+			}
+			const started = await sendAgent(prompt);
+			if (
+				!started &&
+				useDraft &&
+				!text().trim() &&
+				attachments().length === 0
+			) {
+				setText(agentDraftText);
+				setAttachments(agentDraftAttachments);
+			}
 			return;
 		}
 		const draftText = text();
@@ -567,6 +633,13 @@ export default function ChatPage() {
 			case "chat.busy":
 			case "chat.request_already_used":
 				return m.chatBusy();
+			case "coding_task.busy":
+				return m.chatBusy();
+			case "coding_task.access_denied":
+			case "coding_task.invalid_input":
+			case "coding_task.invalid_phase":
+			case "coding_task.unavailable":
+				return m.chatAgentError();
 			case "chat.prompt_invalid":
 				return m.chatPromptTooLong();
 			case "chat.timeout":
@@ -688,123 +761,12 @@ export default function ChatPage() {
 									<span style={{ width: `${contextPercent()}%` }} />
 								</span>
 								<Show when={contextOpen() || contextPinned()}>
-									<section
-										id="chat-context-details"
-										class={s.contextPopover}
-										data-elevated
-										aria-label={m.chatContextTitle()}
+									<ContextPopover
+										breakdown={contextBreakdown()}
+										attachments={attachments()}
 										onMouseEnter={showContext}
 										onMouseLeave={hideContext}
-									>
-									<strong>{m.chatContextTitle()}</strong>
-									<div class={s.contextStack} aria-hidden="true">
-										<span
-											class={s.contextSegment}
-											data-kind="user"
-											style={{ width: `${contextShare(contextBreakdown().userChars)}%` }}
-										/>
-										<span
-											class={s.contextSegment}
-											data-kind="assistant"
-											style={{
-												width: `${contextShare(contextBreakdown().assistantChars)}%`,
-											}}
-										/>
-										<span
-											class={s.contextSegment}
-											data-kind="attachments"
-											style={{
-												width: `${contextShare(contextBreakdown().attachmentChars)}%`,
-											}}
-										/>
-										<span
-											class={s.contextSegment}
-											data-kind="draft"
-											style={{ width: `${contextShare(contextBreakdown().draftChars)}%` }}
-										/>
-									</div>
-									<dl class={s.contextRows}>
-										<div>
-											<dt>{m.chatContextUser()}</dt>
-											<dd>
-												{formatNumber(contextBreakdown().userChars)}{" "}
-												{m.chatContextCharsShort()}
-											</dd>
-										</div>
-										<div>
-											<dt>{m.chatContextAssistant()}</dt>
-											<dd>
-												{formatNumber(contextBreakdown().assistantChars)}{" "}
-												{m.chatContextCharsShort()}
-											</dd>
-										</div>
-										<div>
-											<dt>{m.chatContextAttachments()}</dt>
-											<dd>
-												{formatNumber(contextBreakdown().attachmentChars)}{" "}
-												{m.chatContextCharsShort()}
-											</dd>
-										</div>
-										<div>
-											<dt>{m.chatContextDraft()}</dt>
-											<dd>
-												{formatNumber(contextBreakdown().draftChars)}{" "}
-												{m.chatContextCharsShort()}
-											</dd>
-										</div>
-									</dl>
-									<Show when={attachments().length > 0}>
-										<p class={s.contextSection}>{m.chatContextFiles()}</p>
-										<ul class={s.contextFiles}>
-											<For each={attachments()}>
-												{(file) => (
-													<li>
-														<span title={file.name}>{file.name}</span>
-														<span>
-															{formatNumber(file.text.length)}{" "}
-															{m.chatContextCharsShort()}
-														</span>
-													</li>
-												)}
-											</For>
-										</ul>
-									</Show>
-									<Show when={contextBreakdown().top.length > 0}>
-										<p class={s.contextSection}>{m.chatContextTop()}</p>
-										<ul class={s.contextMessages}>
-											<For each={contextBreakdown().top}>
-												{(item) => (
-													<li>
-														<span class={s.contextMessageRole}>
-															{item.role === "user" ? m.you() : m.assistant()}
-														</span>
-														<span
-															class={s.contextMessagePreview}
-															title={item.preview}
-														>
-															{item.preview}
-														</span>
-														<span class={s.contextMessageChars}>
-															{formatNumber(item.chars)}
-														</span>
-													</li>
-												)}
-											</For>
-										</ul>
-									</Show>
-									<p class={s.contextLimits}>
-										{m.chatContextMessages({
-											count: formatNumber(contextBreakdown().messageCount),
-										})}
-									</p>
-									<p class={s.contextLimits}>{m.chatContextLimits()}</p>
-									<p class={s.contextFree}>
-										{m.chatContextFree()}:{" "}
-										{formatNumber(contextBreakdown().remaining)}{" "}
-										{m.chatContextCharsShort()}
-									</p>
-									<p class={s.contextNote}>{m.chatContextNote()}</p>
-									</section>
+									/>
 								</Show>
 							</div>
 						</header>
@@ -895,6 +857,9 @@ export default function ChatPage() {
 									)}
 								</Index>
 							</Show>
+							<Show when={agentTask()}>
+								{(task) => <AgentRunCard task={task()} />}
+							</Show>
 							<div ref={messagesEnd} class={s.messagesEnd} />
 						</div>
 						<form
@@ -983,9 +948,18 @@ export default function ChatPage() {
 									>
 										{listening() ? m.chatVoiceStop() : m.chatVoice()}
 									</Button>
+									<Button
+										type="button"
+										variant={agentMode() ? "primary" : undefined}
+										aria-pressed={agentMode()}
+										title={m.chatAgentModeHint()}
+										onClick={() => setAgentMode(!agentMode())}
+									>
+										{m.chatAgentMode()}
+									</Button>
 								</div>
 								<div class={s.composerSend}>
-									<Show when={canConfirm()}>
+									<Show when={!agentMode() && canConfirm()}>
 										<Button
 											type="button"
 											disabled={pending()}
@@ -1004,9 +978,13 @@ export default function ChatPage() {
 									<Button
 										type="submit"
 										variant="primary"
-										disabled={pending() || !canSend()}
+										disabled={pending() || agentPending() || !canSend()}
 									>
-										{pending() ? m.loading() : m.send()}
+										{pending() || agentPending()
+											? m.loading()
+											: agentMode()
+												? m.chatAgentSend()
+												: m.send()}
 									</Button>
 								</div>
 							</div>
