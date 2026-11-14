@@ -236,9 +236,11 @@ func productFromRow(row db.SamComplianceProductsRow) SamComplianceProduct {
 	if product.Status == "banned" {
 		product.LicensedSeats = 0
 		product.ExpiredSeats = 0
+		product.OverusedSeats = 0
+		product.IdleSeats = 0
 		product.DeltaSeats = product.BannedInstallations
 	}
-	product.RiskCost = (overused + product.ExpiredSeats + idle) * row.AvgCostPerSeat
+	product.RiskCost = (product.OverusedSeats + product.ExpiredSeats + product.IdleSeats) * row.AvgCostPerSeat
 	product.RiskLevel = productRiskLevel(product)
 	product.Recommendation = productRecommendation(product)
 	return product
