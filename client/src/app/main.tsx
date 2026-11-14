@@ -136,11 +136,20 @@ function App(props: { children?: JSX.Element }) {
 		() => (plannerHostname() || plannerHost() ? "planner" : "other"),
 		async (mode) => {
 			if (mode !== "planner") return null;
-			try {
-				return unwrap(await api.GET("/api/me"));
-			} catch {
-				return null;
+			// A transient failure of /api/me must not flip the user to the
+			// login screen: one short retry before giving up.
+			for (let attempt = 0; attempt < 2; attempt++) {
+				try {
+					return unwrap(await api.GET("/api/me"));
+				} catch {
+					if (attempt === 0) {
+						await new Promise((resolve) => setTimeout(resolve, 800));
+						continue;
+					}
+					return null;
+				}
 			}
+			return null;
 		},
 	);
 	const gateLoading = () => plannerHost() && session.loading;

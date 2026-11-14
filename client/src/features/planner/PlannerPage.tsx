@@ -759,7 +759,9 @@ export default function PlannerPage() {
 	};
 	createEffect(() => {
 		// Anonymous visitors get the plan inside the single public page.
-		if (!planner.loading && !team()) {
+		// A failed request (expired session, network hiccup) must NOT bounce
+		// the user away — the error fallback below offers a retry instead.
+		if (!planner.loading && !planner.error && !team()) {
 			navigate("/", { replace: true });
 		}
 	});
