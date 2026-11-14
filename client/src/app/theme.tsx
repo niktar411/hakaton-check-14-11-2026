@@ -31,9 +31,17 @@ function applyTheme(theme: Theme) {
 export function ThemeToggle() {
 	const [theme, setTheme] = createSignal<Theme>(readTheme());
 	const [labelTheme, setLabelTheme] = createSignal<Theme>(theme());
+	let toggleButton: HTMLButtonElement | undefined;
+	const syncButton = (value: Theme) => {
+		if (!toggleButton) return;
+		const label = value === "dark" ? m.themeLight() : m.themeDark();
+		toggleButton.textContent = label;
+		toggleButton.setAttribute("aria-label", `${label} — ${m.themeToggle()}`);
+	};
 	onMount(() => {
 		setLabelTheme(theme());
 		applyTheme(theme());
+		syncButton(theme());
 	});
 	const toggle = (event: MouseEvent) => {
 		const current = pendingTheme ?? theme();
@@ -45,7 +53,9 @@ export function ThemeToggle() {
 
 		if (!viewDocument.startViewTransition || reducedMotion) {
 			pendingTheme = undefined;
+			setLabelTheme(next);
 			applyTheme(next);
+			syncButton(next);
 			return;
 		}
 
@@ -58,7 +68,9 @@ export function ThemeToggle() {
 		const transition = viewDocument.startViewTransition(() => {
 			if (id !== transitionId) return;
 			setTheme(next);
+			setLabelTheme(next);
 			applyTheme(next);
+			syncButton(next);
 		});
 		activeTransition = transition;
 		const cleanup = () => {
@@ -72,11 +84,13 @@ export function ThemeToggle() {
 			setLabelTheme(next === "dark" ? "light" : "dark");
 			setLabelTheme(next);
 			applyTheme(next);
+			syncButton(next);
 		};
 		void transition.finished.then(cleanup, cleanup);
 	};
 	return (
 		<Button
+			ref={(element) => (toggleButton = element)}
 			aria-label={`${labelTheme() === "dark" ? m.themeLight() : m.themeDark()} — ${m.themeToggle()}`}
 			onClick={toggle}
 		>
