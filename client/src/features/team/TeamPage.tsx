@@ -213,6 +213,7 @@ export default function TeamPage() {
 									class={s.memberCard}
 									style={{ "animation-delay": `${index() * 70}ms` }}
 								>
+									<DragonMark class={s.memberCardMark} />
 									<button
 										type="button"
 										class={s.memberCardButton}
@@ -220,30 +221,25 @@ export default function TeamPage() {
 										aria-label={`${member.name}: ${m.teamMemberDetails()}`}
 										onClick={() => setSelectedMember(member)}
 									>
-										<span class={s.memberPhoto} aria-hidden="true">
-											<Show
-												when={member.photo}
-												fallback={
-													<>
-														<DragonMark class={s.memberWatermark} />
-														<span class={s.memberInitials}>
-															{initials(member.name)}
-														</span>
-													</>
-												}
-											>
-												{(photo) => (
-													<img
-														class={s.memberPhotoImage}
-														src={photo()}
-														alt=""
-														loading="lazy"
-													/>
-												)}
-											</Show>
-										</span>
+										<Show
+											when={member.photo}
+											fallback={
+												<span class={s.memberAvatarFallback} aria-hidden="true">
+													{initials(member.name)}
+												</span>
+											}
+										>
+											{(photo) => (
+												<img
+													class={s.memberAvatar}
+													src={photo()}
+													alt=""
+													loading="lazy"
+												/>
+											)}
+										</Show>
 										<span class={s.memberCardBody}>
-											<span class={s.memberName}>{member.name}</span>
+											<span class={s.memberCardName}>{member.name}</span>
 											<span class={s.memberRole}>{member.role}</span>
 										</span>
 									</button>
@@ -348,7 +344,7 @@ export default function TeamPage() {
 											).padStart(2, "0"),
 										})}
 									</p>
-									<h2 class={s.memberName}>{member().name}</h2>
+									<h2 class={s.memberProfileName}>{member().name}</h2>
 									<p class={s.memberDialogRole}>{member().role}</p>
 									<p class={s.memberSummary}>{summaryOf(member())}</p>
 								</div>
