@@ -428,7 +428,7 @@ func (q *Queries) SamCreateAliases(ctx context.Context, arg SamCreateAliasesPara
 const samCreateProduct = `-- name: SamCreateProduct :one
 INSERT INTO sam_products(name, vendor, version, category, status)
 VALUES ($1, $2, $3, $4, $5)
-RETURNING id, name, vendor, version, category, status, created_at, updated_at, vendor_id, section_code, class_code, license_metric, registry_rf, registry_entry, is_trackable
+RETURNING id, name, vendor, version, category, status, created_at, updated_at
 `
 
 type SamCreateProductParams struct {
@@ -457,13 +457,6 @@ func (q *Queries) SamCreateProduct(ctx context.Context, arg SamCreateProductPara
 		&i.Status,
 		&i.CreatedAt,
 		&i.UpdatedAt,
-		&i.VendorID,
-		&i.SectionCode,
-		&i.ClassCode,
-		&i.LicenseMetric,
-		&i.RegistryRf,
-		&i.RegistryEntry,
-		&i.IsTrackable,
 	)
 	return i, err
 }
@@ -577,7 +570,7 @@ func (q *Queries) SamInstallationsByRawNamesForUpdate(ctx context.Context, rawNa
 }
 
 const samLicensesByRefs = `-- name: SamLicensesByRefs :many
-SELECT l.id, l.product_id, l.license_type, l.seats, l.cost_per_seat, l.currency, l.starts_at, l.expires_at, l.status, l.created_at, l.updated_at, l.contract
+SELECT l.id, l.product_id, l.license_type, l.seats, l.cost_per_seat, l.currency, l.starts_at, l.expires_at, l.status, l.created_at, l.updated_at
 FROM sam_licenses l
 WHERE (coalesce(cardinality($1::bigint[]), 0) = 0 OR l.id = ANY($1::bigint[]))
   AND (coalesce(cardinality($2::bigint[]), 0) = 0 OR l.product_id = ANY($2::bigint[]))
@@ -610,7 +603,6 @@ func (q *Queries) SamLicensesByRefs(ctx context.Context, arg SamLicensesByRefsPa
 			&i.Status,
 			&i.CreatedAt,
 			&i.UpdatedAt,
-			&i.Contract,
 		); err != nil {
 			return nil, err
 		}
@@ -623,7 +615,7 @@ func (q *Queries) SamLicensesByRefs(ctx context.Context, arg SamLicensesByRefsPa
 }
 
 const samLicensesForUpdate = `-- name: SamLicensesForUpdate :many
-SELECT l.id, l.product_id, l.license_type, l.seats, l.cost_per_seat, l.currency, l.starts_at, l.expires_at, l.status, l.created_at, l.updated_at, l.contract
+SELECT l.id, l.product_id, l.license_type, l.seats, l.cost_per_seat, l.currency, l.starts_at, l.expires_at, l.status, l.created_at, l.updated_at
 FROM sam_licenses l
 WHERE (coalesce(cardinality($1::bigint[]), 0) = 0 OR l.id = ANY($1::bigint[]))
   AND (coalesce(cardinality($2::bigint[]), 0) = 0 OR l.product_id = ANY($2::bigint[]))
@@ -657,7 +649,6 @@ func (q *Queries) SamLicensesForUpdate(ctx context.Context, arg SamLicensesForUp
 			&i.Status,
 			&i.CreatedAt,
 			&i.UpdatedAt,
-			&i.Contract,
 		); err != nil {
 			return nil, err
 		}
@@ -670,7 +661,7 @@ func (q *Queries) SamLicensesForUpdate(ctx context.Context, arg SamLicensesForUp
 }
 
 const samProductByID = `-- name: SamProductByID :one
-SELECT id, name, vendor, version, category, status, created_at, updated_at, vendor_id, section_code, class_code, license_metric, registry_rf, registry_entry, is_trackable
+SELECT id, name, vendor, version, category, status, created_at, updated_at
 FROM sam_products
 WHERE id = $1
 `
@@ -687,13 +678,6 @@ func (q *Queries) SamProductByID(ctx context.Context, id int64) (SamProduct, err
 		&i.Status,
 		&i.CreatedAt,
 		&i.UpdatedAt,
-		&i.VendorID,
-		&i.SectionCode,
-		&i.ClassCode,
-		&i.LicenseMetric,
-		&i.RegistryRf,
-		&i.RegistryEntry,
-		&i.IsTrackable,
 	)
 	return i, err
 }
@@ -710,7 +694,7 @@ func (q *Queries) SamProductNameExists(ctx context.Context, name string) (bool, 
 }
 
 const samProductsByIDsForUpdate = `-- name: SamProductsByIDsForUpdate :many
-SELECT id, name, vendor, version, category, status, created_at, updated_at, vendor_id, section_code, class_code, license_metric, registry_rf, registry_entry, is_trackable
+SELECT id, name, vendor, version, category, status, created_at, updated_at
 FROM sam_products
 WHERE id = ANY($1::bigint[])
 ORDER BY id
@@ -735,13 +719,6 @@ func (q *Queries) SamProductsByIDsForUpdate(ctx context.Context, ids []int64) ([
 			&i.Status,
 			&i.CreatedAt,
 			&i.UpdatedAt,
-			&i.VendorID,
-			&i.SectionCode,
-			&i.ClassCode,
-			&i.LicenseMetric,
-			&i.RegistryRf,
-			&i.RegistryEntry,
-			&i.IsTrackable,
 		); err != nil {
 			return nil, err
 		}
@@ -754,7 +731,7 @@ func (q *Queries) SamProductsByIDsForUpdate(ctx context.Context, ids []int64) ([
 }
 
 const samProductsByRefs = `-- name: SamProductsByRefs :many
-SELECT p.id, p.name, p.vendor, p.version, p.category, p.status, p.created_at, p.updated_at, p.vendor_id, p.section_code, p.class_code, p.license_metric, p.registry_rf, p.registry_entry, p.is_trackable
+SELECT p.id, p.name, p.vendor, p.version, p.category, p.status, p.created_at, p.updated_at
 FROM sam_products p
 WHERE (coalesce(cardinality($1::bigint[]), 0) = 0 OR p.id = ANY($1::bigint[]))
   AND (
@@ -796,13 +773,6 @@ func (q *Queries) SamProductsByRefs(ctx context.Context, arg SamProductsByRefsPa
 			&i.Status,
 			&i.CreatedAt,
 			&i.UpdatedAt,
-			&i.VendorID,
-			&i.SectionCode,
-			&i.ClassCode,
-			&i.LicenseMetric,
-			&i.RegistryRf,
-			&i.RegistryEntry,
-			&i.IsTrackable,
 		); err != nil {
 			return nil, err
 		}

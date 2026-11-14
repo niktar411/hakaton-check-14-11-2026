@@ -214,12 +214,6 @@ SELECT p.id,
        p.name,
        p.vendor,
        p.category,
-       p.section_code,
-       p.class_code,
-       p.license_metric,
-       p.registry_rf,
-       p.registry_entry,
-       p.is_trackable,
        p.updated_at,
        (SELECT count(*) FROM sam_licenses l WHERE l.product_id = p.id)::bigint AS license_count,
        (SELECT count(*) FROM sam_installations i
@@ -237,7 +231,6 @@ SELECT l.id,
        (SELECT count(DISTINCT coalesce(nullif(i.device_name, ''), 'installation:' || i.id))::int
         FROM sam_installations i
         WHERE i.product_id = p.id AND i.status = 'installed') AS seats_used,
-       l.contract,
        l.expires_at AS valid_until,
        CASE
            WHEN l.status <> 'active' THEN 'expired'

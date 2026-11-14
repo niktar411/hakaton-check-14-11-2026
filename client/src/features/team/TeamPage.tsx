@@ -116,9 +116,6 @@ export default function TeamPage() {
 			<section id="plan" class={s.section} aria-labelledby="team-plan-title">
 				<header class={s.sectionHeader}>
 					<p class={s.sectionLabel}>
-						<span class={s.sectionIndex} aria-hidden="true">
-							01
-						</span>
 						{m.teamPlanLabel()}
 					</p>
 					<h2 id="team-plan-title">{m.teamPlanTitle()}</h2>
@@ -179,9 +176,6 @@ export default function TeamPage() {
 			<section id="team" class={s.section} aria-labelledby="team-people-title">
 				<header class={s.sectionHeader}>
 					<p class={s.sectionLabel}>
-						<span class={s.sectionIndex} aria-hidden="true">
-							02
-						</span>
 						{m.teamTeamLabel()}
 					</p>
 					<h2 id="team-people-title">{m.teamTeamTitle()}</h2>
@@ -201,9 +195,6 @@ export default function TeamPage() {
 									class={s.memberCard}
 									style={{ "animation-delay": `${index() * 70}ms` }}
 								>
-									<span class={s.memberNumber} aria-hidden="true">
-										{String(index() + 1).padStart(2, "0")}
-									</span>
 									<span class={s.avatar} aria-hidden="true">
 										{initials(member.name)}
 									</span>
@@ -237,9 +228,6 @@ export default function TeamPage() {
 				<div class={s.assistantGrid}>
 					<div class={s.assistantCopy}>
 						<p class={s.sectionLabel}>
-							<span class={s.sectionIndex} aria-hidden="true">
-								03
-							</span>
 							{m.teamAiLabel()}
 						</p>
 						<h2 id="team-assistant-title">{m.teamAiTitle()}</h2>

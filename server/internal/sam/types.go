@@ -17,20 +17,11 @@ type Overview struct {
 }
 
 // Product is one catalog entry with its current license and installation usage.
-// SectionCode and ClassCode follow the SAM classification (04 development,
-// 05 applied software); LicenseMetric decides whether seats are counted per
-// device, per user or per installation.
 type Product struct {
 	ID                int64     `json:"id"`
 	Name              string    `json:"name"`
 	Vendor            string    `json:"vendor"`
 	Category          string    `json:"category"`
-	SectionCode       string    `json:"sectionCode"`
-	ClassCode         string    `json:"classCode"`
-	LicenseMetric     string    `json:"licenseMetric" enum:"device,user,installation,none"`
-	RegistryRf        bool      `json:"registryRf" doc:"Listed in the Russian software registry"`
-	RegistryEntry     string    `json:"registryEntry" doc:"Registry entry number"`
-	IsTrackable       bool      `json:"isTrackable" doc:"Counted in compliance calculations"`
 	LicenseCount      int64     `json:"licenseCount"`
 	InstallationCount int64     `json:"installationCount"`
 	UpdatedAt         time.Time `json:"updatedAt"`
@@ -45,7 +36,6 @@ type License struct {
 	Kind       string  `json:"kind" enum:"subscription,perpetual,trial"`
 	SeatsTotal int32   `json:"seatsTotal"`
 	SeatsUsed  int32   `json:"seatsUsed"`
-	Contract   string  `json:"contract" doc:"Contract or order number"`
 	ValidUntil *string `json:"validUntil" doc:"Calendar date in YYYY-MM-DD format"`
 	Status     string  `json:"status" enum:"active,expiring,expired"`
 }

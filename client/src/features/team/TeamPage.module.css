@@ -276,21 +276,6 @@
 	text-transform: uppercase;
 }
 
-.sectionIndex {
-	display: grid;
-	min-width: 30px;
-	height: 22px;
-	place-items: center;
-	padding-inline: var(--space-1);
-	border: 1px solid color-mix(in srgb, var(--primary) 38%, var(--border));
-	border-radius: var(--radius-full);
-	background: color-mix(in srgb, var(--primary) 8%, var(--surface));
-	font-size: 10px;
-	font-weight: 800;
-	letter-spacing: 0.08em;
-	line-height: 1;
-}
-
 .section h2 {
 	margin: 0;
 	font-size: clamp(26px, 3.6vw, 40px);
@@ -555,22 +540,6 @@
 	opacity: 1;
 }
 
-.memberNumber {
-	position: absolute;
-	top: var(--space-2);
-	right: var(--space-3);
-	color: color-mix(in srgb, var(--text) 9%, transparent);
-	font-size: 42px;
-	font-weight: 800;
-	line-height: 1;
-	letter-spacing: -2px;
-	transition: color var(--dur) var(--ease);
-}
-
-.memberCard:hover .memberNumber {
-	color: color-mix(in srgb, var(--primary) 26%, transparent);
-}
-
 .avatar {
 	display: grid;
 	width: 58px;
@@ -821,10 +790,6 @@
 
 	.memberCard {
 		padding: var(--space-4);
-	}
-
-	.memberNumber {
-		font-size: 32px;
 	}
 
 	.avatar {
