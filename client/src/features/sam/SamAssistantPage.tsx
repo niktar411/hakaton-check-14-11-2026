@@ -1,17 +1,17 @@
 import { A } from "@solidjs/router";
-import { createResource, For } from "solid-js";
+import { For } from "solid-js";
 import * as m from "@/paraglide/messages";
 import { api, unwrap } from "@/shared/api";
 import type { components } from "@/shared/api/schema";
 import { SamPageHeader } from "./SamPage";
 import s from "./SamPage.module.css";
-import { SamPageState } from "./SamPageState";
+import { createSamResource, SamPageState } from "./SamPageState";
 import { suggestionLabel } from "./labels";
 
 type Assistant = components["schemas"]["Assistant"];
 
 export default function SamAssistantPage() {
-	const [assistant, { refetch }] = createResource(async () =>
+	const { resource: assistant, refetch } = createSamResource<Assistant>(async () =>
 		unwrap(await api.GET("/api/public/sam/assistant")),
 	);
 	return (
