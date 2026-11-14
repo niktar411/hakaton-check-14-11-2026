@@ -1,0 +1,100 @@
+.root {
+	position: relative;
+	min-width: 0;
+}
+
+.trigger {
+	display: flex;
+	min-height: 42px;
+	width: 100%;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--space-2);
+	padding: var(--space-2) var(--space-3);
+	border: 1px solid var(--border);
+	border-radius: var(--radius-xs);
+	background: var(--surface);
+	color: var(--text);
+	font: inherit;
+	font-size: var(--text-sm);
+	font-weight: 600;
+	text-align: left;
+	cursor: pointer;
+	transition:
+		background-color var(--dur) var(--ease),
+		border-color var(--dur) var(--ease),
+		color var(--dur) var(--ease);
+}
+
+.trigger:hover:not(:disabled),
+.trigger:focus-visible {
+	border-color: var(--primary);
+}
+
+.trigger:disabled {
+	cursor: not-allowed;
+	opacity: 0.55;
+}
+
+.trigger:focus-visible {
+	outline: 2px solid var(--primary);
+	outline-offset: 1px;
+}
+
+.value {
+	overflow: hidden;
+	min-width: 0;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.chevron {
+	flex: none;
+	color: var(--text-muted);
+	transition: transform var(--dur-fast) var(--ease);
+}
+
+.chevronOpen {
+	transform: rotate(180deg);
+}
+
+.list {
+	position: absolute;
+	z-index: 40;
+	top: calc(100% + var(--space-1));
+	left: 0;
+	right: 0;
+	max-height: 300px;
+	margin: 0;
+	padding: var(--space-1);
+	border-radius: var(--radius-sm);
+	overflow-y: auto;
+	list-style: none;
+}
+
+.option {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--space-3);
+	padding: var(--space-2) var(--space-3);
+	border-radius: var(--radius-xs);
+	color: var(--text);
+	font-size: var(--text-sm);
+	cursor: pointer;
+}
+
+.optionActive {
+	background: var(--surface-2);
+}
+
+.optionSelected {
+	color: var(--primary);
+	font-weight: 600;
+}
+
+.optionLabel {
+	overflow: hidden;
+	min-width: 0;
+	text-overflow: ellipsis;
+}

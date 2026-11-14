@@ -30,9 +30,13 @@ export function SamBadge(props: { label: string; tone?: SamTone }) {
 
 export function SamFields(props: {
 	items: Array<{ label: string; value: string }>;
+	wide?: boolean;
 }) {
 	return (
-		<dl class={s.fields}>
+		<dl
+			class={s.fields}
+			classList={{ [s.fieldsWide]: props.wide === true }}
+		>
 			<For each={props.items}>
 				{(item) => (
 					<div class={s.field}>

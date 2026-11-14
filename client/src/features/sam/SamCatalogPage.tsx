@@ -41,7 +41,7 @@ export default function SamCatalogPage() {
 											{product.vendor} · {product.category}
 										</p>
 									</div>
-									<SamFields
+									<SamFields wide
 										items={[
 											{
 												label: m.samLicenseCount(),

@@ -136,7 +136,12 @@ export default function SamProductPage() {
 															: m.samLicenseNoExpiry()}
 													</p>
 												</div>
-												<dl class={s.fields}>
+												<dl
+												classList={{
+													[s.fields]: true,
+													[s.fieldsWide]: true,
+												}}
+											>
 													<div class={s.field}>
 														<dt>{m.samLicenseSeats()}</dt>
 														<dd>

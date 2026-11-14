@@ -49,6 +49,7 @@ export default function SamMatchingPage() {
 										</p>
 									</div>
 									<SamFields
+										wide
 										items={[
 											{
 												label: m.samMatchAsset(),

@@ -177,8 +177,9 @@ function App(props: { children?: JSX.Element }) {
 		location.pathname.startsWith("/coding/") ||
 		location.pathname === "/planner" ||
 		location.pathname.startsWith("/planner/");
-	// The public team page is monochrome: the black-and-white palette keeps the
-	// focus on the plan, the team and the assistant instead of decoration.
+	// The public pages are monochrome: black, white and gray carry the layout.
+	// Inside SAM the semantic colors (severity, deltas) come back through the
+	// .samRoot overrides, so chips stay readable on the grayscale base.
 	const monoPage = () =>
 		!plannerHost() &&
 		(location.pathname === "/" ||
@@ -300,7 +301,8 @@ if (root) {
 	render(
 		() => (
 			<Router root={App}>
-				<Route path="/" component={SamLayout}>
+				<Route path="/" component={TeamPage} />
+				<Route path="/sam" component={SamLayout}>
 					<Route path="/" component={SamDashboardPage} />
 					<Route path="/catalog" component={SamCatalogPage} />
 					<Route path="/catalog/:id" component={SamProductPage} />

@@ -83,7 +83,7 @@ export function findingSeverityTone(value: string): SamTone {
 		case "medium":
 			return "info";
 		case "high":
-			return "warning";
+			return "danger";
 		case "critical":
 			return "danger";
 		default:

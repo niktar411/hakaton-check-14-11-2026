@@ -7,22 +7,20 @@
 
 .secBand {
 	display: flex;
-	align-items: center;
+	align-items: baseline;
 	gap: var(--space-3);
-	margin-left: calc(50% - 50vw);
-	margin-right: 0;
-	padding: var(--space-2) 0 var(--space-2) max(var(--space-6), calc(50vw - var(--content-max) / 2 + var(--space-6)));
-	background: var(--text);
-	color: var(--bg);
+	padding: var(--space-1) 0;
 }
 
 .secTitle {
 	margin: 0;
-	color: inherit;
-	font-size: var(--text-xl);
-	font-weight: 700;
-	letter-spacing: -0.02em;
-	white-space: nowrap;
+	color: var(--text);
+	font-size: clamp(26px, 3.6vw, 36px);
+	font-weight: 800;
+	letter-spacing: -0.03em;
+	line-height: 1.1;
+	text-wrap: balance;
+	overflow-wrap: anywhere;
 }
 
 .secLead {
@@ -31,20 +29,6 @@
 	font-size: var(--text-sm);
 	text-align: right;
 	max-width: 50%;
-}
-
-.badge {
-	display: inline-flex;
-	align-items: center;
-	padding: 2px 7px;
-	border: 1px solid var(--border);
-	border-radius: 3px;
-	background: var(--surface);
-	color: var(--text-muted);
-	font-size: 10px;
-	font-weight: 700;
-	letter-spacing: 0.02em;
-	white-space: nowrap;
 }
 
 .metrics {
@@ -62,7 +46,7 @@
 	gap: var(--space-1);
 	padding: var(--space-4);
 	border: 1px solid var(--border);
-	border-radius: var(--radius-sm);
+	border-radius: var(--radius-md);
 	background: var(--surface);
 }
 
@@ -88,14 +72,124 @@
 	list-style: none;
 }
 
+/* Появление строк — как карточки участников на странице команды. */
+@keyframes sam-card-in {
+	from {
+		opacity: 0;
+		translate: 0 14px;
+	}
+	to {
+		opacity: 1;
+		translate: 0 0;
+	}
+}
+
+.list > *,
+.suggestions > * {
+	animation: sam-card-in 0.55s var(--ease) both;
+}
+
+.list > :nth-child(2),
+.suggestions > :nth-child(2) {
+	animation-delay: 70ms;
+}
+
+.list > :nth-child(3),
+.suggestions > :nth-child(3) {
+	animation-delay: 140ms;
+}
+
+.list > :nth-child(4),
+.suggestions > :nth-child(4) {
+	animation-delay: 210ms;
+}
+
+.list > :nth-child(5),
+.suggestions > :nth-child(5) {
+	animation-delay: 280ms;
+}
+
+.list > :nth-child(6),
+.suggestions > :nth-child(6) {
+	animation-delay: 350ms;
+}
+
+.list > :nth-child(7),
+.suggestions > :nth-child(7) {
+	animation-delay: 420ms;
+}
+
+.list > :nth-child(8),
+.suggestions > :nth-child(8) {
+	animation-delay: 490ms;
+}
+
 .row {
 	display: flex;
 	flex-direction: column;
 	gap: var(--space-3);
 	padding: var(--space-4);
 	border: 1px solid var(--border);
-	border-radius: var(--radius-sm);
+	border-radius: var(--radius-md);
 	background: var(--surface);
+	transition:
+		transform var(--dur) var(--ease),
+		border-color var(--dur) var(--ease),
+		box-shadow var(--dur) var(--ease);
+}
+
+.row {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-3);
+	padding: var(--space-4);
+	border: 1px solid var(--border);
+	border-radius: var(--radius-md);
+	background: var(--surface);
+	transition:
+		transform var(--dur) var(--ease),
+		border-color var(--dur) var(--ease),
+		box-shadow var(--dur) var(--ease);
+}
+
+.row::before {
+	position: absolute;
+	top: 0;
+	right: 0;
+	left: 0;
+	height: 3px;
+	border-radius: var(--radius-md) var(--radius-md) 0 0;
+	background: var(--primary);
+	opacity: 0;
+	content: "";
+	transition: opacity var(--dur) var(--ease);
+}
+
+.row:hover::before {
+	opacity: 1;
+}
+
+.suggestion {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--space-3);
+	padding: var(--space-4);
+	border: 1px solid var(--border);
+	border-radius: var(--radius-md);
+	background: var(--surface);
+	transition:
+		transform var(--dur) var(--ease),
+		border-color var(--dur) var(--ease),
+		box-shadow var(--dur) var(--ease);
+}
+
+.suggestion:hover {
+	transform: translateY(-2px);
+	border-color: color-mix(in srgb, var(--text) 22%, var(--border));
+	box-shadow: 0 14px 30px color-mix(in srgb, var(--text) 12%, transparent);
 }
 
 .rowHeader {
@@ -127,6 +221,15 @@
 	margin: 0;
 }
 
+/* Растянутый режим: поля расходятся по всей ширине карточки —
+   слева и справа, без пустого правого края. */
+.fieldsWide {
+	flex: 1 1 auto;
+	width: 100%;
+	justify-content: space-between;
+	gap: var(--space-2) var(--space-4);
+}
+
 .field {
 	display: flex;
 	min-width: 0;
@@ -149,7 +252,7 @@
 	display: inline-flex;
 	align-items: center;
 	padding: 2px var(--space-2);
-	border: 1px solid var(--border);
+	border: 1px solid transparent;
 	border-radius: var(--radius-full);
 	background: var(--surface-2);
 	color: var(--text-muted);
@@ -159,26 +262,25 @@
 }
 
 .badgeInfo {
-	border-color: transparent;
 	background: var(--info-bg);
 	color: var(--text);
 }
 
 .badgeWarning {
-	border-color: transparent;
 	background: var(--warning-bg);
 	color: var(--text);
 }
 
 .badgeDanger {
-	border-color: var(--danger);
+	background: var(--danger-bg);
 	color: var(--danger);
+	font-weight: 700;
 }
 
 .badgeSuccess {
-	border-color: var(--success);
-	background: var(--surface);
+	background: var(--success-bg);
 	color: var(--success);
+	font-weight: 600;
 }
 
 .suggestions {
@@ -188,18 +290,6 @@
 	margin: 0;
 	padding: 0;
 	list-style: none;
-}
-
-.suggestion {
-	display: flex;
-	flex-wrap: wrap;
-	align-items: center;
-	justify-content: space-between;
-	gap: var(--space-3);
-	padding: var(--space-4);
-	border: 1px solid var(--border);
-	border-radius: var(--radius-sm);
-	background: var(--surface);
 }
 
 .suggestionText {
@@ -235,6 +325,17 @@
 		display: grid;
 		grid-template-columns: minmax(0, 1.2fr) minmax(0, 2fr);
 		align-items: start;
+	}
+
+	/* Хвост строки прижимается к правому краю: бейджи статусов и поля
+	   расходятся «слева и справа», без пустой правой половины. */
+	.row > .badge {
+		justify-self: end;
+		align-self: start;
+	}
+
+	.row > .rowMeta {
+		grid-column: 1 / -1;
 	}
 }
 
@@ -275,6 +376,18 @@
 	margin: 0;
 	padding: var(--space-4);
 	border: 1px solid var(--border);
-	border-radius: var(--radius-sm);
+	border-radius: var(--radius-md);
 	color: var(--text-muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.list > *,
+	.suggestions > * {
+		animation: none;
+	}
+
+	.row,
+	.suggestion {
+		transition: none;
+	}
 }

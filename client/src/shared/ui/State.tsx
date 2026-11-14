@@ -23,5 +23,9 @@ export function ErrorState(props: { onRetry?: () => void }) {
 }
 
 export function EmptyState(props: { message?: string }) {
-	return <p class="text-muted py-4">{props.message ?? m.empty()}</p>;
+	return (
+		<div class="border-border text-muted bg-surface-2 rounded-md border border-dashed p-8 text-center">
+			{props.message ?? m.empty()}
+		</div>
+	);
 }

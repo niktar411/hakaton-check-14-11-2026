@@ -5,6 +5,7 @@ import { api, unwrap } from "@/shared/api";
 import type { components } from "@/shared/api/schema";
 import { formatMoney, formatNumber } from "@/shared/lib/format";
 import { Button } from "@/shared/ui/Button";
+import { Select } from "@/shared/ui/Select";
 import { SamBadge } from "./SamPage";
 import { SamDocHeader, SamSectionBand } from "./SamLayout";
 import { formatDay } from "@/shared/lib/format";
@@ -12,8 +13,6 @@ import s from "./SamDashboardPage.module.css";
 import { createSamResource, SamPageState } from "./SamPageState";
 import {
 	productStatusLabel,
-	productStatusTone,
-	productRiskCostLabel,
 	riskCodeLabel,
 	riskCostLabel,
 	riskLevelLabel,
@@ -131,7 +130,6 @@ export default function SamDashboardPage() {
 	return (
 		<>
 			<SamDocHeader
-				eyebrow={m.samDocEyebrow()}
 				title={m.samDashboardPageTitle()}
 				lead={m.samDashboardLead()}
 				meta={[
@@ -150,43 +148,52 @@ export default function SamDashboardPage() {
 			>
 				{(value) => (
 					<div class={s.page}>
-						<SamSectionBand
-							num="01"
-							title={m.samBandOverview()}
-							meta={m.samBandOverviewMeta()}
-						/>
 						<section class={s.kpis} aria-label={m.samBandOverview()}>
-							<A class={s.kpi} href="/sam/inventory">
+							<A class={s.kpi} href="/sam/inventory" classList={{ [s.toneInfo]: true }}>
 								<span class={s.kpiValue}>{formatNumber(value.summary.devices)}</span>
 								<span class={s.kpiLabel}>{m.samKpiHosts()}</span>
 							</A>
-							<A class={s.kpi} href="/sam/catalog">
+							<A class={s.kpi} href="/sam/catalog" classList={{ [s.toneInfo]: true }}>
 								<span class={s.kpiValue}>
 									{formatNumber(value.summary.products)}
 								</span>
 								<span class={s.kpiLabel}>{m.samMetricProducts()}</span>
 							</A>
-							<A class={s.kpi} href="/sam/licenses">
+							<A class={s.kpi} href="/sam/licenses" classList={{ [s.toneInfo]: true }}>
 								<span class={s.kpiValue}>
 									{formatNumber(value.summary.licenses)}
 								</span>
 								<span class={s.kpiLabel}>{m.samMetricLicenses()}</span>
 							</A>
-							<A class={s.kpi} href="/sam/compliance">
+							<A
+								class={s.kpi}
+								href="/sam/compliance"
+								classList={{
+									[s.toneGood]: value.summary.compliancePercent >= 80,
+									[s.toneWarn]: value.summary.compliancePercent < 80,
+								}}
+							>
 								<span class={s.kpiValue}>
 									{value.summary.compliancePercent}%
 								</span>
 								<span class={s.kpiLabel}>{m.samKpiCompliance()}</span>
 								<span class={s.kpiHint}>{m.samCompliancePercentHint()}</span>
 							</A>
-							<A class={s.kpi} href="/sam/compliance">
+							<A
+								class={s.kpi}
+								href="/sam/compliance"
+								classList={{
+									[s.toneBad]: value.summary.costAtRisk > 0,
+									[s.toneInfo]: value.summary.costAtRisk === 0,
+								}}
+							>
 								<span class={s.kpiValue}>
 									{formatMoney(value.summary.costAtRisk)}
 								</span>
 								<span class={s.kpiLabel}>{m.samKpiRisk()}</span>
 								<span class={s.kpiHint}>{m.samCostAtRiskHint()}</span>
 							</A>
-							<div class={s.kpi}>
+							<div class={s.kpi} classList={{ [s.toneWarn]: true }}>
 								<span class={s.kpiValue}>
 									{formatMoney(value.summary.idleCost)}
 								</span>
@@ -195,56 +202,54 @@ export default function SamDashboardPage() {
 							</div>
 						</section>
 
-						<section class={s.riskBanner}>
-							<div class={s.riskBannerMain}>
-								<span class={s.riskBannerLabel}>{m.samRiskLevel()}</span>
-								<SamBadge
-									label={riskLevelLabel(value.summary.riskLevel)}
-									tone={riskLevelTone(value.summary.riskLevel)}
-								/>
-								<p class={s.riskBannerHint}>
-									{m.samAnnualCost()}: {formatMoney(value.summary.annualCost)}
-								</p>
-							</div>
-							<div class={s.riskBannerNumbers}>
-								<div>
-									<span>{m.samKpiOverused()}</span>
-									<strong>{formatNumber(value.summary.overusedSeats)}</strong>
+						<section class={s.duo} aria-label={m.samRiskLevel()}>
+							<article class={s.riskCard}>
+								<h2>{m.samRiskLevel()}</h2>
+								<div class={s.riskCardMain}>
+									<SamBadge
+										label={riskLevelLabel(value.summary.riskLevel)}
+										tone={riskLevelTone(value.summary.riskLevel)}
+									/>
+									<p class={s.riskCardAnnual}>
+										{m.samAnnualCost()}: {formatMoney(value.summary.annualCost)}
+									</p>
 								</div>
-								<div>
-									<span>{m.samKpiIdleSeats()}</span>
-									<strong>{formatNumber(value.summary.idleSeats)}</strong>
-								</div>
-								<div>
-									<span>{m.samKpiExpiredSeats()}</span>
-									<strong>{formatNumber(value.summary.expiredSeats)}</strong>
-								</div>
-								<div>
-									<span>{m.samKpiBanned()}</span>
-									<strong>
-										{formatNumber(value.summary.bannedInstallations)}
-									</strong>
-								</div>
-								<div>
-									<span>{m.samKpiUnmatched()}</span>
-									<strong>
-										{formatNumber(value.summary.unmatchedInstallations)}
-									</strong>
-								</div>
-							</div>
-							<SamSectionBand num="02" title={m.samRecommendations()} />
-							<div class={s.recommendations}>
-								<ul>
+								<dl class={s.riskFacts}>
+									<div>
+										<dt>{m.samKpiOverused()}</dt>
+										<dd>{formatNumber(value.summary.overusedSeats)}</dd>
+									</div>
+									<div>
+										<dt>{m.samKpiIdleSeats()}</dt>
+										<dd>{formatNumber(value.summary.idleSeats)}</dd>
+									</div>
+									<div>
+										<dt>{m.samKpiExpiredSeats()}</dt>
+										<dd>{formatNumber(value.summary.expiredSeats)}</dd>
+									</div>
+									<div>
+										<dt>{m.samKpiBanned()}</dt>
+										<dd>{formatNumber(value.summary.bannedInstallations)}</dd>
+									</div>
+									<div>
+										<dt>{m.samKpiUnmatched()}</dt>
+										<dd>{formatNumber(value.summary.unmatchedInstallations)}</dd>
+									</div>
+								</dl>
+							</article>
+							<article class={s.todoCard}>
+								<h2>{m.samRecommendations()}</h2>
+								<ul class={s.todoList}>
 									<For each={value.summary.recommendations ?? []}>
 										{(item) => <li>{item}</li>}
 									</For>
 								</ul>
-							</div>
+							</article>
 						</section>
 
 						<section class={s.charts}>
 							<article class={s.chart}>
-								<SamSectionBand num="03" title={m.samChartStatuses()} />
+								<SamSectionBand num="01" title={m.samChartStatuses()} />
 								<Show
 									when={maxStatus() > 0}
 									fallback={<p class={s.chartEmpty}>{m.samChartEmpty()}</p>}
@@ -274,7 +279,7 @@ export default function SamDashboardPage() {
 								</Show>
 							</article>
 							<article class={s.chart}>
-								<SamSectionBand num="04" title={m.samChartCategories()} />
+								<SamSectionBand num="02" title={m.samChartCategories()} />
 								<Show
 									when={maxCategory() > 0}
 									fallback={<p class={s.chartEmpty}>{m.samChartEmpty()}</p>}
@@ -308,23 +313,26 @@ export default function SamDashboardPage() {
 
 						<section class={s.section}>
 							<SamSectionBand
-								num="05"
+								num="03"
 								title={m.samTopRisks()}
 								meta={m.samCostAtRiskHint()}
 							/>
 							<div class={s.filters}>
-								<FilterGroup
-									label={m.samFilterCategory()}
-									value={category()}
-									onChange={setCategory}
-									options={[
-										{ value: "all", label: m.samFilterAll() },
-										...categories().map((item) => ({
-											value: item,
-											label: item,
-										})),
-									]}
-								/>
+								<div class={s.filterGroup}>
+									<span class={s.filterLabel}>{m.samFilterCategory()}</span>
+									<Select
+										label={m.samFilterCategory()}
+										value={category()}
+										onChange={setCategory}
+										options={[
+											{ value: "all", label: m.samFilterAll() },
+											...categories().map((item) => ({
+												value: item,
+												label: item,
+											})),
+										]}
+									/>
+								</div>
 								<FilterGroup
 									label={m.samFilterRisk()}
 									value={risk()}
@@ -344,7 +352,13 @@ export default function SamDashboardPage() {
 								<ul class={s.riskList}>
 									<For each={filteredRisks().slice(0, 6)}>
 										{(item) => (
-											<li class={s.riskItem}>
+											<li
+												class={s.riskItem}
+												classList={{
+													[s.riskItemHigh]: item.severity === "high",
+													[s.riskItemMedium]: item.severity !== "high",
+												}}
+											>
 												<div class={s.riskItemMain}>
 													<div class={s.riskItemHeader}>
 														<SamBadge
@@ -390,70 +404,11 @@ export default function SamDashboardPage() {
 									</For>
 								</ul>
 							</Show>
-						</section>
-
-						<section class={s.section}>
-							<SamSectionBand
-								num="06"
-								title={m.samBalanceTitle()}
-								meta={m.samBalanceHint()}
-							/>
-							<div class={s.sectionHeader}>
+							<p class={s.sectionFooter}>
 								<A class={s.sectionLink} href="/sam/compliance">
-									{m.samCompliancePageTitle()}
+									{m.samBalanceFull()}
 								</A>
-							</div>
-							<Show
-								when={filteredProducts().length > 0}
-								fallback={<p class={s.empty}>{m.samNoFilteredProducts()}</p>}
-							>
-								<ul class={s.productList}>
-									<For each={filteredProducts().slice(0, 8)}>
-										{(product) => (
-											<li class={s.productItem}>
-												<div class={s.productMain}>
-													<A class={s.productLink} href={`/sam/catalog/${product.id}`}>
-														{product.name}
-													</A>
-													<span class={s.productMeta}>
-														{product.vendor} · {product.category}
-													</span>
-												</div>
-												<SamBadge
-													label={productStatusLabel(product.status)}
-													tone={productStatusTone(product.status)}
-												/>
-												<dl class={s.productNumbers}>
-													<div>
-														<dt>{m.samColumnPurchased()}</dt>
-														<dd>{formatNumber(product.purchasedSeats)}</dd>
-													</div>
-													<div>
-														<dt>{m.samColumnInstalled()}</dt>
-														<dd>{formatNumber(product.installedDevices)}</dd>
-													</div>
-													<div>
-														<dt>{m.samColumnDelta()}</dt>
-														<dd
-															classList={{
-																[s.negative]: product.deltaSeats > 0,
-																[s.positive]: product.deltaSeats < 0,
-															}}
-														>
-															{product.deltaSeats > 0 ? "+" : ""}
-															{formatNumber(product.deltaSeats)}
-														</dd>
-													</div>
-													<div>
-														<dt>{m.samColumnRisk()}</dt>
-														<dd>{productRiskCostLabel(product)}</dd>
-													</div>
-												</dl>
-											</li>
-										)}
-									</For>
-								</ul>
-							</Show>
+							</p>
 						</section>
 					</div>
 				)}

@@ -39,7 +39,7 @@ export default function SamInventoryPage() {
 										</h2>
 										<p class={s.rowMeta}>{asset.platform}</p>
 									</div>
-									<SamFields
+									<SamFields wide
 										items={[
 											{
 												label: m.samOwner(),

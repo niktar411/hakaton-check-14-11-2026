@@ -50,7 +50,7 @@ export default function SamLicensesPage() {
 										</div>
 										<p class={s.rowMeta}>{license.vendor}</p>
 									</div>
-									<SamFields
+									<SamFields wide
 										items={[
 											{
 												label: m.samLicenseKind(),

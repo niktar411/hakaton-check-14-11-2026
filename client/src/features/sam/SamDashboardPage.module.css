@@ -4,10 +4,54 @@
 	gap: var(--space-5);
 }
 
+/* Появление блоков — как карточки участников на странице команды:
+   каскад снизу вверх, задержка ступенями. */
+@keyframes sam-card-in {
+	from {
+		opacity: 0;
+		translate: 0 14px;
+	}
+	to {
+		opacity: 1;
+		translate: 0 0;
+	}
+}
+
 .kpis {
 	display: grid;
 	grid-template-columns: repeat(2, minmax(0, 1fr));
 	gap: var(--space-3);
+}
+
+.kpis > *,
+.duo > *,
+.charts > *,
+.riskList > * {
+	opacity: 0;
+	translate: 0 14px;
+	animation: sam-card-in 0.55s var(--ease) forwards;
+}
+
+.kpis > :nth-child(2),
+.duo > :nth-child(2),
+.charts > :nth-child(2) {
+	animation-delay: 70ms;
+}
+
+.kpis > :nth-child(3) {
+	animation-delay: 140ms;
+}
+
+.kpis > :nth-child(4) {
+	animation-delay: 210ms;
+}
+
+.kpis > :nth-child(5) {
+	animation-delay: 280ms;
+}
+
+.kpis > :nth-child(6) {
+	animation-delay: 350ms;
 }
 
 .kpi {
@@ -17,18 +61,46 @@
 	gap: var(--space-1);
 	padding: var(--space-4);
 	border: 1px solid var(--border);
-	border-radius: var(--radius-sm);
+	border-top: 3px solid var(--kpi-accent, var(--border));
+	border-radius: var(--radius-md);
 	background: var(--surface);
 	color: var(--text);
 	text-decoration: none;
+	transition:
+		transform var(--dur) var(--ease),
+		border-color var(--dur) var(--ease),
+		box-shadow var(--dur) var(--ease);
 }
 
 a.kpi:hover {
+	transform: translateY(-3px);
 	border-color: var(--primary);
+	border-top-color: var(--kpi-accent, var(--primary));
+	box-shadow: 0 14px 30px color-mix(in srgb, var(--text) 12%, transparent);
+}
+
+/* Цветовой смысл карточки: акцентная полоса сверху и подсветка значения. */
+.toneInfo {
+	--kpi-accent: var(--primary);
+}
+
+.toneGood {
+	--kpi-accent: var(--success);
+	--kpi-value: var(--success);
+}
+
+.toneWarn {
+	--kpi-accent: var(--warning);
+}
+
+.toneBad {
+	--kpi-accent: var(--danger);
+	--kpi-value: var(--danger);
 }
 
 .kpiValue {
 	overflow-wrap: anywhere;
+	color: var(--kpi-value, var(--text));
 	font-size: var(--text-2xl);
 	font-weight: 700;
 	font-variant-numeric: tabular-nums;
@@ -44,76 +116,98 @@ a.kpi:hover {
 	font-size: var(--text-xs);
 }
 
-.riskBanner {
-	display: flex;
-	flex-direction: column;
-	gap: var(--space-4);
-	padding: var(--space-5);
-	border: 1px solid var(--border);
-	border-radius: var(--radius-md);
-	background: var(--surface-2);
+/* Пара «Уровень риска» + «Что делать» — две равные карточки. */
+.duo {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr);
+	gap: var(--space-3);
 }
 
-.riskBannerMain {
+.riskCard,
+.todoCard {
+	display: flex;
+	min-width: 0;
+	flex-direction: column;
+	gap: var(--space-3);
+	padding: var(--space-4);
+	border: 1px solid var(--border);
+	border-radius: var(--radius-md);
+	background: var(--surface);
+}
+
+.riskCard h2,
+.todoCard h2 {
+	margin: 0;
+	font-size: var(--text-lg);
+}
+
+.riskCardMain {
 	display: flex;
 	flex-wrap: wrap;
 	align-items: center;
 	gap: var(--space-2);
 }
 
-.riskBannerLabel {
-	color: var(--text-muted);
-	font-size: var(--text-sm);
-}
-
-.riskBannerHint {
+.riskCardAnnual {
 	margin: 0;
 	color: var(--text-muted);
 	font-size: var(--text-sm);
 }
 
-.riskBannerNumbers {
+.riskFacts {
 	display: grid;
 	grid-template-columns: repeat(2, minmax(0, 1fr));
 	gap: var(--space-3);
+	margin: 0;
 }
 
-.riskBannerNumbers div {
+.riskFacts div {
 	display: flex;
 	min-width: 0;
 	flex-direction: column;
 	gap: 2px;
+	padding-top: var(--space-2);
+	border-top: 1px solid var(--border);
 }
 
-.riskBannerNumbers span {
+.riskFacts dt {
 	color: var(--text-muted);
 	font-size: var(--text-xs);
 }
 
-.riskBannerNumbers strong {
+.riskFacts dd {
+	margin: 0;
 	font-size: var(--text-lg);
+	font-weight: 700;
 	font-variant-numeric: tabular-nums;
 }
 
-.recommendations {
-	padding: var(--space-4);
-	border-radius: var(--radius-sm);
-	background: var(--surface);
-}
-
-.recommendations h2,
-.chart h2,
-.sectionHeader h2 {
-	margin: 0;
-	font-size: var(--text-lg);
-}
-
-.recommendations ul {
+.todoList {
 	display: flex;
 	flex-direction: column;
 	gap: var(--space-2);
-	margin: var(--space-3) 0 0;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.todoList li {
+	position: relative;
 	padding-left: var(--space-5);
+	color: var(--text);
+	font-size: var(--text-sm);
+	line-height: 1.5;
+}
+
+.todoList li::before {
+	content: "";
+	position: absolute;
+	left: var(--space-1);
+	top: 0.55em;
+	width: 6px;
+	height: 6px;
+	border-radius: var(--radius-full);
+	background: var(--primary);
 }
 
 .charts {
@@ -129,7 +223,7 @@ a.kpi:hover {
 	gap: var(--space-3);
 	padding: var(--space-4);
 	border: 1px solid var(--border);
-	border-radius: var(--radius-sm);
+	border-radius: var(--radius-md);
 	background: var(--surface);
 }
 
@@ -190,17 +284,8 @@ a.kpi:hover {
 	gap: var(--space-4);
 }
 
-.sectionHeader {
-	display: flex;
-	flex-wrap: wrap;
-	align-items: flex-end;
-	justify-content: space-between;
-	gap: var(--space-3);
-}
-
-.sectionHeader p {
-	margin: var(--space-1) 0 0;
-	color: var(--text-muted);
+.sectionFooter {
+	margin: 0;
 	font-size: var(--text-sm);
 }
 
@@ -210,8 +295,8 @@ a.kpi:hover {
 }
 
 .filters {
-	display: flex;
-	flex-direction: column;
+	display: grid;
+	grid-template-columns: minmax(0, 1fr);
 	gap: var(--space-3);
 }
 
@@ -234,8 +319,7 @@ a.kpi:hover {
 	gap: var(--space-2);
 }
 
-.riskList,
-.productList {
+.riskList {
 	display: flex;
 	flex-direction: column;
 	gap: var(--space-3);
@@ -244,14 +328,63 @@ a.kpi:hover {
 	list-style: none;
 }
 
+/* Каскад для списков произвольной длины: анимируем первые восемь строк,
+   остальные видимы сразу. */
+.riskList > :nth-child(2) {
+	animation-delay: 70ms;
+}
+
+.riskList > :nth-child(3) {
+	animation-delay: 140ms;
+}
+
+.riskList > :nth-child(4) {
+	animation-delay: 210ms;
+}
+
+.riskList > :nth-child(5) {
+	animation-delay: 280ms;
+}
+
+.riskList > :nth-child(6) {
+	animation-delay: 350ms;
+}
+
+.riskList > :nth-child(7) {
+	animation-delay: 420ms;
+}
+
+.riskList > :nth-child(8) {
+	animation-delay: 490ms;
+}
+
 .riskItem {
 	display: grid;
 	grid-template-columns: minmax(0, 1fr);
 	gap: var(--space-3);
 	padding: var(--space-4);
 	border: 1px solid var(--border);
-	border-radius: var(--radius-sm);
+	border-left: 3px solid var(--border);
+	border-radius: var(--radius-md);
 	background: var(--surface);
+	transition:
+		transform var(--dur) var(--ease),
+		border-color var(--dur) var(--ease),
+		box-shadow var(--dur) var(--ease);
+}
+
+.riskItem:hover {
+	transform: translateY(-2px);
+	border-color: color-mix(in srgb, var(--text) 22%, var(--border));
+	box-shadow: 0 14px 30px color-mix(in srgb, var(--text) 12%, transparent);
+}
+
+.riskItemHigh {
+	border-left-color: var(--danger);
+}
+
+.riskItemMedium {
+	border-left-color: var(--warning);
 }
 
 .riskItemMain {
@@ -294,75 +427,22 @@ a.kpi:hover {
 	gap: 2px;
 }
 
-.riskNumbers dt,
-.productNumbers dt {
+.riskNumbers dt {
 	color: var(--text-muted);
 	font-size: var(--text-xs);
 }
 
-.riskNumbers dd,
-.productNumbers dd {
+.riskNumbers dd {
 	margin: 0;
 	font-size: var(--text-sm);
 	font-variant-numeric: tabular-nums;
-}
-
-.productItem {
-	display: grid;
-	grid-template-columns: minmax(0, 1fr) auto;
-	gap: var(--space-3);
-	padding: var(--space-4);
-	border: 1px solid var(--border);
-	border-radius: var(--radius-sm);
-	background: var(--surface);
-}
-
-.productMain {
-	display: flex;
-	min-width: 0;
-	flex-direction: column;
-	gap: 2px;
-}
-
-.productLink {
-	color: var(--text);
-	font-weight: 600;
-	overflow-wrap: anywhere;
-}
-
-.productMeta {
-	color: var(--text-muted);
-	font-size: var(--text-sm);
-}
-
-.productNumbers {
-	display: grid;
-	grid-column: 1 / -1;
-	grid-template-columns: repeat(2, minmax(0, 1fr));
-	gap: var(--space-3);
-	margin: 0;
-}
-
-.productNumbers div {
-	display: flex;
-	min-width: 0;
-	flex-direction: column;
-	gap: 2px;
-}
-
-.negative {
-	color: var(--danger);
-}
-
-.positive {
-	color: var(--success);
 }
 
 .empty {
 	margin: 0;
 	padding: var(--space-4);
 	border: 1px solid var(--border);
-	border-radius: var(--radius-sm);
+	border-radius: var(--radius-md);
 	color: var(--text-muted);
 }
 
@@ -371,7 +451,11 @@ a.kpi:hover {
 		grid-template-columns: repeat(3, minmax(0, 1fr));
 	}
 
-	.riskBannerNumbers {
+	.duo {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+
+	.riskFacts {
 		grid-template-columns: repeat(5, minmax(0, 1fr));
 	}
 
@@ -379,18 +463,28 @@ a.kpi:hover {
 		grid-template-columns: repeat(2, minmax(0, 1fr));
 	}
 
+	.filters {
+		grid-template-columns: minmax(0, 1fr) auto;
+	}
+
 	.riskItem {
 		grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
 		align-items: start;
 	}
+}
 
-	.productItem {
-		grid-template-columns: minmax(0, 1.4fr) auto minmax(0, 2fr);
-		align-items: center;
+@media (prefers-reduced-motion: reduce) {
+	.kpis > *,
+	.duo > *,
+	.charts > *,
+	.riskList > * {
+		opacity: 1;
+		translate: 0 0;
+		animation: none;
 	}
 
-	.productNumbers {
-		grid-column: auto;
-		grid-template-columns: repeat(4, minmax(0, 1fr));
+	.kpi,
+	.riskItem {
+		transition: none;
 	}
 }

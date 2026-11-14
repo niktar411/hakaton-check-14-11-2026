@@ -5,6 +5,7 @@ import { api, unwrap } from "@/shared/api";
 import type { components } from "@/shared/api/schema";
 import { formatMoney, formatNumber } from "@/shared/lib/format";
 import { Button } from "@/shared/ui/Button";
+import { Select } from "@/shared/ui/Select";
 import { SamBadge, SamPageHeader } from "./SamPage";
 import s from "./SamCompliancePage.module.css";
 import { createSamResource, SamPageState } from "./SamPageState";
@@ -12,8 +13,6 @@ import {
 	productRiskCostLabel,
 	productStatusLabel,
 	productStatusTone,
-	riskLevelLabel,
-	riskLevelTone,
 } from "./labels";
 
 type Summary = components["schemas"]["SamComplianceSummary"];
@@ -152,73 +151,45 @@ export default function SamCompliancePage() {
 				{(value) => (
 					<div class={s.page}>
 						<section class={s.kpis} aria-label={m.samComplianceSummaryTitle()}>
-							<div class={s.kpi}>
+							<div class={s.kpi} classList={{ [s.toneBad]: true }}>
 								<span class={s.kpiValue}>{formatMoney(value.summary.costAtRisk)}</span>
 								<span class={s.kpiLabel}>{m.samCostAtRisk()}</span>
 							</div>
-							<div class={s.kpi}>
+							<div
+								class={s.kpi}
+								classList={{
+									[s.toneGood]: value.summary.compliancePercent >= 80,
+									[s.toneWarn]: value.summary.compliancePercent < 80,
+								}}
+							>
 								<span class={s.kpiValue}>{value.summary.compliancePercent}%</span>
 								<span class={s.kpiLabel}>{m.samCompliancePercent()}</span>
 							</div>
-							<div class={s.kpi}>
+							<div class={s.kpi} classList={{ [s.toneBad]: true }}>
 								<span class={s.kpiValue}>
 									{formatNumber(value.summary.overusedSeats)}
 								</span>
 								<span class={s.kpiLabel}>{m.samKpiOverused()}</span>
 							</div>
-							<div class={s.kpi}>
+							<div class={s.kpi} classList={{ [s.toneWarn]: true }}>
 								<span class={s.kpiValue}>
 									{formatNumber(value.summary.idleSeats)}
 								</span>
 								<span class={s.kpiLabel}>{m.samKpiIdleSeats()}</span>
 							</div>
-							<div class={s.kpi}>
+							<div class={s.kpi} classList={{ [s.toneWarn]: true }}>
 								<span class={s.kpiValue}>
 									{formatNumber(value.summary.expiredSeats)}
 								</span>
 								<span class={s.kpiLabel}>{m.samKpiExpiredSeats()}</span>
 							</div>
-							<div class={s.kpi}>
+							<div class={s.kpi} classList={{ [s.toneBad]: true }}>
 								<span class={s.kpiValue}>
 									{formatNumber(value.summary.bannedInstallations)}
 								</span>
 								<span class={s.kpiLabel}>{m.samKpiBanned()}</span>
 							</div>
 						</section>
-
-						<div class={s.summaryRow}>
-							<section class={s.summary}>
-								<div class={s.summaryHeader}>
-									<h2>{m.samRiskLevel()}</h2>
-									<SamBadge
-										label={riskLevelLabel(value.summary.riskLevel)}
-										tone={riskLevelTone(value.summary.riskLevel)}
-									/>
-								</div>
-								<p class={s.summaryHint}>
-									{m.samCostAtRiskHint()} {m.samAnnualCost()}:{" "}
-									{formatMoney(value.summary.annualCost)}
-								</p>
-								<dl class={s.summaryNumbers}>
-									<div>
-										<dt>{m.samKpiUnmatched()}</dt>
-										<dd>{formatNumber(value.summary.unmatchedInstallations)}</dd>
-									</div>
-									<div>
-										<dt>{m.samKpiIdle()}</dt>
-										<dd>{formatMoney(value.summary.idleCost)}</dd>
-									</div>
-								</dl>
-							</section>
-							<section class={s.recommendations}>
-								<h2>{m.samRecommendations()}</h2>
-								<ul>
-									<For each={value.summary.recommendations ?? []}>
-										{(item) => <li>{item}</li>}
-									</For>
-								</ul>
-							</section>
-						</div>
 
 						<section class={s.section}>
 							<div class={s.sectionHeader}>
@@ -228,18 +199,21 @@ export default function SamCompliancePage() {
 								</div>
 							</div>
 							<div class={s.filters}>
-								<FilterGroup
-									label={m.samFilterCategory()}
-									value={category()}
-									onChange={setCategory}
-									options={[
-										{ value: "all", label: m.samFilterAll() },
-										...categories().map((item) => ({
-											value: item,
-											label: item,
-										})),
-									]}
-								/>
+								<div class={s.filterGroup}>
+									<span class={s.filterLabel}>{m.samFilterCategory()}</span>
+									<Select
+										label={m.samFilterCategory()}
+										value={category()}
+										onChange={setCategory}
+										options={[
+											{ value: "all", label: m.samFilterAll() },
+											...categories().map((item) => ({
+												value: item,
+												label: item,
+											})),
+										]}
+									/>
+								</div>
 								<FilterGroup
 									label={m.samFilterRisk()}
 									value={risk()}

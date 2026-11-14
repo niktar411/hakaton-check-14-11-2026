@@ -54,6 +54,9 @@
   --dragon-fire-mid: #ff9d32;
   --dragon-fire-edge: #e4472b;
   --info-bg: #dae8ff;
+  /* Мягкие подложки статусов: чипы «запрещено/актуально» без жирных рамок. */
+  --danger-bg: #ffe9e7;
+  --success-bg: #e6f6ec;
   --overlay: rgba(0, 0, 0, 0.45);
   /* РџРѕРґР»РѕР¶РєР° РїРѕРґ Р±РµР»С‹РјРё РєР°СЂС‚РѕС‡РєР°РјРё РЅР° С‚РµР»РµС„РѕРЅРµ: Р±Р»РѕРєРё С‡РёС‚Р°СЋС‚СЃСЏ Р±РµР· С‚РѕР»СЃС‚С‹С… СЂР°РјРѕРє. */
   --page-mobile: #f2f4f8;
@@ -95,6 +98,8 @@
   --dragon-fire-mid: #ff9d32;
   --dragon-fire-edge: #e4472b;
   --info-bg: rgba(79, 143, 238, 0.16);
+  --danger-bg: rgba(255, 107, 97, 0.16);
+  --success-bg: rgba(52, 200, 95, 0.16);
   --danger-hover: #ff5a50;
   /* Р¤РѕРЅ В«РІС‹РґРµР»РµРЅРЅРѕРіРѕВ» СЃРѕСЃС‚РѕСЏРЅРёСЏ Р±РµР· СЃРІРµС‚Р»С‹С… РїСЏС‚РµРЅ РЅР° С‚С‘РјРЅС‹С… РєР°СЂС‚РѕС‡РєР°С…. */
   --blue-50: #1f2838;
@@ -157,6 +162,8 @@
   --warning: #525252;
   --warning-bg: #f5f5f5;
   --info-bg: #ededed;
+  --danger-bg: #ededed;
+  --success-bg: #ededed;
   --overlay: rgba(0, 0, 0, 0.5);
   --page-mobile: #f5f5f5;
 }
@@ -188,4 +195,25 @@
   --info-bg: #262626;
   --overlay: rgba(0, 0, 0, 0.7);
   --page-mobile: #0a0a0a;
+}
+
+/* SAM живёт на монохромных страницах, но цвет статусов там — данные, а не
+   декор: severity-чипы, дельты и простаивающие места остаются цветными.
+   Признак data-sam ставит каркас раздела (SamLayout). */
+:root[data-mono] [data-sam] {
+  --danger: #b3261e;
+  --success: #15803d;
+  --warning: #a3560b;
+  --warning-bg: #fdf0d9;
+  --danger-bg: #f9e2e0;
+  --success-bg: #e2f2e8;
+}
+
+:root[data-mono][data-theme='dark'] [data-sam] {
+  --danger: #ff6b61;
+  --success: #4ade80;
+  --warning: #ffb84d;
+  --warning-bg: rgba(255, 147, 0, 0.16);
+  --danger-bg: rgba(255, 107, 97, 0.16);
+  --success-bg: rgba(52, 200, 95, 0.16);
 }
