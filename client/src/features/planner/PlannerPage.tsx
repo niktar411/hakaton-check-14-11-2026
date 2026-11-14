@@ -226,13 +226,21 @@ function buildLayout(blocks: AnyBlock[], team: boolean): Layout {
 		}
 	}
 
+	const forestCenterX =
+		(Math.min(...nodes.map((node) => node.x)) +
+			Math.max(...nodes.map((node) => node.x))) /
+		2;
+	const forestCenterY =
+		(Math.min(...nodes.map((node) => node.y)) +
+			Math.max(...nodes.map((node) => node.y))) /
+		2;
 	return {
 		nodes,
 		edges,
 		width,
 		height,
-		rootX: root ? root.x : width / 2,
-		rootY: root ? root.y : height / 2,
+		rootX: root ? root.x : forestCenterX,
+		rootY: root ? root.y : forestCenterY,
 		cardWidth: card.width,
 		cardHeight: card.height,
 	};
