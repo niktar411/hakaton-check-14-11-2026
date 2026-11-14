@@ -12,7 +12,9 @@
 		<!-- Inlined theme boot: applies the saved theme before first paint and
 		     removes the render-blocking /theme-boot.js request. The CSP in
 		     client/snippets/security-headers.conf and the API server CSP allow
-		     this exact script by its sha256 hash — update both when editing. -->
+		     this exact script by its sha256 hash — update both when editing.
+		     Inline <style> blocks rely on style-src 'unsafe-inline': Tailwind
+		     v4 rewrites their contents at build time, so a hash would break. -->
 		<script>try{const s=localStorage.getItem("portal-theme");const t=s==="light"||s==="dark"?s:(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");document.documentElement.dataset.theme=t}catch{document.documentElement.dataset.theme="light"}</script>
 	</head>
 	<body>

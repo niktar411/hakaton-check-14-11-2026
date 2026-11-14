@@ -40,7 +40,7 @@ func (s *Service) Router() http.Handler {
 			w.Header().Set("X-Content-Type-Options", "nosniff")
 			w.Header().Set("X-Frame-Options", "DENY")
 			w.Header().Set("Referrer-Policy", "no-referrer")
-			w.Header().Set("Content-Security-Policy", "default-src 'self'; script-src 'self' 'sha256-RYZ7hb5+dT+ee9Mqca4WpMMUtltzUrign0b4dxb+7vY='; style-src 'self' 'sha256-1S0y6hFYGE7lJLApM01T/Arsf6OCslXwT+m9JWFvYQM='; font-src 'self'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'")
+			w.Header().Set("Content-Security-Policy", "default-src 'self'; script-src 'self' 'sha256-RYZ7hb5+dT+ee9Mqca4WpMMUtltzUrign0b4dxb+7vY='; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'")
 			next.ServeHTTP(w, r)
 		})
 	})
