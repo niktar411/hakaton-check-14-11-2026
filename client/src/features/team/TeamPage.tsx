@@ -213,7 +213,6 @@ export default function TeamPage() {
 									class={s.memberCard}
 									style={{ "animation-delay": `${index() * 70}ms` }}
 								>
-									<DragonMark class={s.memberCardMark} />
 									<button
 										type="button"
 										class={s.memberCardButton}
@@ -221,23 +220,31 @@ export default function TeamPage() {
 										aria-label={`${member.name}: ${m.teamMemberDetails()}`}
 										onClick={() => setSelectedMember(member)}
 									>
-										<Show
-											when={member.photo}
-											fallback={
-												<span class={s.memberAvatarFallback} aria-hidden="true">
-													{initials(member.name)}
-												</span>
-											}
-										>
-											{(photo) => (
-												<img
-													class={s.memberAvatar}
-													src={photo()}
-													alt=""
-													loading="lazy"
-												/>
-											)}
-										</Show>
+										<span class={s.memberPhotoFrame}>
+											<Show
+												when={member.photo}
+												fallback={
+													<>
+														<DragonMark class={s.memberPhotoMark} />
+														<span
+															class={s.memberPhotoInitials}
+															aria-hidden="true"
+														>
+															{initials(member.name)}
+														</span>
+													</>
+												}
+											>
+												{(photo) => (
+													<img
+														class={s.memberPhotoImage}
+														src={photo()}
+														alt=""
+														loading="lazy"
+													/>
+												)}
+											</Show>
+										</span>
 										<span class={s.memberCardBody}>
 											<span class={s.memberCardName}>{member.name}</span>
 											<span class={s.memberRole}>{member.role}</span>

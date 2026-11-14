@@ -509,7 +509,7 @@
 	grid-template-columns: repeat(5, minmax(0, 1fr));
 	gap: var(--space-3);
 	width: 100%;
-	max-width: 940px;
+	max-width: 1080px;
 	margin: 0 auto;
 	padding: 0;
 	list-style: none;
@@ -545,9 +545,9 @@
 	border: 1px solid var(--border);
 	border-radius: var(--radius-md);
 	background: var(--surface);
-	box-shadow: 0 6px 18px color-mix(in srgb, var(--text) 5%, transparent);
+	box-shadow: 0 8px 22px color-mix(in srgb, var(--text) 6%, transparent);
 	opacity: 0;
-	translate: 0 10px;
+	translate: 0 12px;
 	animation: team-card-in 0.5s var(--ease) forwards;
 	transition:
 		transform var(--dur) var(--ease),
@@ -557,12 +557,13 @@
 
 .memberCard::after {
 	position: absolute;
+	z-index: 2;
 	inset: 0;
 	background: linear-gradient(
 		105deg,
-		transparent 32%,
+		transparent 34%,
 		color-mix(in srgb, var(--text) 8%, transparent) 50%,
-		transparent 68%
+		transparent 66%
 	);
 	transform: translateX(-120%);
 	content: "";
@@ -570,9 +571,9 @@
 }
 
 .memberCard:hover {
-	transform: translateY(-2px);
+	transform: translateY(-3px);
 	border-color: color-mix(in srgb, var(--primary) 42%, var(--border));
-	box-shadow: 0 10px 24px color-mix(in srgb, var(--text) 10%, transparent);
+	box-shadow: 0 12px 28px color-mix(in srgb, var(--text) 11%, transparent);
 }
 
 .memberCard:hover::after {
@@ -581,30 +582,15 @@
 
 .memberCard:focus-within {
 	border-color: color-mix(in srgb, var(--primary) 42%, var(--border));
-	box-shadow: 0 10px 24px color-mix(in srgb, var(--text) 10%, transparent);
-}
-
-.memberCardMark {
-	position: absolute;
-	top: 50%;
-	right: -12px;
-	width: 84px;
-	height: 84px;
-	color: color-mix(in srgb, var(--text) 7%, transparent);
-	transform: translateY(-50%) rotate(-8deg);
-	animation: card-dragon 14s ease-in-out infinite;
-	pointer-events: none;
+	box-shadow: 0 12px 28px color-mix(in srgb, var(--text) 11%, transparent);
 }
 
 .memberCardButton {
 	position: relative;
 	z-index: 1;
-	display: flex;
+	display: block;
 	width: 100%;
-	min-height: 68px;
-	align-items: center;
-	gap: var(--space-3);
-	padding: var(--space-2) var(--space-3);
+	padding: 0;
 	border: 0;
 	background: none;
 	color: inherit;
@@ -618,42 +604,57 @@
 	outline-offset: -2px;
 }
 
-.memberAvatar,
-.memberAvatarFallback {
+.memberPhotoFrame {
+	position: relative;
 	display: grid;
-	width: 44px;
-	height: 44px;
-	flex: 0 0 44px;
+	aspect-ratio: 1.4 / 1;
 	place-items: center;
 	overflow: hidden;
-	border: 1px solid color-mix(in srgb, var(--primary) 24%, var(--border));
-	border-radius: var(--radius-sm);
+	border-bottom: 1px solid var(--border);
 	background: var(--surface-2);
-	color: var(--text);
-	font-size: var(--text-xs);
-	font-weight: 800;
-	letter-spacing: 0.03em;
-	object-fit: cover;
-	object-position: center 28%;
-	transition: transform var(--dur) var(--ease);
 }
 
-.memberCard:hover .memberAvatar,
-.memberCard:hover .memberAvatarFallback {
-	transform: scale(1.04);
+.memberPhotoImage {
+	display: block;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	object-position: center 28%;
+	transition: transform 0.5s var(--ease);
+}
+
+.memberCard:hover .memberPhotoImage {
+	transform: scale(1.05);
+}
+
+.memberPhotoMark {
+	position: absolute;
+	width: 50%;
+	color: color-mix(in srgb, var(--text) 9%, transparent);
+	transform: translateX(24%);
+	animation: card-dragon 14s ease-in-out infinite;
+}
+
+.memberPhotoInitials {
+	position: relative;
+	z-index: 1;
+	color: var(--text);
+	font-size: var(--text-2xl);
+	font-weight: 800;
+	letter-spacing: 0.04em;
 }
 
 .memberCardBody {
 	display: flex;
-	min-width: 0;
 	flex-direction: column;
-	gap: 2px;
+	gap: 3px;
+	padding: 10px 11px 12px;
 }
 
 .memberCardName {
 	display: block;
 	overflow: hidden;
-	font-size: var(--text-xs);
+	font-size: var(--text-sm);
 	font-weight: 700;
 	line-height: 1.25;
 	text-overflow: ellipsis;
@@ -664,7 +665,7 @@
 	display: block;
 	overflow: hidden;
 	color: var(--text-muted);
-	font-size: 10px;
+	font-size: var(--text-xs);
 	line-height: 1.3;
 	text-overflow: ellipsis;
 	white-space: nowrap;
@@ -682,10 +683,10 @@
 @keyframes card-dragon {
 	0%,
 	100% {
-		transform: translateY(-50%) rotate(-8deg);
+		transform: translateX(24%) rotate(-8deg);
 	}
 	50% {
-		transform: translateY(-54%) rotate(-4deg);
+		transform: translateX(20%) rotate(-3deg);
 	}
 }
 
@@ -693,24 +694,24 @@
 	position: relative;
 	display: flex;
 	flex-direction: column;
-	gap: var(--space-5);
+	gap: var(--space-4);
 }
 
 .memberClose {
 	position: absolute;
 	z-index: 2;
-	top: calc(-1 * var(--space-2));
-	right: calc(-1 * var(--space-2));
+	top: calc(-1 * var(--space-1));
+	right: calc(-1 * var(--space-1));
 	display: grid;
-	width: 38px;
-	height: 38px;
+	width: 32px;
+	height: 32px;
 	place-items: center;
-	padding: 0 0 3px;
+	padding: 0 0 2px;
 	border: 1px solid var(--border);
 	border-radius: var(--radius-sm);
 	background: var(--surface-2);
 	color: var(--text);
-	font-size: 24px;
+	font-size: 20px;
 	line-height: 1;
 	cursor: pointer;
 }
@@ -721,25 +722,25 @@
 
 .memberTop {
 	display: grid;
-	grid-template-columns: minmax(0, 240px) minmax(0, 1fr);
+	grid-template-columns: minmax(0, 128px) minmax(0, 1fr);
 	align-items: start;
-	gap: var(--space-8);
-	padding-right: var(--space-8);
+	gap: var(--space-4);
+	padding-right: var(--space-6);
 }
 
 .memberPortraitColumn {
 	display: flex;
 	flex-direction: column;
-	gap: var(--space-3);
+	gap: var(--space-2);
 }
 
 .memberPortrait,
 .memberPortraitFallback {
 	display: block;
 	width: 100%;
-	aspect-ratio: 0.93;
+	aspect-ratio: 1 / 1.05;
 	border: 1px solid var(--border);
-	border-radius: var(--radius-md);
+	border-radius: var(--radius-sm);
 	background: var(--surface-2);
 	object-fit: cover;
 	object-position: center 30%;
@@ -770,8 +771,8 @@
 
 .memberSocial {
 	display: grid;
-	width: 44px;
-	height: 44px;
+	width: 36px;
+	height: 36px;
 	place-items: center;
 	border: 1px solid var(--border);
 	border-radius: var(--radius-sm);
@@ -781,8 +782,8 @@
 }
 
 .memberSocial svg {
-	width: 20px;
-	height: 20px;
+	width: 18px;
+	height: 18px;
 }
 
 .memberSocial:hover {
@@ -793,36 +794,35 @@
 	display: flex;
 	min-width: 0;
 	flex-direction: column;
-	gap: var(--space-2);
-	padding-top: var(--space-2);
+	gap: 2px;
 }
 
 .memberEyebrow {
 	display: inline-flex;
 	align-items: center;
-	gap: var(--space-2);
+	gap: var(--space-1);
 	width: fit-content;
 	margin: 0;
-	padding: var(--space-1) var(--space-3);
+	padding: 2px var(--space-2);
 	border: 1px solid var(--border);
 	border-radius: var(--radius-full);
 	color: var(--text-muted);
-	font-size: 10px;
+	font-size: 8px;
 	font-weight: 700;
 	letter-spacing: 0.08em;
 	text-transform: uppercase;
 }
 
 .memberEyebrowDot {
-	width: 6px;
-	height: 6px;
+	width: 5px;
+	height: 5px;
 	border-radius: 50%;
 	background: var(--primary);
 }
 
 .memberProfileName {
 	margin: 0;
-	font-size: clamp(28px, 4vw, 42px);
+	font-size: clamp(22px, 3vw, 28px);
 	line-height: 1.05;
 	letter-spacing: -0.03em;
 	overflow-wrap: anywhere;
@@ -831,17 +831,17 @@
 .memberDialogRole {
 	margin: 0;
 	color: var(--primary);
-	font-size: var(--text-xl);
+	font-size: var(--text-lg);
 	font-weight: 700;
 	line-height: 1.3;
 }
 
 .memberSummary {
-	max-width: 48ch;
-	margin: var(--space-1) 0 0;
+	max-width: 40ch;
+	margin: 0;
 	color: var(--text-muted);
-	font-size: var(--text-md);
-	line-height: 1.6;
+	font-size: var(--text-sm);
+	line-height: 1.5;
 }
 
 .memberDivider {
@@ -851,15 +851,15 @@
 
 .memberAbout {
 	display: grid;
-	grid-template-columns: minmax(0, 1fr) minmax(260px, 0.9fr);
-	align-items: center;
-	gap: var(--space-8);
+	grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+	align-items: start;
+	gap: var(--space-4);
 }
 
 .memberBio h3,
 .memberDuty h3 {
-	margin: 0 0 var(--space-3);
-	font-size: var(--text-xl);
+	margin: 0 0 var(--space-2);
+	font-size: var(--text-lg);
 	font-weight: 700;
 	letter-spacing: -0.02em;
 }
@@ -867,26 +867,26 @@
 .memberBio p {
 	margin: 0;
 	color: var(--text-muted);
-	font-size: var(--text-md);
-	line-height: 1.7;
+	font-size: var(--text-sm);
+	line-height: 1.55;
 }
 
 .codeCard {
 	min-width: 0;
-	padding: 0 var(--space-3) var(--space-4);
+	padding: 0 10px 12px;
 	overflow: hidden;
 	border: 1px solid var(--border);
-	border-radius: var(--radius-md);
+	border-radius: var(--radius-sm);
 	background: var(--surface-2);
 }
 
 .codeBar {
 	display: flex;
 	align-items: center;
-	gap: 6px;
-	height: 36px;
-	margin: 0 calc(-1 * var(--space-3)) var(--space-3);
-	padding-inline: var(--space-3);
+	gap: 5px;
+	height: 30px;
+	margin: 0 -10px var(--space-2);
+	padding-inline: 10px;
 	border-bottom: 1px solid var(--border);
 }
 
@@ -916,8 +916,8 @@
 	overflow-x: auto;
 	color: var(--text);
 	font-family: var(--font);
-	font-size: var(--text-xs);
-	line-height: 1.8;
+	font-size: 11px;
+	line-height: 1.55;
 }
 
 .codeKey {
@@ -939,23 +939,23 @@
 	gap: var(--space-2);
 	width: fit-content;
 	margin: 0;
-	padding: var(--space-2) var(--space-3);
+	padding: 6px var(--space-2);
 	border: 1px solid var(--border);
 	border-radius: var(--radius-sm);
 	background: var(--surface-2);
-	font-size: var(--text-md);
+	font-size: var(--text-sm);
 	font-weight: 600;
 }
 
 .memberDutyRole::before {
 	display: grid;
-	width: 18px;
-	height: 18px;
+	width: 16px;
+	height: 16px;
 	place-items: center;
 	border: 1px solid var(--primary);
-	border-radius: 5px;
+	border-radius: 4px;
 	content: "✓";
-	font-size: 11px;
+	font-size: 10px;
 }
 
 .dialogBody {
@@ -1150,35 +1150,23 @@
 		gap: var(--space-3);
 	}
 
-	.memberCardButton {
-		gap: var(--space-2);
-		padding: var(--space-2);
-	}
-
-	.memberAvatar,
-	.memberAvatarFallback {
-		width: 40px;
-		height: 40px;
-		flex-basis: 40px;
-	}
-
 	.memberTop {
-		grid-template-columns: minmax(0, 180px) minmax(0, 1fr);
-		gap: var(--space-5);
-		padding-right: var(--space-6);
+		grid-template-columns: minmax(0, 120px) minmax(0, 1fr);
+		gap: var(--space-3);
+		padding-right: var(--space-5);
 	}
 
 	.memberAbout {
 		grid-template-columns: 1fr;
-		gap: var(--space-5);
+		gap: var(--space-3);
 	}
 
 	.memberProfileName {
-		font-size: var(--text-2xl);
+		font-size: var(--text-xl);
 	}
 
 	.memberDialogRole {
-		font-size: var(--text-lg);
+		font-size: var(--text-md);
 	}
 }
 
@@ -1207,28 +1195,29 @@
 
 	.memberCardBody {
 		gap: 1px;
+		padding: 8px 9px 9px;
 	}
 
 	.memberCardName {
-		font-size: 11px;
+		font-size: var(--text-xs);
 	}
 
 	.memberRole {
-		font-size: 9px;
+		font-size: 10px;
 	}
 
 	.memberTop {
-		grid-template-columns: 110px minmax(0, 1fr);
-		gap: var(--space-4);
-		padding-right: var(--space-5);
+		grid-template-columns: 96px minmax(0, 1fr);
+		gap: var(--space-3);
+		padding-right: var(--space-4);
 	}
 
 	.memberProfileName {
-		font-size: var(--text-xl);
+		font-size: var(--text-lg);
 	}
 
 	.memberEyebrow {
-		font-size: 9px;
+		font-size: 8px;
 	}
 
 	.memberSummary {
