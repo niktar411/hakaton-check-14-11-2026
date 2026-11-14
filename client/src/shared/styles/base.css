@@ -74,30 +74,19 @@
     }
   }
 
-  /* Круговая волна раскрывает новую тему от переключателя. */
-  html.theme-wave::view-transition-group(root) {
-    animation: none;
-  }
-
-  html.theme-wave::view-transition-new(root) {
-    z-index: 1;
-    animation: theme-wave-reveal 1.5s cubic-bezier(0.22, 1, 0.36, 1) both;
-    clip-path: circle(0 at var(--theme-wave-x, 50vw) var(--theme-wave-y, 50vh));
-  }
-
-  /* Fallback when a page error prevents a View Transition snapshot. */
-  html.theme-wave-fallback *,
-  html.theme-wave-fallback body {
+  /* One consistent radial color wave for the first and every later toggle. */
+  html.theme-wave *,
+  html.theme-wave body {
     transition:
-      background-color 0.75s ease,
-      color 0.75s ease,
-      border-color 0.75s ease,
-      box-shadow 0.75s ease,
-      fill 0.75s ease,
-      stroke 0.75s ease;
+      background-color 1.5s ease,
+      color 1.5s ease,
+      border-color 1.5s ease,
+      box-shadow 1.5s ease,
+      fill 1.5s ease,
+      stroke 1.5s ease;
   }
 
-  html.theme-wave-fallback::after {
+  html.theme-wave::after {
     position: fixed;
     z-index: 1000;
     top: var(--theme-wave-y, 50vh);
@@ -110,13 +99,7 @@
     content: "";
     pointer-events: none;
     transform: translate(-50%, -50%) scale(0.1);
-    animation: theme-wave-ripple 0.85s ease-out both;
-  }
-
-  @keyframes theme-wave-reveal {
-    to {
-      clip-path: circle(150vmax at var(--theme-wave-x, 50vw) var(--theme-wave-y, 50vh));
-    }
+    animation: theme-wave-ripple 1.5s ease-out both;
   }
 
   @keyframes theme-wave-ripple {

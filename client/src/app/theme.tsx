@@ -3,19 +3,11 @@ import * as m from "@/paraglide/messages";
 import { Button } from "@/shared/ui/Button";
 
 type Theme = "light" | "dark";
-type ViewTransition = {
-	ready: Promise<void>;
-	finished: Promise<void>;
-	skipTransition: () => void;
-};
-type ViewTransitionDocument = Document & {
-	startViewTransition?: (callback: () => void) => ViewTransition;
-};
 const STORAGE_KEY = "portal-theme";
-let activeTransition: ViewTransition | undefined;
-let transitionId = 0;
+const WAVE_DURATION_MS = 1500;
+let waveId = 0;
+let waveTimer: number | undefined;
 let pendingTheme: Theme | undefined;
-let fallbackTimer: number | undefined;
 
 function readTheme(): Theme {
 	const stored = localStorage.getItem(STORAGE_KEY);
@@ -32,79 +24,59 @@ function applyTheme(theme: Theme) {
 	} catch {
 		// Theme still applies for this page if storage is unavailable.
 	}
-	const toggleButton = document.querySelector<HTMLButtonElement>("[data-theme-toggle]");
-	if (toggleButton) {
+	const button = document.querySelector<HTMLButtonElement>("[data-theme-toggle]");
+	if (button) {
 		const label = theme === "dark" ? m.themeLight() : m.themeDark();
-		toggleButton.textContent = label;
-		toggleButton.setAttribute("aria-label", `${label} — ${m.themeToggle()}`);
+		button.textContent = label;
+		button.setAttribute("aria-label", `${label} — ${m.themeToggle()}`);
 	}
+}
+
+function clearWave(root: HTMLElement) {
+	root.classList.remove("theme-wave");
+	root.style.removeProperty("--theme-wave-x");
+	root.style.removeProperty("--theme-wave-y");
+	waveTimer = undefined;
+	pendingTheme = undefined;
 }
 
 export function ThemeToggle() {
 	const [theme, setTheme] = createSignal<Theme>(readTheme());
 	onMount(() => applyTheme(theme()));
-	const toggle = (event: MouseEvent) => {
-		const current = pendingTheme ?? theme();
-		const next = current === "dark" ? "light" : "dark";
-		const root = document.documentElement;
-		const viewDocument = document as ViewTransitionDocument;
-		const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-		if (!viewDocument.startViewTransition || reducedMotion) {
+	const toggle = (event: MouseEvent) => {
+		const next = (pendingTheme ?? theme()) === "dark" ? "light" : "dark";
+		const root = document.documentElement;
+		const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+		const id = ++waveId;
+
+		if (waveTimer !== undefined) window.clearTimeout(waveTimer);
+		root.classList.remove("theme-wave");
+
+		if (reducedMotion) {
 			pendingTheme = undefined;
 			setTheme(next);
 			applyTheme(next);
+			root.style.removeProperty("--theme-wave-x");
+			root.style.removeProperty("--theme-wave-y");
 			return;
 		}
 
-		const id = ++transitionId;
-		pendingTheme = next;
-		activeTransition?.skipTransition();
-		if (fallbackTimer !== undefined) window.clearTimeout(fallbackTimer);
-		root.classList.remove("theme-wave-fallback");
+		// Reflow restarts the same radial wave on every click, including quick repeats.
+		void root.offsetWidth;
 		root.style.setProperty("--theme-wave-x", `${event.clientX}px`);
 		root.style.setProperty("--theme-wave-y", `${event.clientY}px`);
 		root.classList.add("theme-wave");
-		let fallbackStarted = false;
-		const fallbackWave = () => {
-			if (id !== transitionId || fallbackStarted) return;
-			fallbackStarted = true;
-			root.classList.remove("theme-wave");
-			root.classList.add("theme-wave-fallback");
-			setTheme(next);
-			applyTheme(next);
-			fallbackTimer = window.setTimeout(() => {
-				if (id !== transitionId) return;
-				root.classList.remove("theme-wave-fallback");
-				root.style.removeProperty("--theme-wave-x");
-				root.style.removeProperty("--theme-wave-y");
-				fallbackTimer = undefined;
-			}, 900);
-		};
-		const transition = viewDocument.startViewTransition(() => {
-			if (id !== transitionId) return;
-			setTheme(next);
-			applyTheme(next);
-		});
-		activeTransition = transition;
-		void transition.ready.catch(fallbackWave);
-		const cleanup = () => {
-			if (id !== transitionId) return;
-			root.classList.remove("theme-wave");
-			if (!fallbackStarted) {
-				root.style.removeProperty("--theme-wave-x");
-				root.style.removeProperty("--theme-wave-y");
-			}
-			activeTransition = undefined;
-			pendingTheme = undefined;
-			setTheme(next);
-			applyTheme(next);
-		};
-		void transition.finished.then(cleanup, () => {
-			fallbackWave();
-			cleanup();
-		});
+		void root.offsetWidth;
+
+		pendingTheme = next;
+		setTheme(next);
+		applyTheme(next);
+		waveTimer = window.setTimeout(() => {
+			if (id === waveId) clearWave(root);
+		}, WAVE_DURATION_MS);
 	};
+
 	return (
 		<Button
 			data-theme-toggle="true"
