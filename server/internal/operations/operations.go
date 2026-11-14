@@ -24,79 +24,46 @@ import (
 	"hackathon/internal/localaccounts"
 	"hackathon/internal/plannerblocks"
 	"hackathon/internal/questions"
-	"hackathon/internal/sam"
-	"hackathon/internal/sam/assistant"
-	"hackathon/internal/sam/compliance"
-	"hackathon/internal/sam/guard"
-	"hackathon/internal/sam/matching"
-	"hackathon/internal/sam/operator"
 )
 
 type Service struct {
-	db            *db.Queries
-	pool          *pgxpool.Pool
-	config        Config
-	http          *http.Client
-	modelHTTP     *http.Client
-	model         *llm.Service
-	chatSlots     chan struct{}
-	mu            sync.Mutex
-	activeUsers   map[string]bool
-	accounts      *localaccounts.Service
-	questions     *questions.Service
-	planner       *plannerblocks.Service
-	sam           *sam.Service
-	samAssistant  *assistant.Service
-	samMatching   *matching.Service
-	samCompliance *compliance.Service
-	samOperator   *operator.Service
-	coding        *codingtasks.Service
-	deployments   *deployments.Service
-	gitLab        *gitlab.Client
-	projectMu     sync.Mutex
-	projectAt     time.Time
-	projectText   string
+	db          *db.Queries
+	pool        *pgxpool.Pool
+	config      Config
+	http        *http.Client
+	modelHTTP   *http.Client
+	model       *llm.Service
+	chatSlots   chan struct{}
+	mu          sync.Mutex
+	activeUsers map[string]bool
+	accounts    *localaccounts.Service
+	questions   *questions.Service
+	planner     *plannerblocks.Service
+	coding      *codingtasks.Service
+	deployments *deployments.Service
 }
 
 func NewService(pool *pgxpool.Pool, c Config) *Service {
 	modelHTTP := &http.Client{Timeout: 120 * time.Second, CheckRedirect: noRedirect}
 	s := &Service{db: db.New(pool), pool: pool, config: c, http: &http.Client{Timeout: 10 * time.Second, CheckRedirect: noRedirect}, modelHTTP: modelHTTP, model: llm.NewService(pool, llm.Config{URL: c.ModelURL, APIKey: c.ModelKey, Model: c.Model, EncryptionKey: c.ModelEncryptionKey}, modelHTTP), chatSlots: make(chan struct{}, 2), activeUsers: map[string]bool{}}
 	gitLab := gitlab.NewClient(gitlab.Config{URL: c.GitLabURL, Token: c.GitLabToken, Project: c.GitLabProject, Provider: c.Provider}, s.http)
-	s.gitLab = gitLab
-	s.accounts = localaccounts.NewService(pool, localaccounts.Config{PublicURL: c.PublicURL, PlannerURL: c.PlannerURL, AIURL: c.AIURL, AdminUser: c.AdminUser, AdminIP: c.AdminIP, SecureCookies: strings.HasPrefix(c.PublicURL, "https://")})
+	s.accounts = localaccounts.NewService(pool, localaccounts.Config{PublicURL: c.PublicURL, PlannerURL: c.PlannerURL, AdminUser: c.AdminUser, AdminIP: c.AdminIP, SecureCookies: strings.HasPrefix(c.PublicURL, "https://")})
 	s.questions = questions.NewService(pool, s.model, questions.Config{PublicBaseURL: c.PublicURL, PlannerBaseURL: c.PlannerURL, AdminUser: c.AdminUser, AdminIP: c.AdminIP})
 	s.planner = plannerblocks.NewService(pool, gitLab, plannerblocks.Config{AdminUser: c.AdminUser, AdminIP: c.AdminIP})
-	modelGuard := guard.NewLimiter(2, 1)
-	s.sam = sam.NewService(pool)
-	s.samAssistant = assistant.NewService(pool, s.model, modelGuard)
-	s.samMatching = matching.NewService(pool)
-	s.samCompliance = compliance.NewService(pool)
-	s.samOperator = operator.NewService(pool, s.model, modelGuard, operator.Config{AdminUser: c.AdminUser, AdminIP: c.AdminIP})
 	httpWorker, err := codingtasks.NewHTTPWorker(c.WorkerURL, c.WorkerToken, s.http)
 	var worker codingtasks.Worker
 	if err == nil {
 		worker = httpWorker
 	}
-	s.coding = codingtasks.NewService(s.db, s.model, worker, gitLab, codingtasks.Config{AdminUser: c.AdminUser, AdminIP: c.AdminIP, WorkerURL: c.WorkerURL, WorkerToken: c.WorkerToken, AsyncExecution: true})
-	orchestrator := deployments.Orchestrator(deployments.NewOrchestrator(deployments.Config{AgentURL: c.AgentURL, AgentToken: c.AgentToken}, s.http))
-	if c.WorkerAgentURL != "" && c.WorkerAgentToken != "" {
-		workerOrchestrator := deployments.NewOrchestrator(deployments.Config{AgentURL: c.WorkerAgentURL, AgentToken: c.WorkerAgentToken}, s.http)
-		orchestrator = deployments.NewTargetOrchestrator(orchestrator, workerOrchestrator)
-	}
+	s.coding = codingtasks.NewService(s.db, s.model, worker, gitLab, codingtasks.Config{AdminUser: c.AdminUser, AdminIP: c.AdminIP, WorkerURL: c.WorkerURL, WorkerToken: c.WorkerToken})
+	orchestrator := deployments.NewOrchestrator(deployments.Config{AgentURL: c.AgentURL, AgentToken: c.AgentToken}, s.http)
 	s.deployments = deployments.NewService(s.db, gitLab, orchestrator, deployments.Config{AdminUser: c.AdminUser, AdminIP: c.AdminIP, AgentURL: c.AgentURL, AgentToken: c.AgentToken, GitLabWebhookSecret: c.GitLabWebhookSecret})
 	s.coding.SetAdminTools(s.planner, s.deployments)
 	return s
 }
 
+func (s *Service) Model() *llm.Service                    { return s.model }
 func noRedirect(_ *http.Request, _ []*http.Request) error { return http.ErrUseLastResponse }
-
-// RecoverCodingTasks fails executions left running by a previous process.
-func (s *Service) RecoverCodingTasks(ctx context.Context) error {
-	if s.coding == nil {
-		return nil
-	}
-	return s.coding.Recover(ctx)
-}
 
 func (s *Service) agent(ctx context.Context, path string, body interface{}, out interface{}) error {
 	return s.controlRequest(ctx, s.config.AgentURL, s.config.AgentToken, path, body, out)

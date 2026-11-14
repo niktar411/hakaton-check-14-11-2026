@@ -3,7 +3,6 @@ package gitlab
 import (
 	"bytes"
 	"context"
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -83,84 +82,6 @@ func escapeProject(project string) string {
 		parts[index] = url.PathEscape(part)
 	}
 	return strings.Join(parts, "/")
-}
-
-type TreeEntry struct {
-	Path string `json:"path"`
-	Type string `json:"type"`
-	Size int64  `json:"size"`
-}
-
-type giteaTreeResponse struct {
-	Tree      []TreeEntry `json:"tree"`
-	Truncated bool        `json:"truncated"`
-}
-
-type giteaContentResponse struct {
-	Content  string `json:"content"`
-	Encoding string `json:"encoding"`
-	Path     string `json:"path"`
-	Type     string `json:"type"`
-}
-
-func escapeRepoPath(path string) string {
-	parts := strings.Split(strings.Trim(path, "/"), "/")
-	for index, part := range parts {
-		parts[index] = url.PathEscape(part)
-	}
-	return strings.Join(parts, "/")
-}
-
-// DefaultBranch returns the repository default branch. Gitea is the only
-// provider used by the production deployment; GitLab falls back to main.
-func (c *Client) DefaultBranch(ctx context.Context) (string, error) {
-	if !c.isGitea() {
-		return "main", nil
-	}
-	var repository struct {
-		DefaultBranch string `json:"default_branch"`
-	}
-	if err := c.request(ctx, http.MethodGet, "", nil, &repository); err != nil {
-		return "", fmt.Errorf("load repository: %w", err)
-	}
-	if strings.TrimSpace(repository.DefaultBranch) == "" {
-		return "main", nil
-	}
-	return repository.DefaultBranch, nil
-}
-
-// Tree returns a bounded recursive file tree for the chat project snapshot.
-func (c *Client) Tree(ctx context.Context, ref string) ([]TreeEntry, error) {
-	if !c.isGitea() {
-		return nil, fmt.Errorf("repository tree is not supported for this provider")
-	}
-	var result giteaTreeResponse
-	path := "/git/trees/" + url.PathEscape(ref) + "?recursive=true&per_page=1000"
-	if err := c.request(ctx, http.MethodGet, path, nil, &result); err != nil {
-		return nil, fmt.Errorf("load repository tree: %w", err)
-	}
-	return result.Tree, nil
-}
-
-// File reads one repository file. Callers must apply secret-path filtering and
-// their own size limits before placing the content into a model prompt.
-func (c *Client) File(ctx context.Context, path, ref string) ([]byte, error) {
-	if !c.isGitea() {
-		return nil, fmt.Errorf("repository file is not supported for this provider")
-	}
-	var result giteaContentResponse
-	endpoint := "/contents/" + escapeRepoPath(path) + "?ref=" + url.QueryEscape(ref)
-	if err := c.request(ctx, http.MethodGet, endpoint, nil, &result); err != nil {
-		return nil, fmt.Errorf("load repository file: %w", err)
-	}
-	if result.Encoding != "base64" {
-		return nil, fmt.Errorf("repository file has unsupported encoding")
-	}
-	content, err := base64.StdEncoding.DecodeString(result.Content)
-	if err != nil {
-		return nil, fmt.Errorf("decode repository file: %w", err)
-	}
-	return content, nil
 }
 
 func (c *Client) endpoint(path string) string {

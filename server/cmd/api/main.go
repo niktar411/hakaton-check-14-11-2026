@@ -50,9 +50,6 @@ func run(ctx context.Context) error {
 	}
 	defer pool.Close()
 	service := operations.NewService(pool, config)
-	if err := service.RecoverCodingTasks(ctx); err != nil {
-		return fmt.Errorf("recover coding tasks: %w", err)
-	}
 	server := &http.Server{Addr: config.Listen, Handler: service.Router(), ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 20 * time.Second, WriteTimeout: 150 * time.Second, IdleTimeout: 60 * time.Second, MaxHeaderBytes: 16384}
 	done := make(chan error, 1)
 	go func() { done <- server.ListenAndServe() }()

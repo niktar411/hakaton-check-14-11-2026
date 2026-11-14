@@ -1,17 +1,16 @@
-import { createSignal, createUniqueId, For, Show } from "solid-js";
+import { createSignal, For, Show } from "solid-js";
 import * as m from "@/paraglide/messages";
-import { api, ApiError, requestId, unwrap } from "@/shared/api";
+import { api, requestId, unwrap } from "@/shared/api";
 import type { components } from "@/shared/api/schema";
+
+type QuestionResult = components["schemas"]["Answer"];
 import { Button } from "@/shared/ui/Button";
 import { ErrorState, LoadingState } from "@/shared/ui/State";
 import { useToast } from "@/shared/ui/Toast";
-import s from "./PublicAssistant.module.css";
+import s from "./QuestionsPage.module.css";
 
-type QuestionResult = components["schemas"]["Answer"];
-
-export function PublicAssistant() {
+export default function QuestionsPage() {
 	const toast = useToast();
-	const fieldId = createUniqueId();
 	const [question, setQuestion] = createSignal("");
 	const [result, setResult] = createSignal<QuestionResult>();
 	const [pending, setPending] = createSignal(false);
@@ -31,28 +30,28 @@ export function PublicAssistant() {
 				}),
 			);
 			setResult(response);
-		} catch (error) {
+		} catch {
 			setResult(undefined);
 			setFailed(true);
-			toast.show(
-				error instanceof ApiError && error.code === "questions.injection_blocked"
-					? m.questionInjectionBlocked()
-					: m.questionFailed(),
-			);
+			toast.show(m.questionFailed());
 		} finally {
 			setPending(false);
 		}
 	}
 
 	return (
-		<div class={s.assistant}>
+		<main class={s.page}>
+			<header class={s.header}>
+				<h1>{m.questionsPageTitle()}</h1>
+				<p>{m.questionsIntro()}</p>
+			</header>
 			<form class={s.form} onSubmit={submit}>
-				<label for={fieldId}>{m.questionLabel()}</label>
+				<label for="public-question">{m.questionLabel()}</label>
 				<textarea
-					id={fieldId}
+					id="public-question"
 					required
 					maxlength={4000}
-					rows={4}
+					rows={5}
 					value={question()}
 					onInput={(event) => setQuestion(event.currentTarget.value)}
 					placeholder={m.questionPlaceholder()}
@@ -102,6 +101,6 @@ export function PublicAssistant() {
 			<Show when={!result() && !pending() && !failed()}>
 				<p class={s.hint}>{m.questionsEmptyHint()}</p>
 			</Show>
-		</div>
+		</main>
 	);
 }

@@ -20,11 +20,3 @@ client/src/paraglide/
 playwright-report/
 test-results/
 __pycache__/
-
-# SAM demo: исходные xlsx/csv с серийниками и внешний mapping — вне git
-*.xlsx
-*.xls
-demo/sam/source/
-demo/sam/mapping.json
-demo/sam/salt
-demo/sam/salt.txt

@@ -33,7 +33,7 @@ func TestConfigValidation(t *testing.T) {
 	}
 	for _, override := range []func(*Config){
 		func(c *Config) { c.CheckTimeout = 5 },
-		func(c *Config) { c.CheckTimeout = 241 },
+		func(c *Config) { c.CheckTimeout = 111 },
 		func(c *Config) { c.MaxConcurrency = 0 },
 		func(c *Config) { c.MaxConcurrency = 5 },
 		func(c *Config) { c.CodingImage = "bad image" },
