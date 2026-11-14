@@ -3,10 +3,16 @@ import * as m from "@/paraglide/messages";
 import { Button } from "@/shared/ui/Button";
 
 type Theme = "light" | "dark";
+type ViewTransition = {
+	finished: Promise<void>;
+	skipTransition: () => void;
+};
 type ViewTransitionDocument = Document & {
-	startViewTransition?: (callback: () => void) => { finished: Promise<void> };
+	startViewTransition?: (callback: () => void) => ViewTransition;
 };
 const STORAGE_KEY = "portal-theme";
+let activeTransition: ViewTransition | undefined;
+let transitionId = 0;
 
 function readTheme(): Theme {
 	const stored = localStorage.getItem(STORAGE_KEY);
@@ -39,14 +45,19 @@ export function ThemeToggle() {
 			return;
 		}
 
+		const id = ++transitionId;
+		activeTransition?.skipTransition();
 		root.style.setProperty("--theme-wave-x", `${event.clientX}px`);
 		root.style.setProperty("--theme-wave-y", `${event.clientY}px`);
 		root.classList.add("theme-wave");
 		const transition = viewDocument.startViewTransition(update);
+		activeTransition = transition;
 		const cleanup = () => {
+			if (id !== transitionId) return;
 			root.classList.remove("theme-wave");
 			root.style.removeProperty("--theme-wave-x");
 			root.style.removeProperty("--theme-wave-y");
+			activeTransition = undefined;
 		};
 		void transition.finished.then(cleanup, cleanup);
 	};
