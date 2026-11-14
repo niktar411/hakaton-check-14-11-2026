@@ -30,12 +30,25 @@ import TeamPage from "@/features/team/TeamPage";
 import CodingPage from "@/features/coding/CodingPage";
 import AdminLoginPage from "@/features/administration/AdminLoginPage";
 import AdministrationPage from "@/features/administration/AdministrationPage";
+import { SamLayout } from "@/features/sam/SamLayout";
+import SamDashboardPage from "@/features/sam/SamDashboardPage";
+import SamCatalogPage from "@/features/sam/SamCatalogPage";
+import SamLicensesPage from "@/features/sam/SamLicensesPage";
+import SamInventoryPage from "@/features/sam/SamInventoryPage";
+import SamCompliancePage from "@/features/sam/SamCompliancePage";
+import SamProductPage from "@/features/sam/SamProductPage";
+import SamHostPage from "@/features/sam/SamHostPage";
+import SamMatchingPage from "@/features/sam/SamMatchingPage";
+import SamAssistantPage from "@/features/sam/SamAssistantPage";
 import { SiteConfigProvider } from "@/app/site-config";
 
 function PublicNavigation() {
 	return (
 		<nav class="flex flex-wrap gap-x-5 gap-y-2" aria-label={m.mainNavigation()}>
-			<A href="/">{m.teamPageTitle()}</A>
+			<a href="/">{m.footerHome()}</a>
+			<A href="/questions">{m.questionsPageTitle()}</A>
+			<A href="/planner">{m.plannerPageTitle()}</A>
+			<A href="/sam">{m.samNavigation()}</A>
 		</nav>
 	);
 }
@@ -250,6 +263,17 @@ if (root) {
 				<Route path="/planner" component={PlannerPage} />
 				<Route path="/chat" component={ChatPage} />
 				<Route path="/deployments" component={TeamDeploymentsPage} />
+				<Route path="/sam" component={SamLayout}>
+					<Route path="/" component={SamDashboardPage} />
+					<Route path="/catalog" component={SamCatalogPage} />
+					<Route path="/catalog/:id" component={SamProductPage} />
+					<Route path="/licenses" component={SamLicensesPage} />
+					<Route path="/inventory" component={SamInventoryPage} />
+					<Route path="/inventory/:id" component={SamHostPage} />
+					<Route path="/compliance" component={SamCompliancePage} />
+					<Route path="/matching" component={SamMatchingPage} />
+					<Route path="/assistant" component={SamAssistantPage} />
+				</Route>
 				<Route path="/coding" component={CodingPage} />
 				<Route path="/admin/login" component={AdminLoginPage} />
 				<Route path="/admin" component={AdministrationPage} />

@@ -67,6 +67,7 @@ var internalProxyNetwork = func() *net.IPNet {
 	}
 	return network
 }()
+
 func allowedUser(u string) bool {
 	switch u {
 	case "niktar411", "reznak", "kvant", "hensy":
@@ -283,6 +284,7 @@ func (s *Service) Callback(w http.ResponseWriter, r *http.Request) {
 	http.SetCookie(w, &http.Cookie{Name: "portal_session", Value: id, Path: "/", MaxAge: int(lifetime), HttpOnly: true, Secure: strings.HasPrefix(s.config.PublicURL, "https:"), SameSite: http.SameSiteLaxMode})
 	http.Redirect(w, r, "/", http.StatusFound)
 }
+
 type logoutOutput struct {
 	SetCookie string `header:"Set-Cookie"`
 }

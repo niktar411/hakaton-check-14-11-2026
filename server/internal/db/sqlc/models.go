@@ -129,6 +129,110 @@ type PlannerBlock struct {
 	StartedAt       pgtype.Timestamptz `json:"started_at"`
 }
 
+type SamAiAction struct {
+	ID             int64              `json:"id"`
+	ConversationID pgtype.Int8        `json:"conversation_id"`
+	Actor          string             `json:"actor"`
+	Intent         string             `json:"intent"`
+	Payload        []byte             `json:"payload"`
+	Preview        []byte             `json:"preview"`
+	Status         string             `json:"status"`
+	Affected       int64              `json:"affected"`
+	Error          string             `json:"error"`
+	Fingerprint    string             `json:"fingerprint"`
+	CreatedAt      pgtype.Timestamptz `json:"created_at"`
+	AppliedAt      pgtype.Timestamptz `json:"applied_at"`
+	UndoneAt       pgtype.Timestamptz `json:"undone_at"`
+	Before         []byte             `json:"before"`
+	After          []byte             `json:"after"`
+}
+
+type SamAiConversation struct {
+	ID        int64              `json:"id"`
+	Actor     string             `json:"actor"`
+	Mode      string             `json:"mode"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
+}
+
+type SamAiMessage struct {
+	ID             int64              `json:"id"`
+	ConversationID int64              `json:"conversation_id"`
+	Role           string             `json:"role"`
+	Content        string             `json:"content"`
+	ToolName       string             `json:"tool_name"`
+	CreatedAt      pgtype.Timestamptz `json:"created_at"`
+}
+
+type SamInstallation struct {
+	ID          int64              `json:"id"`
+	ProductID   pgtype.Int8        `json:"product_id"`
+	RawName     string             `json:"raw_name"`
+	DeviceName  string             `json:"device_name"`
+	UserName    string             `json:"user_name"`
+	Version     string             `json:"version"`
+	Source      string             `json:"source"`
+	Status      string             `json:"status"`
+	InstalledAt pgtype.Timestamptz `json:"installed_at"`
+	LastSeenAt  pgtype.Timestamptz `json:"last_seen_at"`
+	CreatedAt   pgtype.Timestamptz `json:"created_at"`
+}
+
+type SamLicense struct {
+	ID          int64              `json:"id"`
+	ProductID   int64              `json:"product_id"`
+	LicenseType string             `json:"license_type"`
+	Seats       int64              `json:"seats"`
+	CostPerSeat int64              `json:"cost_per_seat"`
+	Currency    string             `json:"currency"`
+	StartsAt    pgtype.Date        `json:"starts_at"`
+	ExpiresAt   pgtype.Date        `json:"expires_at"`
+	Status      string             `json:"status"`
+	CreatedAt   pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt   pgtype.Timestamptz `json:"updated_at"`
+}
+
+type SamMatchCandidate struct {
+	ID             int64              `json:"id"`
+	InstallationID int64              `json:"installation_id"`
+	ProductID      int64              `json:"product_id"`
+	RawName        string             `json:"raw_name"`
+	Score          float32            `json:"score"`
+	Method         string             `json:"method"`
+	Status         string             `json:"status"`
+	CreatedAt      pgtype.Timestamptz `json:"created_at"`
+	ResolvedAt     pgtype.Timestamptz `json:"resolved_at"`
+	ResolvedBy     pgtype.Text        `json:"resolved_by"`
+}
+
+type SamProduct struct {
+	ID        int64              `json:"id"`
+	Name      string             `json:"name"`
+	Vendor    string             `json:"vendor"`
+	Version   string             `json:"version"`
+	Category  string             `json:"category"`
+	Status    string             `json:"status"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
+}
+
+type SamProductAlias struct {
+	ID              int64              `json:"id"`
+	ProductID       int64              `json:"product_id"`
+	Alias           string             `json:"alias"`
+	NormalizedAlias string             `json:"normalized_alias"`
+	CreatedBy       string             `json:"created_by"`
+	CreatedAt       pgtype.Timestamptz `json:"created_at"`
+	Confidence      float32            `json:"confidence"`
+}
+
+type SamRiskOverview struct {
+	Risk     string `json:"risk"`
+	Severity string `json:"severity"`
+	Affected int64  `json:"affected"`
+	Detail   string `json:"detail"`
+}
+
 type Session struct {
 	ID          string             `json:"id"`
 	Username    string             `json:"username"`
