@@ -2,7 +2,6 @@ import {
 	createSignal,
 	type JSX,
 	Match,
-	onMount,
 	Switch,
 } from "solid-js";
 import { EmptyState, ErrorState, LoadingState } from "@/shared/ui/State";
@@ -42,9 +41,7 @@ export function createSamResource<T>(loader: () => Promise<T>) {
 		}
 	};
 
-	onMount(() => {
-		void refetch();
-	});
+	void refetch();
 
 	const resource = (() => data()) as SamResource<T>;
 	Object.defineProperties(resource, {
