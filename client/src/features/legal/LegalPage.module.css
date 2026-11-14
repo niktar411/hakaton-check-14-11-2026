@@ -1,12 +1,6 @@
 .page {
 	display: flex;
 	width: 100%;
-	flex-direction: column;
-}
-
-.inner {
-	display: flex;
-	width: 100%;
 	max-width: 820px;
 	flex-direction: column;
 	gap: var(--space-6);

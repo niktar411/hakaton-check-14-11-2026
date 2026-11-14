@@ -707,11 +707,11 @@ func TestApplyRejectsStalePreview(t *testing.T) {
 	store := newFakeStore()
 	store.products = []db.SamProduct{{ID: 1, Name: "Notepad++", Status: "active"}}
 	service := testOperator(store, &fakeModel{})
-	action, err := service.Propose(context.Background(), 0, "niktar411", "set_status", `{"productIds":[1],"status":"outdated"}`)
+	action, err := service.Propose(context.Background(), 0, "niktar411", "set_status", `{"productIds":[1],"status":"inactive"}`)
 	if err != nil {
 		t.Fatal(err)
 	}
-	store.products[0].Status = "outdated"
+	store.products[0].Status = "inactive"
 	_, err = service.Apply(context.Background(), "niktar411", true, action.ID, "")
 	requireStatus(t, err, 409)
 	current, err := store.GetSamAIAction(context.Background(), action.ID)
@@ -730,7 +730,7 @@ func TestApplyRequiresAdmin(t *testing.T) {
 	store := newFakeStore()
 	store.products = []db.SamProduct{{ID: 1, Name: "Notepad++", Status: "active"}}
 	service := testOperator(store, &fakeModel{})
-	action, err := service.Propose(context.Background(), 0, "member", "set_status", `{"productIds":[1],"status":"outdated"}`)
+	action, err := service.Propose(context.Background(), 0, "member", "set_status", `{"productIds":[1],"status":"inactive"}`)
 	if err != nil {
 		t.Fatal(err)
 	}

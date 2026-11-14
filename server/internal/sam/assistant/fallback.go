@@ -100,11 +100,11 @@ func statusFilter(prompt string) string {
 	case containsAny(normalized, "запрещ", "бан", "banned"):
 		return "banned"
 	case containsAny(normalized, "устарев"):
-		return "outdated"
+		return "inactive"
 	case containsAny(normalized, "архив"):
 		return "archived"
 	case containsAny(normalized, "неактив"):
-		return "outdated"
+		return "inactive"
 	case containsAny(normalized, "актив"):
 		return "active"
 	default:

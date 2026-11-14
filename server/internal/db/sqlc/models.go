@@ -23,15 +23,6 @@ type AuditEvent struct {
 	CreatedAt pgtype.Timestamptz `json:"created_at"`
 }
 
-type ChatChangePrompt struct {
-	ID        int64              `json:"id"`
-	Username  string             `json:"username"`
-	BlockID   int64              `json:"block_id"`
-	MrUrl     string             `json:"mr_url"`
-	PulledAt  pgtype.Timestamptz `json:"pulled_at"`
-	CreatedAt pgtype.Timestamptz `json:"created_at"`
-}
-
 type CodingMessage struct {
 	ID        int64              `json:"id"`
 	TaskID    int64              `json:"task_id"`
@@ -136,7 +127,6 @@ type PlannerBlock struct {
 	UpdatedAt       pgtype.Timestamptz `json:"updated_at"`
 	ParentID        pgtype.Int8        `json:"parent_id"`
 	StartedAt       pgtype.Timestamptz `json:"started_at"`
-	CompletedAt     pgtype.Timestamptz `json:"completed_at"`
 }
 
 type SamAiAction struct {
@@ -174,51 +164,6 @@ type SamAiMessage struct {
 	CreatedAt      pgtype.Timestamptz `json:"created_at"`
 }
 
-type SamAuditLog struct {
-	ID         int64              `json:"id"`
-	Actor      string             `json:"actor"`
-	Action     string             `json:"action"`
-	EntityType string             `json:"entity_type"`
-	EntityID   string             `json:"entity_id"`
-	Before     []byte             `json:"before"`
-	After      []byte             `json:"after"`
-	CreatedAt  pgtype.Timestamptz `json:"created_at"`
-}
-
-type SamDevice struct {
-	ID         int64              `json:"id"`
-	DeviceCode string             `json:"device_code"`
-	Platform   string             `json:"platform"`
-	EmployeeID pgtype.Int8        `json:"employee_id"`
-	LastSeenAt pgtype.Timestamptz `json:"last_seen_at"`
-	CreatedAt  pgtype.Timestamptz `json:"created_at"`
-}
-
-type SamEmployee struct {
-	ID           int64              `json:"id"`
-	EmployeeCode string             `json:"employee_code"`
-	DisplayName  string             `json:"display_name"`
-	Department   string             `json:"department"`
-	Active       bool               `json:"active"`
-	CreatedAt    pgtype.Timestamptz `json:"created_at"`
-}
-
-type SamImport struct {
-	ID            int64              `json:"id"`
-	Source        string             `json:"source"`
-	FileName      string             `json:"file_name"`
-	Status        string             `json:"status"`
-	RowsTotal     int64              `json:"rows_total"`
-	RowsInserted  int64              `json:"rows_inserted"`
-	RowsUpdated   int64              `json:"rows_updated"`
-	RowsSkipped   int64              `json:"rows_skipped"`
-	RowsUnmatched int64              `json:"rows_unmatched"`
-	Error         string             `json:"error"`
-	StartedBy     string             `json:"started_by"`
-	StartedAt     pgtype.Timestamptz `json:"started_at"`
-	FinishedAt    pgtype.Timestamptz `json:"finished_at"`
-}
-
 type SamInstallation struct {
 	ID          int64              `json:"id"`
 	ProductID   pgtype.Int8        `json:"product_id"`
@@ -231,8 +176,6 @@ type SamInstallation struct {
 	InstalledAt pgtype.Timestamptz `json:"installed_at"`
 	LastSeenAt  pgtype.Timestamptz `json:"last_seen_at"`
 	CreatedAt   pgtype.Timestamptz `json:"created_at"`
-	DeviceID    pgtype.Int8        `json:"device_id"`
-	EmployeeID  pgtype.Int8        `json:"employee_id"`
 }
 
 type SamLicense struct {
@@ -247,7 +190,6 @@ type SamLicense struct {
 	Status      string             `json:"status"`
 	CreatedAt   pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt   pgtype.Timestamptz `json:"updated_at"`
-	Contract    string             `json:"contract"`
 }
 
 type SamMatchCandidate struct {
@@ -264,21 +206,14 @@ type SamMatchCandidate struct {
 }
 
 type SamProduct struct {
-	ID            int64              `json:"id"`
-	Name          string             `json:"name"`
-	Vendor        string             `json:"vendor"`
-	Version       string             `json:"version"`
-	Category      string             `json:"category"`
-	Status        string             `json:"status"`
-	CreatedAt     pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt     pgtype.Timestamptz `json:"updated_at"`
-	VendorID      pgtype.Int8        `json:"vendor_id"`
-	SectionCode   string             `json:"section_code"`
-	ClassCode     string             `json:"class_code"`
-	LicenseMetric string             `json:"license_metric"`
-	RegistryRf    bool               `json:"registry_rf"`
-	RegistryEntry string             `json:"registry_entry"`
-	IsTrackable   bool               `json:"is_trackable"`
+	ID        int64              `json:"id"`
+	Name      string             `json:"name"`
+	Vendor    string             `json:"vendor"`
+	Version   string             `json:"version"`
+	Category  string             `json:"category"`
+	Status    string             `json:"status"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
 }
 
 type SamProductAlias struct {
@@ -296,15 +231,6 @@ type SamRiskOverview struct {
 	Severity string `json:"severity"`
 	Affected int64  `json:"affected"`
 	Detail   string `json:"detail"`
-}
-
-type SamVendor struct {
-	ID             int64              `json:"id"`
-	Name           string             `json:"name"`
-	NormalizedName string             `json:"normalized_name"`
-	Country        string             `json:"country"`
-	IsRussian      bool               `json:"is_russian"`
-	CreatedAt      pgtype.Timestamptz `json:"created_at"`
 }
 
 type Session struct {

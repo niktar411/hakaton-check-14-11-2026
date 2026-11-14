@@ -9,7 +9,3 @@
 bun.lock linguist-generated
 client/src/shared/api/schema.d.ts linguist-generated
 api/openapi.json linguist-generated
-
-*.docx binary
-*.xlsx binary
-*.pptx binary

@@ -140,10 +140,6 @@ server {
         include /etc/nginx/snippets/proxy.conf;
         proxy_pass http://hackathon_api;
     }
-    location ^~ /api/sam/ {
-        include /etc/nginx/snippets/proxy.conf;
-        proxy_pass http://hackathon_api;
-    }
     location ^~ /api/ { return 404; }
     location ^~ /auth/ { return 404; }
     location ^~ /admin { return 404; }

@@ -37,7 +37,7 @@ export function SamLayout(props: { children?: JSX.Element }) {
 					)}
 				</For>
 			</nav>
-			<main>{props.children}</main>
+			{props.children}
 		</div>
 	);
 }

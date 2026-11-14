@@ -14,8 +14,7 @@ function LegalPage(props: {
 	children?: JSX.Element;
 }) {
 	return (
-		<main class={s.page}>
-			<article class={s.inner}>
+		<article class={s.page}>
 			<header class={s.header}>
 				<p class={s.eyebrow}>{m.legalUpdated()}</p>
 				<h1 class={s.title}>{props.title}</h1>
@@ -30,8 +29,7 @@ function LegalPage(props: {
 			<footer class={s.footer}>
 				<p>{m.legalContact()}</p>
 			</footer>
-			</article>
-		</main>
+		</article>
 	);
 }
 

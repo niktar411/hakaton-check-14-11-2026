@@ -71,18 +71,4 @@ func Register(api huma.API, s *Service) {
 		}
 		return &chatHistoryOutput{Body: out}, nil
 	})
-	huma.Register(api, huma.Operation{OperationID: "chat-updates", Method: http.MethodGet, Path: "/api/chat/updates"}, func(ctx context.Context, _ *struct{}) (*chatUpdatesOutput, error) {
-		out, err := s.ChatUpdates(ctx)
-		if err != nil {
-			return nil, err
-		}
-		return &chatUpdatesOutput{Body: out}, nil
-	})
-	huma.Register(api, huma.Operation{OperationID: "chat-update-pull", Method: http.MethodPost, Path: "/api/chat/updates/{id}/pull"}, func(ctx context.Context, in *chatUpdatePullInput) (*chatUpdatePullOutput, error) {
-		out, err := s.PullChatUpdate(ctx, in.ID)
-		if err != nil {
-			return nil, err
-		}
-		return &chatUpdatePullOutput{Body: *out}, nil
-	})
 }

@@ -1,24 +1,9 @@
-import {
-	createResource,
-	type JSX,
-	type Resource,
-	Match,
-	Switch,
-} from "solid-js";
+import { type JSX, Match, type Resource, Switch } from "solid-js";
 import { EmptyState, ErrorState, LoadingState } from "@/shared/ui/State";
 
 /**
- * Loads data into Solid's native resource so every SAM screen shares the same
- * loading, error, empty and success behaviour.
- */
-export function createSamResource<T>(loader: () => Promise<T>) {
-	const [resource, { refetch }] = createResource(loader);
-	return { resource, refetch };
-}
-
-/**
  * Renders the four data states shared by every SAM screen. The success branch
- * only runs after data arrives, so pages never render partial results.
+ * only runs after the resource resolved, so pages never render partial data.
  */
 export function SamPageState<T>(props: {
 	data: Resource<T>;
@@ -50,4 +35,3 @@ export function SamPageState<T>(props: {
 		</Switch>
 	);
 }
-
