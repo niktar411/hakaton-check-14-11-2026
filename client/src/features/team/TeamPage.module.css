@@ -524,6 +524,8 @@
 	border: 1px solid var(--border);
 	border-radius: var(--radius-md);
 	background: var(--surface);
+	cursor: pointer;
+	text-align: left;
 	opacity: 0;
 	translate: 0 14px;
 	animation: team-card-in 0.55s var(--ease) forwards;
@@ -531,6 +533,32 @@
 		transform var(--dur) var(--ease),
 		border-color var(--dur) var(--ease),
 		box-shadow var(--dur) var(--ease);
+}
+
+.memberCard:focus-within {
+	border-color: color-mix(in srgb, var(--primary) 42%, var(--border));
+	box-shadow: 0 18px 38px color-mix(in srgb, var(--text) 13%, transparent);
+}
+
+.memberCardButton {
+	display: flex;
+	width: 100%;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: var(--space-2);
+	padding: 0;
+	border: 0;
+	background: none;
+	color: inherit;
+	font: inherit;
+	text-align: left;
+	cursor: pointer;
+}
+
+.memberCardButton:focus-visible {
+	outline: 2px solid var(--primary);
+	outline-offset: 4px;
+	border-radius: var(--radius-sm);
 }
 
 .memberCard::before {
@@ -615,6 +643,19 @@
 	line-height: 1.45;
 }
 
+.memberDetails {
+	margin-top: var(--space-1);
+	color: var(--text-muted);
+	font-size: var(--text-xs);
+	font-weight: 600;
+	letter-spacing: 0.02em;
+	text-transform: uppercase;
+}
+
+.memberDetails::after {
+	content: " →";
+}
+
 .memberLink {
 	margin-top: auto;
 	padding-top: var(--space-2);
@@ -630,6 +671,72 @@
 }
 
 .memberLink:hover {
+	text-decoration: underline;
+}
+
+.memberDialog {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-4);
+}
+
+.memberDialogRole {
+	margin: 0;
+	color: var(--text-muted);
+	font-size: var(--text-sm);
+	line-height: 1.5;
+}
+
+.memberQuote {
+	margin: 0;
+	padding: var(--space-4) var(--space-5);
+	border-left: 3px solid var(--primary);
+	border-radius: var(--radius-sm);
+	background: var(--surface-2);
+}
+
+.memberQuote p {
+	margin: 0;
+	font-size: var(--text-lg);
+	font-style: normal;
+	line-height: 1.5;
+}
+
+.memberBio {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
+}
+
+.memberBio h3 {
+	margin: 0;
+	color: var(--text-muted);
+	font-size: var(--text-xs);
+	font-weight: 700;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+}
+
+.memberBio p {
+	margin: 0;
+	font-size: var(--text-md);
+	line-height: 1.6;
+}
+
+.memberDialogLink {
+	width: fit-content;
+	font-size: var(--text-sm);
+	font-weight: 600;
+	text-decoration: none;
+}
+
+.memberDialogLink::after {
+	margin-left: var(--space-1);
+	content: "↗";
+	font-size: var(--text-xs);
+}
+
+.memberDialogLink:hover {
 	text-decoration: underline;
 }
 

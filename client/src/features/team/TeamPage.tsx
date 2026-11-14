@@ -19,6 +19,7 @@ import {
 	plannerStatus,
 } from "@/features/planner/PlannerPage";
 import { DragonScene } from "./DragonScene";
+import type { TeamMember } from "./readme-team";
 import { team } from "./team-data";
 import s from "./TeamPage.module.css";
 
@@ -41,6 +42,7 @@ function initials(name: string) {
 
 export default function TeamPage() {
 	const [selected, setSelected] = createSignal<PublicBlock>();
+	const [selectedMember, setSelectedMember] = createSignal<TeamMember>();
 	const [planner, { refetch }] = createResource(
 		async () => unwrap(await api.GET("/api/public/planner")) ?? [],
 	);
@@ -201,14 +203,24 @@ export default function TeamPage() {
 									class={s.memberCard}
 									style={{ "animation-delay": `${index() * 70}ms` }}
 								>
-									<span class={s.memberNumber} aria-hidden="true">
-										{String(index() + 1).padStart(2, "0")}
-									</span>
-									<span class={s.avatar} aria-hidden="true">
-										{initials(member.name)}
-									</span>
-									<h3>{member.name}</h3>
-									<p class={s.memberRole}>{member.role}</p>
+									<button
+										type="button"
+										class={s.memberCardButton}
+										aria-haspopup="dialog"
+										onClick={() => setSelectedMember(member)}
+									>
+										<span class={s.memberNumber} aria-hidden="true">
+											{String(index() + 1).padStart(2, "0")}
+										</span>
+										<span class={s.avatar} aria-hidden="true">
+											{initials(member.name)}
+										</span>
+										<h3>{member.name}</h3>
+										<p class={s.memberRole}>{member.role}</p>
+										<span class={s.memberDetails} aria-hidden="true">
+											{m.teamMemberDetails()}
+										</span>
+									</button>
 									<Show when={member.telegram}>
 										{(url) => (
 											<a
@@ -260,6 +272,47 @@ export default function TeamPage() {
 					</div>
 				</div>
 			</section>
+
+			<Dialog
+				open={!!selectedMember()}
+				title={selectedMember()?.name ?? m.teamPageTitle()}
+				onClose={() => setSelectedMember(undefined)}
+			>
+				<Show when={selectedMember()}>
+					{(member) => (
+						<div class={s.memberDialog}>
+							<p class={s.memberDialogRole}>{member().role}</p>
+							<Show when={member().quote}>
+								{(quote) => (
+									<blockquote class={s.memberQuote}>
+										<p>«{quote()}»</p>
+									</blockquote>
+								)}
+							</Show>
+							<Show when={member().bio}>
+								{(bio) => (
+									<div class={s.memberBio}>
+										<h3>{m.teamMemberBio()}</h3>
+										<p>{bio()}</p>
+									</div>
+								)}
+							</Show>
+							<Show when={member().telegram}>
+								{(url) => (
+									<a
+										class={s.memberDialogLink}
+										href={url()}
+										target="_blank"
+										rel="noopener noreferrer"
+									>
+										{m.teamTelegram()}
+									</a>
+								)}
+							</Show>
+						</div>
+					)}
+				</Show>
+			</Dialog>
 
 			<Dialog
 				open={!!selected()}
