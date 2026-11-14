@@ -591,24 +591,6 @@ export function PlannerBoard(props: {
 					<button
 						type="button"
 						class={s.zoomButton}
-						aria-label={m.plannerZoomOut()}
-						title={m.plannerZoomOut()}
-						onClick={() => zoomBy(0.86)}
-					>
-						−
-					</button>
-					<button
-						type="button"
-						class={s.zoomButton}
-						aria-label={m.plannerZoomIn()}
-						title={m.plannerZoomIn()}
-						onClick={() => zoomBy(1.16)}
-					>
-						+
-					</button>
-					<button
-						type="button"
-						class={s.zoomButton}
 						aria-label={m.plannerFit()}
 						title={m.plannerFit()}
 						onClick={() => fit(true)}

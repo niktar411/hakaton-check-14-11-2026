@@ -24,6 +24,9 @@ export function Dialog(props: {
 				event.preventDefault();
 				props.onClose();
 			}}
+			onPointerDown={(event) => {
+				if (event.target === event.currentTarget) props.onClose();
+			}}
 			class={s.dialog}
 			data-elevated
 		>

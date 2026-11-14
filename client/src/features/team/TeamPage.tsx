@@ -185,7 +185,6 @@ export default function TeamPage() {
 								blocks={planner() ?? []}
 								team={false}
 								contained
-								wheelZoom={false}
 								onSelect={(block) => {
 									if (!("owner" in block)) setSelected(block);
 								}}
@@ -298,15 +297,6 @@ export default function TeamPage() {
 				<Show when={selectedMember()}>
 					{(member) => (
 						<div class={s.memberProfile}>
-							<button
-								type="button"
-								class={s.memberClose}
-								aria-label={m.close()}
-								onClick={() => setSelectedMember(undefined)}
-							>
-								<span aria-hidden="true">×</span>
-							</button>
-
 							<div class={s.memberTop}>
 								<div class={s.memberPortraitColumn}>
 									<Show
@@ -369,20 +359,28 @@ export default function TeamPage() {
 
 								<div class={s.codeCard} aria-hidden="true">
 									<div class={s.codeBar}>
-										<span class={s.codeDot} />
-										<span class={s.codeDot} />
-										<span class={s.codeDot} />
+										<span class={s.codeDotRed} />
+										<span class={s.codeDotYellow} />
+										<span class={s.codeDotGreen} />
 										<span class={s.codeFile}>profile.js</span>
 									</div>
 									<pre class={s.codeBlock}>
 										<code>
-											<span class={s.codeKey}>const</span> developer ={" "}
+											<span class={s.codeKeyword}>const</span>{" "}
+											<span class={s.codeDeveloper}>developer</span> =
+											{" "}
 											{"{"}
-											{"\n"} name:{" "}
-											<span class={s.codeString}>"{member().name}"</span>,
-											{"\n"} role:{" "}
-											<span class={s.codeString}>"{member().role}"</span>,
-											{"\n"} goal:{" "}
+											{"\n"} <span class={s.codeProperty}>name</span>:{" "}
+											<span class={s.codeString}>
+												"{member().name}"
+											</span>
+											,
+											{"\n"} <span class={s.codeProperty}>role</span>:{" "}
+											<span class={s.codeStringAlt}>
+												"{member().role}"
+											</span>
+											,
+											{"\n"} <span class={s.codeProperty}>goal</span>:{" "}
 											<span class={s.codeString}>
 												"{m.teamMemberGoal()}"
 											</span>

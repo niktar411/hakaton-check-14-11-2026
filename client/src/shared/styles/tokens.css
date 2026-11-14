@@ -24,6 +24,14 @@
   --blue-100: #dce9fb;
   --blue-50: #eef4fd;
   --teal-600: #0f9b8e;
+  /* Синтаксис карточки кода: единственное цветное пятно на монохромной странице. */
+  --code-keyword: #1c63e6;
+  --code-property: #6d28d9;
+  --code-string: #0f7a5f;
+  --code-string-alt: #7c3aed;
+  --code-dot-red: #e05252;
+  --code-dot-yellow: #e0a52e;
+  --code-dot-green: #35a163;
 
   /* Семантика */
   --bg: #ffffff;
@@ -88,6 +96,13 @@
   --navy-800: #b4cdf5;
   --overlay: rgba(0, 0, 0, 0.65);
   --page-mobile: var(--bg);
+  --code-keyword: #6fa8ff;
+  --code-property: #c18bff;
+  --code-string: #9bdf92;
+  --code-string-alt: #c18bff;
+  --code-dot-red: #f45a60;
+  --code-dot-yellow: #f4c44b;
+  --code-dot-green: #45c67a;
 }
 
 /* Всплывающие поверхности (меню, поповер, модалка, тост) ставят data-elevated

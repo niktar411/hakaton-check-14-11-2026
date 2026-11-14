@@ -607,7 +607,7 @@
 .memberPhotoFrame {
 	position: relative;
 	display: grid;
-	aspect-ratio: 1.4 / 1;
+	aspect-ratio: 1.2 / 1;
 	place-items: center;
 	overflow: hidden;
 	border-bottom: 1px solid var(--border);
@@ -619,7 +619,7 @@
 	width: 100%;
 	height: 100%;
 	object-fit: cover;
-	object-position: center 28%;
+	object-position: center 42%;
 	transition: transform 0.5s var(--ease);
 }
 
@@ -697,29 +697,6 @@
 	gap: var(--space-4);
 }
 
-.memberClose {
-	position: absolute;
-	z-index: 2;
-	top: calc(-1 * var(--space-1));
-	right: calc(-1 * var(--space-1));
-	display: grid;
-	width: 32px;
-	height: 32px;
-	place-items: center;
-	padding: 0 0 2px;
-	border: 1px solid var(--border);
-	border-radius: var(--radius-sm);
-	background: var(--surface-2);
-	color: var(--text);
-	font-size: 20px;
-	line-height: 1;
-	cursor: pointer;
-}
-
-.memberClose:hover {
-	border-color: var(--primary);
-}
-
 .memberTop {
 	display: grid;
 	grid-template-columns: minmax(0, 128px) minmax(0, 1fr);
@@ -743,7 +720,7 @@
 	border-radius: var(--radius-sm);
 	background: var(--surface-2);
 	object-fit: cover;
-	object-position: center 30%;
+	object-position: center 40%;
 }
 
 .memberPortraitFallback {
@@ -890,19 +867,24 @@
 	border-bottom: 1px solid var(--border);
 }
 
-.codeDot {
+.codeDotRed,
+.codeDotYellow,
+.codeDotGreen {
 	width: 9px;
 	height: 9px;
 	border-radius: 50%;
-	background: color-mix(in srgb, var(--text) 24%, var(--surface));
 }
 
-.codeDot:first-child {
-	background: color-mix(in srgb, var(--text) 55%, var(--surface));
+.codeDotRed {
+	background: var(--code-dot-red);
 }
 
-.codeDot:nth-child(2) {
-	background: color-mix(in srgb, var(--text) 38%, var(--surface));
+.codeDotYellow {
+	background: var(--code-dot-yellow);
+}
+
+.codeDotGreen {
+	background: var(--code-dot-green);
 }
 
 .codeFile {
@@ -920,12 +902,25 @@
 	line-height: 1.55;
 }
 
-.codeKey {
-	color: color-mix(in srgb, var(--text) 55%, var(--surface));
+.codeKeyword {
+	color: var(--code-keyword);
+}
+
+.codeDeveloper {
+	font-weight: 700;
+}
+
+.codeProperty {
+	color: var(--code-property);
+	font-weight: 600;
 }
 
 .codeString {
-	color: color-mix(in srgb, var(--text) 78%, var(--surface));
+	color: var(--code-string);
+}
+
+.codeStringAlt {
+	color: var(--code-string-alt);
 }
 
 .memberDuty {
