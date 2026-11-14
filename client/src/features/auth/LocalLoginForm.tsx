@@ -1,6 +1,6 @@
 import { createSignal, Show } from "solid-js";
 import * as m from "@/paraglide/messages";
-import { api, unwrap } from "@/shared/api";
+import { api, ApiError, unwrap } from "@/shared/api";
 import type { components } from "@/shared/api/schema";
 
 type Audience = components["schemas"]["LoginRequest"]["audience"];
@@ -18,12 +18,14 @@ export function LocalLoginForm(props: {
 	const [password, setPassword] = createSignal("");
 	const [pending, setPending] = createSignal(false);
 	const [failed, setFailed] = createSignal(false);
+	const [problem, setProblem] = createSignal("");
 
 	async function login(event: SubmitEvent) {
 		event.preventDefault();
 		if (pending() || !username().trim() || !password()) return;
 		setPending(true);
 		setFailed(false);
+		setProblem("");
 		try {
 			const session = unwrap(
 				await api.POST("/api/auth/local-login", {
@@ -37,9 +39,16 @@ export function LocalLoginForm(props: {
 			setPassword("");
 			props.onSuccess(session);
 			toast.show(m.loginSuccess());
-		} catch {
+		} catch (error) {
+			const message =
+				error instanceof ApiError && error.code === "auth.admin_vpn_required"
+					? m.adminVpnRequired()
+					: error instanceof ApiError && error.status === 429
+						? m.loginTooManyAttempts()
+						: m.loginFailed();
 			setFailed(true);
-			toast.show(m.loginFailed());
+			setProblem(message);
+			toast.show(message);
 		} finally {
 			setPending(false);
 		}
@@ -66,7 +75,7 @@ export function LocalLoginForm(props: {
 			/>
 			<Show when={failed()}>
 				<p class="text-danger" role="alert">
-					{m.loginFailed()}
+					{problem() || m.loginFailed()}
 				</p>
 			</Show>
 			<Button

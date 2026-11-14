@@ -73,6 +73,20 @@ func (s *Service) List(ctx context.Context, limit, offset int32) ([]Deployment, 
 	if _, err := s.requireAdmin(ctx); err != nil {
 		return nil, err
 	}
+	return s.list(ctx, limit, offset)
+}
+
+// ListMember returns the audit-safe deployment history to any authenticated
+// team member. Production mutations stay administrator-only; reading history
+// does not expose secrets.
+func (s *Service) ListMember(ctx context.Context, limit, offset int32) ([]Deployment, error) {
+	if _, err := identity.FromContext(ctx); err != nil {
+		return nil, err
+	}
+	return s.list(ctx, limit, offset)
+}
+
+func (s *Service) list(ctx context.Context, limit, offset int32) ([]Deployment, error) {
 	if limit == 0 {
 		limit = 50
 	}
@@ -169,6 +183,21 @@ func (s *Service) Run(ctx context.Context, principal identity.Principal, action,
 		return Deployment{}, huma.Error409Conflict("deployment.verified_merge_required")
 	}
 	return s.execute(ctx, admin.Session.Username, action, target, release)
+}
+
+// RunMember lets any authenticated team member operate the second server
+// (coding, review, test). Production stays administrator-only.
+func (s *Service) RunMember(ctx context.Context, principal identity.Principal, action, target, release string) (Deployment, error) {
+	if _, err := identity.FromContext(ctx); err != nil {
+		return Deployment{}, err
+	}
+	if target == TargetProduction {
+		return Deployment{}, huma.Error403Forbidden("deployment.admin_required")
+	}
+	if !validAction(action) || !validTarget(target) {
+		return Deployment{}, huma.Error400BadRequest("deployment.invalid_operation")
+	}
+	return s.execute(ctx, principal.Session.Username, action, target, release)
 }
 
 // execute is called by Run after admin authorization and by the webhook after

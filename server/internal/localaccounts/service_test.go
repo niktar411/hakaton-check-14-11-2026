@@ -131,8 +131,24 @@ func TestLoginOriginAndAdministratorRestrictions(t *testing.T) {
 	}
 }
 
-func TestLoginRejectsUnknownAccountAndStorageFailure(t *testing.T) {
-	service := newUnitService(newFakeStore())
+func TestAdministratorLoginAcceptsEveryConfiguredAddress(t *testing.T) {
+	admin := testDBAccount(1, "root", "admin", validTestHash(t))
+	store := newFakeStore(admin)
+	config := testConfig()
+	config.AdminIP = "10.77.0.2, 10.77.0.6"
+	service := newService(store, config)
+	service.now = func() time.Time { return testNow }
+	for _, ip := range []string{"10.77.0.2", "10.77.0.6"} {
+		_, cookie, err := service.Login(loginContext(ip), LoginRequest{
+			Username: "root", Password: "correct-horse-battery", Audience: "admin",
+		}, "https://portal.example")
+		if err != nil || cookie == nil {
+			t.Fatalf("address %s rejected: %v", ip, err)
+		}
+	}
+}
+
+func TestLoginRejectsUnknownAccountAndStorageFailure(t *testing.T) {	service := newUnitService(newFakeStore())
 	_, _, err := service.Login(loginContext("192.0.2.1"), LoginRequest{
 		Username: "nobody", Password: "incorrect-password", Audience: "coding",
 	}, "https://portal.example")

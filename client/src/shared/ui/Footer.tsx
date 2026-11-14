@@ -3,22 +3,28 @@ import { Show } from "solid-js";
 import * as m from "@/paraglide/messages";
 import s from "./Footer.module.css";
 
-export function Footer(props: { plannerUrl?: string; publicUrl?: string }) {
+export function Footer(props: {
+	team?: boolean;
+	borderless?: boolean;
+}) {
 	return (
-		<footer class={s.root}>
+		<footer class={s.root} data-borderless={props.borderless}>
 			<nav class={s.links} aria-label={m.footerNavigation()}>
-				<a href={props.publicUrl ?? "/"}>{m.footerHome()}</a>
-				<A href="/questions">{m.questionsPageTitle()}</A>
-				<A href="/planner">{m.plannerPageTitle()}</A>
-				<Show when={props.plannerUrl}>
-					{(url) => (
-						<a href={url()} target="_blank" rel="noopener noreferrer">
-							{m.openPlanner()}
-						</a>
-					)}
+				<Show
+					when={!props.team}
+					fallback={
+						<>
+							<A href="/planner">{m.plannerPageTitle()}</A>
+							<A href="/chat">{m.aiChatTitle()}</A>
+						</>
+					}
+				>
+					<A href="/">{m.teamPageTitle()}</A>
 				</Show>
 			</nav>
-			<p class={s.note}>{m.publicFooterNote()}</p>
+			<p class={s.note}>
+				{props.team ? m.teamFooterNote() : m.publicFooterNote()}
+			</p>
 		</footer>
 	);
 }

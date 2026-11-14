@@ -17,6 +17,15 @@ func (p *recordingPlanner) CreateForAI(_ context.Context, _ identity.Principal, 
 	return plannerblocks.PlannerBlock{ID: 7, Title: input.Title, Owner: plannerblocks.Owner{Username: "niktar411"}}, nil
 }
 
+func (p *recordingPlanner) StartForOwner(_ context.Context, id int64, username string) (plannerblocks.PlannerBlock, error) {
+	p.calls++
+	return plannerblocks.PlannerBlock{ID: id, Owner: plannerblocks.Owner{Username: username}, Progress: plannerblocks.Progress{State: plannerblocks.ProgressVerifying}}, nil
+}
+
+func (p *recordingPlanner) ListOwned(_ context.Context, username string) ([]plannerblocks.PlannerBlock, error) {
+	return []plannerblocks.PlannerBlock{{ID: 7, Title: "Real block", Owner: plannerblocks.Owner{Username: username}}}, nil
+}
+
 type recordingDeployments struct {
 	calls  int
 	action string
@@ -28,6 +37,12 @@ func (d *recordingDeployments) Run(_ context.Context, _ identity.Principal, acti
 	d.action = action
 	d.target = target
 	return deployments.Deployment{ID: 9, Action: action, Target: target, Status: "completed"}, nil
+}
+
+func (d *recordingDeployments) Merge(_ context.Context, iid int64, sha string) (deployments.MergeResult, error) {
+	d.calls++
+	d.action = "merge"
+	return deployments.MergeResult{IID: iid, SHA: sha, State: "merged", Merged: true}, nil
 }
 
 func confirmedAdminContext(ctx context.Context) context.Context {
@@ -60,5 +75,10 @@ func TestAdminToolsRequireAdministratorAndFixedOperations(t *testing.T) {
 	output, err = service.callAdminOperation(ctx, ToolCreatePlannerBlock, ToolInput{Title: "Real block", OwnerID: 1})
 	if err != nil || !output.OK || planner.calls != 1 {
 		t.Fatalf("valid planner operation failed: %+v, %v", output, err)
+	}
+	iid := int64(5)
+	output, err = service.callAdminOperation(ctx, ToolMergeMergeRequest, ToolInput{MRIID: &iid, SHA: "abc123"})
+	if err != nil || !output.OK || deployment.calls != 2 || deployment.action != "merge" {
+		t.Fatalf("admin merge operation failed: %+v, %v", output, err)
 	}
 }

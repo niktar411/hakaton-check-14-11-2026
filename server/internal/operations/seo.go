@@ -110,7 +110,7 @@ func (s *Service) serveIndex(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	content := string(data)
-	if strings.HasPrefix(r.URL.Path, "/admin") || r.URL.Path == "/coding" {
+	if strings.HasPrefix(r.URL.Path, "/admin") || r.URL.Path == "/coding" || r.URL.Path == "/planner" {
 		content = robotsPattern.ReplaceAllString(content, `<meta name="robots" content="noindex,nofollow"/>`)
 	} else {
 		content = robotsPattern.ReplaceAllString(content, `<meta name="robots" content="index,follow"/>`)

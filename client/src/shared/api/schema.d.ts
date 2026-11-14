@@ -107,6 +107,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/chat-context": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["admin-chat-context"];
+        put: operations["update-admin-chat-context"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/coding/tasks": {
         parameters: {
             query?: never;
@@ -390,6 +406,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/chat/agent": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["chat-agent"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/chat/conversations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["chat-conversations"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/chat/conversations/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["chat-history"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/coding/tasks": {
         parameters: {
             query?: never;
@@ -470,6 +534,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/deployments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List deployment operations for team members */
+        get: operations["list-member-deployments"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/deployments/{action}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Run a second-server operation as a team member */
+        post: operations["run-member-deployment-operation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/logout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Log out */
+        post: operations["logout"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/me": {
         parameters: {
             query?: never;
@@ -497,6 +612,23 @@ export interface paths {
         get: operations["list-team-planner-blocks"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/planner/blocks/{id}/start": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Mark your planner block as in progress */
+        post: operations["start-team-planner-block"];
         delete?: never;
         options?: never;
         head?: never;
@@ -673,6 +805,278 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/sam/assistant/chat": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Вопрос аналитику SAM по данным инвентаризации */
+        post: operations["sam-assistant-chat"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sam/assistant/conversations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** История диалогов аналитика SAM */
+        get: operations["sam-assistant-conversations"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sam/assistant/conversations/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Один диалог аналитика SAM */
+        get: operations["sam-assistant-conversation"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sam/compliance/products": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Баланс куплено/установлено по продуктам */
+        get: operations["sam-compliance-products"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sam/compliance/risks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Финансовые и юридические риски SAM */
+        get: operations["sam-compliance-risks"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sam/compliance/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** KPI комплаенса SAM */
+        get: operations["sam-compliance-summary"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sam/matching/candidates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Очередь кандидатов сопоставления */
+        get: operations["sam-matching-candidates"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sam/matching/candidates/{id}/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Подтвердить сопоставление и создать алиас */
+        post: operations["sam-matching-confirm"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sam/matching/candidates/{id}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Отклонить кандидата сопоставления */
+        post: operations["sam-matching-reject"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sam/matching/run": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Построить очередь сопоставления несопоставленных установок */
+        post: operations["sam-matching-run"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sam/matching/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Счётчики очереди сопоставления */
+        get: operations["sam-matching-summary"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sam/operator/actions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** История предложенных и применённых изменений SAM */
+        get: operations["sam-operator-actions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sam/operator/actions/{id}/apply": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Применить подтверждённое изменение SAM */
+        post: operations["sam-operator-apply"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sam/operator/actions/{id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Отменить предложенное изменение SAM */
+        post: operations["sam-operator-cancel"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sam/operator/actions/{id}/undo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Откатить последнее применённое изменение SAM */
+        post: operations["sam-operator-undo"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sam/operator/chat": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Предложить изменение SAM через AI-оператора */
+        post: operations["sam-operator-chat"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -742,6 +1146,53 @@ export interface components {
             target: string;
             username: string;
         };
+        ChatAgentInputBody: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/ChatAgentInputBody.json
+             */
+            readonly $schema?: string;
+            /** Format: int64 */
+            parentId?: number;
+            prompt: string;
+        };
+        ChatContextUpdateInputBody: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/ChatContextUpdateInputBody.json
+             */
+            readonly $schema?: string;
+            general: string;
+        };
+        ChatContextView: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/ChatContextView.json
+             */
+            readonly $schema?: string;
+            agents: string;
+            clarifyingPrompt: string;
+            general: string;
+            /** Format: int64 */
+            limit: number;
+            skipPhrase: string;
+            solutionPrompt: string;
+        };
+        ChatHistory: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/ChatHistory.json
+             */
+            readonly $schema?: string;
+            /** Format: int64 */
+            id: number;
+            messages: components["schemas"]["Message"][] | null;
+            phase: string;
+        };
         ChatInputBody: {
             /**
              * Format: uri
@@ -766,6 +1217,16 @@ export interface components {
             id: number;
             messages: components["schemas"]["Message"][] | null;
             phase: string;
+        };
+        ChatSummary: {
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: int64 */
+            id: number;
+            /** Format: int64 */
+            messageCount: number;
+            phase: string;
+            title: string;
         };
         CodingMessage: {
             content: string;
@@ -1336,6 +1797,8 @@ export interface components {
             /** Format: int32 */
             position: number;
             progress: components["schemas"]["Progress"];
+            /** Format: date-time */
+            startedAt?: string;
             title: string;
             /** Format: date-time */
             updatedAt: string;
@@ -1417,6 +1880,301 @@ export interface components {
             release?: string;
             /** @enum {string} */
             target: "production" | "coding" | "review" | "test";
+        };
+        SamAssistantAnswer: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/SamAssistantAnswer.json
+             */
+            readonly $schema?: string;
+            answer: string;
+            fallback: boolean;
+            /** Format: int64 */
+            id: number;
+            sources: string[] | null;
+        };
+        SamAssistantChatInputBody: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/SamAssistantChatInputBody.json
+             */
+            readonly $schema?: string;
+            /** Format: int64 */
+            id: number;
+            prompt: string;
+            requestId: string;
+        };
+        SamAssistantHistory: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/SamAssistantHistory.json
+             */
+            readonly $schema?: string;
+            /** Format: int64 */
+            id: number;
+            messages: components["schemas"]["SamAssistantMessage"][] | null;
+        };
+        SamAssistantMessage: {
+            content: string;
+            /** Format: date-time */
+            createdAt: string;
+            role: string;
+        };
+        SamAssistantSummary: {
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: int64 */
+            id: number;
+            /** Format: int64 */
+            messageCount: number;
+            title: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        SamComplianceProduct: {
+            /** Format: int64 */
+            annualCost: number;
+            /** Format: int64 */
+            avgCostPerSeat: number;
+            /** Format: int64 */
+            bannedInstallations: number;
+            category: string;
+            /** Format: int64 */
+            expiredSeats: number;
+            /** Format: int64 */
+            id: number;
+            /** Format: int64 */
+            idleSeats: number;
+            /** Format: int64 */
+            installations: number;
+            /** Format: int64 */
+            installedDevices: number;
+            /** Format: int64 */
+            licensedSeats: number;
+            name: string;
+            /** Format: int64 */
+            overusedSeats: number;
+            recommendation: string;
+            /** Format: int64 */
+            riskCost: number;
+            riskLevel: string;
+            status: string;
+            vendor: string;
+        };
+        SamComplianceRisk: {
+            /** Format: int64 */
+            affected: number;
+            code: string;
+            /** Format: int64 */
+            cost: number;
+            /** Format: int64 */
+            productId?: number;
+            productName?: string;
+            recommendation: string;
+            severity: string;
+        };
+        SamComplianceSummary: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/SamComplianceSummary.json
+             */
+            readonly $schema?: string;
+            /** Format: int64 */
+            activeProducts: number;
+            /** Format: int64 */
+            annualCost: number;
+            /** Format: int64 */
+            bannedInstallations: number;
+            /** Format: int64 */
+            bannedProducts: number;
+            /** Format: int64 */
+            costAtRisk: number;
+            /** Format: int64 */
+            devices: number;
+            /** Format: int64 */
+            expiredCost: number;
+            /** Format: int64 */
+            expiredSeats: number;
+            /** Format: int64 */
+            idleCost: number;
+            /** Format: int64 */
+            idleSeats: number;
+            /** Format: int64 */
+            installations: number;
+            /** Format: int64 */
+            licensedSeats: number;
+            /** Format: int64 */
+            overuseCost: number;
+            /** Format: int64 */
+            overusedSeats: number;
+            /** Format: int64 */
+            products: number;
+            recommendations: string[] | null;
+            riskLevel: string;
+            /** Format: int64 */
+            unmatchedInstallations: number;
+        };
+        SamMatchingCandidate: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/SamMatchingCandidate.json
+             */
+            readonly $schema?: string;
+            /** Format: date-time */
+            createdAt: string;
+            deviceName: string;
+            /** Format: int64 */
+            id: number;
+            /** Format: int64 */
+            installationId: number;
+            /** Format: date-time */
+            lastSeenAt: string;
+            method: string;
+            /** Format: int64 */
+            productId: number;
+            productName: string;
+            rawName: string;
+            /** Format: date-time */
+            resolvedAt?: string;
+            resolvedBy?: string;
+            /** Format: float */
+            score: number;
+            status: string;
+        };
+        SamMatchingRunInputBody: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/SamMatchingRunInputBody.json
+             */
+            readonly $schema?: string;
+            /** Format: int32 */
+            limit: number;
+        };
+        SamMatchingRunResult: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/SamMatchingRunResult.json
+             */
+            readonly $schema?: string;
+            /** Format: int64 */
+            candidates: number;
+            /** Format: int32 */
+            limit: number;
+            /** Format: int64 */
+            matched: number;
+            /** Format: int64 */
+            pending: number;
+            /** Format: int64 */
+            scanned: number;
+            /** Format: int64 */
+            skipped: number;
+            /** Format: int64 */
+            unmatched: number;
+        };
+        SamMatchingSummary: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/SamMatchingSummary.json
+             */
+            readonly $schema?: string;
+            /** Format: int64 */
+            confirmed: number;
+            /** Format: int64 */
+            pending: number;
+            /** Format: int64 */
+            rejected: number;
+            /** Format: int64 */
+            unmatched: number;
+        };
+        SamOperatorAction: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/SamOperatorAction.json
+             */
+            readonly $schema?: string;
+            actor: string;
+            /** Format: int64 */
+            affected: number;
+            after?: unknown;
+            /** Format: date-time */
+            appliedAt?: string;
+            before?: unknown;
+            /** Format: int64 */
+            conversationId?: number;
+            /** Format: date-time */
+            createdAt: string;
+            error?: string;
+            /** Format: int64 */
+            id: number;
+            intent: string;
+            preview: components["schemas"]["SamOperatorPreview"];
+            status: string;
+            /** Format: date-time */
+            undoneAt?: string;
+        };
+        SamOperatorApplyInputBody: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/SamOperatorApplyInputBody.json
+             */
+            readonly $schema?: string;
+            confirmation: string;
+        };
+        SamOperatorChatInputBody: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/SamOperatorChatInputBody.json
+             */
+            readonly $schema?: string;
+            /** Format: int64 */
+            id: number;
+            prompt: string;
+            requestId: string;
+        };
+        SamOperatorChatResult: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/SamOperatorChatResult.json
+             */
+            readonly $schema?: string;
+            actions: components["schemas"]["SamOperatorAction"][] | null;
+            answer: string;
+            fallback: boolean;
+            /** Format: int64 */
+            id: number;
+        };
+        SamOperatorDiff: {
+            field: string;
+            new: unknown;
+            old: unknown;
+            target: string;
+        };
+        SamOperatorPreview: {
+            /** Format: int64 */
+            affected: number;
+            confirmationPhrase: string;
+            diffs: components["schemas"]["SamOperatorDiff"][] | null;
+            intent: string;
+            /** Format: int64 */
+            limit: number;
+            requiresPhrase: boolean;
+            samples: {
+                [key: string]: unknown;
+            }[] | null;
+            summary: string;
+            warnings: string[] | null;
         };
         SetEnabledInputBody: {
             /**
@@ -1704,6 +2462,68 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["LocalAccount"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "admin-chat-context": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChatContextView"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "update-admin-chat-context": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChatContextUpdateInputBody"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChatContextView"];
                 };
             };
             /** @description Error */
@@ -2330,6 +3150,102 @@ export interface operations {
             };
         };
     };
+    "chat-agent": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChatAgentInputBody"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CodingTask"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "chat-conversations": {
+        parameters: {
+            query?: {
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChatSummary"][] | null;
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "chat-history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChatHistory"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
     "list-coding-tasks": {
         parameters: {
             query?: {
@@ -2530,6 +3446,101 @@ export interface operations {
             };
         };
     };
+    "list-member-deployments": {
+        parameters: {
+            query?: {
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Deployment"][] | null;
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "run-member-deployment-operation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                action: "deploy" | "rollback" | "restart" | "start" | "stop" | "create_test_database" | "drop_test_database";
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RunDeploymentInputBody"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Deployment"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    logout: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    "Set-Cookie"?: string;
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
     me: {
         parameters: {
             query?: never;
@@ -2575,6 +3586,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PlannerBlock"][] | null;
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "start-team-planner-block": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlannerBlock"];
                 };
             };
             /** @description Error */
@@ -2869,6 +3911,510 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SiteConfig"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "sam-assistant-chat": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SamAssistantChatInputBody"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SamAssistantAnswer"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "sam-assistant-conversations": {
+        parameters: {
+            query?: {
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SamAssistantSummary"][] | null;
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "sam-assistant-conversation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SamAssistantHistory"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "sam-compliance-products": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SamComplianceProduct"][] | null;
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "sam-compliance-risks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SamComplianceRisk"][] | null;
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "sam-compliance-summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SamComplianceSummary"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "sam-matching-candidates": {
+        parameters: {
+            query?: {
+                status?: string;
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SamMatchingCandidate"][] | null;
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "sam-matching-confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SamMatchingCandidate"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "sam-matching-reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SamMatchingCandidate"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "sam-matching-run": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SamMatchingRunInputBody"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SamMatchingRunResult"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "sam-matching-summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SamMatchingSummary"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "sam-operator-actions": {
+        parameters: {
+            query?: {
+                limit?: number;
+                offset?: number;
+                conversationId?: number;
+                status?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SamOperatorAction"][] | null;
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "sam-operator-apply": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SamOperatorApplyInputBody"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SamOperatorAction"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "sam-operator-cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SamOperatorAction"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "sam-operator-undo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SamOperatorAction"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "sam-operator-chat": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SamOperatorChatInputBody"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SamOperatorChatResult"];
                 };
             };
             /** @description Error */
