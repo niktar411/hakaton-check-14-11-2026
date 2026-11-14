@@ -19,6 +19,3 @@ UPDATE planner_blocks SET branch=$2,merge_request_iid=$3,updated_at=now() WHERE 
 -- name: StartPlannerBlock :one
 UPDATE planner_blocks SET started_at=coalesce(started_at,now()),updated_at=now()
 WHERE id=$1 RETURNING *;
--- name: SetPlannerBlockCompleted :one
-UPDATE planner_blocks SET completed_at=now(),updated_at=now()
-WHERE id=$1 AND completed_at IS NULL RETURNING id;

@@ -148,7 +148,9 @@ function App(props: { children?: JSX.Element }) {
 		!plannerHost() &&
 		(location.pathname === "/" ||
 			location.pathname === "/team" ||
-			location.pathname === "/questions");
+			location.pathname === "/questions" ||
+			location.pathname === "/sam" ||
+			location.pathname.startsWith("/sam/"));
 	createEffect(() => {
 		document.documentElement.toggleAttribute("data-mono", monoPage());
 	});
