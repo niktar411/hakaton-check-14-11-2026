@@ -13,7 +13,7 @@ import (
 
 type fakeStore struct {
 	dashboard db.SamDashboardRow
-	products  []db.SamPublicProductsRow
+	products  []db.ListSamProductsRow
 	licenses  []db.ListSamLicensesRow
 	assets    []db.ListSamAssetsRow
 	findings  []db.ListSamFindingsRow
@@ -25,7 +25,7 @@ func (s *fakeStore) SamDashboard(context.Context) (db.SamDashboardRow, error) {
 	return s.dashboard, s.err
 }
 
-func (s *fakeStore) SamPublicProducts(context.Context, db.SamPublicProductsParams) ([]db.SamPublicProductsRow, error) {
+func (s *fakeStore) ListSamProducts(context.Context, db.ListSamProductsParams) ([]db.ListSamProductsRow, error) {
 	return s.products, s.err
 }
 
@@ -69,7 +69,7 @@ func TestDashboardMapsAggregates(t *testing.T) {
 
 func TestProductsMapUsageCounts(t *testing.T) {
 	now := time.Date(2026, 11, 14, 12, 0, 0, 0, time.UTC)
-	store := &fakeStore{products: []db.SamPublicProductsRow{{
+	store := &fakeStore{products: []db.ListSamProductsRow{{
 		ID: 7, Name: "Design Suite", Vendor: "Acme", Category: "Design",
 		LicenseCount: 2, InstallationCount: 5, UpdatedAt: timestamp(now),
 	}}}

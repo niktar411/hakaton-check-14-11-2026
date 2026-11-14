@@ -31,7 +31,7 @@ func (s *Service) publicPages() []publicPage {
 		{Path: "/sam/catalog", Title: "SAM: каталог", Description: "Каталог программных продуктов, лицензий и обнаруженных установок."},
 		{Path: "/sam/licenses", Title: "SAM: лицензии", Description: "Сроки действия лицензий и занятые места."},
 		{Path: "/sam/inventory", Title: "SAM: инвентаризация", Description: "Устройства, владельцы и обнаруженное программное обеспечение."},
-		{Path: "/sam/compliance", Title: "SAM: комплаенс", Description: "Нарушения правил использования программного обеспечения."},
+		{Path: "/sam/compliance", Title: "SAM: комплаенс", Description: "Баланс куплено/установлено, превышения, простой, запрещённое ПО и стоимость риска."},
 		{Path: "/sam/matching", Title: "SAM: сопоставление", Description: "Предложения сопоставить установки с каталогом продуктов."},
 		{Path: "/sam/assistant", Title: "SAM: ассистент", Description: "Рекомендации по текущим данным SAM без изменения записей."},
 		{Path: "/coding", Title: "Разработка с DeepSeek", Description: "Закрытая зона участников: локальный вход и разработка с обязательным уточнением каждой задачи.", Private: true},
@@ -110,7 +110,7 @@ func (s *Service) serveIndex(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	content := string(data)
-	if strings.HasPrefix(r.URL.Path, "/admin") || r.URL.Path == "/coding" || r.URL.Path == "/planner" {
+	if strings.HasPrefix(r.URL.Path, "/admin") || r.URL.Path == "/coding" {
 		content = robotsPattern.ReplaceAllString(content, `<meta name="robots" content="noindex,nofollow"/>`)
 	} else {
 		content = robotsPattern.ReplaceAllString(content, `<meta name="robots" content="index,follow"/>`)

@@ -1,3 +1,4 @@
+import { A } from "@solidjs/router";
 import { createResource, For } from "solid-js";
 import * as m from "@/paraglide/messages";
 import { api, unwrap } from "@/shared/api";
@@ -31,7 +32,11 @@ export default function SamInventoryPage() {
 							{(asset) => (
 								<li class={s.row}>
 									<div>
-										<h2 class={s.rowTitle}>{asset.hostname}</h2>
+										<h2 class={s.rowTitle}>
+											<A class={s.inlineLink} href={`/sam/inventory/${asset.id}`}>
+												{asset.hostname}
+											</A>
+										</h2>
 										<p class={s.rowMeta}>{asset.platform}</p>
 									</div>
 									<SamFields

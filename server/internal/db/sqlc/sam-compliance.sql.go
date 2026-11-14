@@ -7,23 +7,264 @@ package db
 
 import (
 	"context"
+
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
-const samComplianceProducts = `-- name: SamComplianceProducts :many
+const getSamHost = `-- name: GetSamHost :one
+SELECT a.id,
+       a.hostname,
+       a.platform,
+       a.owner,
+       a.last_seen_at,
+       (SELECT count(*) FROM sam_installations i WHERE i.asset_id = a.id)::bigint AS installations,
+       (SELECT count(*) FROM sam_installations i WHERE i.asset_id = a.id AND i.product_id IS NULL)::bigint AS unlicensed
+FROM sam_assets a
+WHERE a.id = $1
+`
+
+type GetSamHostRow struct {
+	ID            int64              `json:"id"`
+	Hostname      string             `json:"hostname"`
+	Platform      string             `json:"platform"`
+	Owner         string             `json:"owner"`
+	LastSeenAt    pgtype.Timestamptz `json:"last_seen_at"`
+	Installations int64              `json:"installations"`
+	Unlicensed    int64              `json:"unlicensed"`
+}
+
+func (q *Queries) GetSamHost(ctx context.Context, id int64) (GetSamHostRow, error) {
+	row := q.db.QueryRow(ctx, getSamHost, id)
+	var i GetSamHostRow
+	err := row.Scan(
+		&i.ID,
+		&i.Hostname,
+		&i.Platform,
+		&i.Owner,
+		&i.LastSeenAt,
+		&i.Installations,
+		&i.Unlicensed,
+	)
+	return i, err
+}
+
+const listSamHostInstallations = `-- name: ListSamHostInstallations :many
+SELECT i.id,
+       i.product_id,
+       i.detected_name,
+       i.version,
+       p.name AS product_name,
+       p.vendor AS product_vendor,
+       p.category AS product_category,
+       p.status AS product_status,
+       EXISTS (
+           SELECT 1 FROM sam_licenses l
+           WHERE l.product_id = p.id
+             AND l.seats_total > 0
+             AND (l.valid_until IS NULL OR l.valid_until >= current_date)
+       ) AS has_active_license,
+       EXISTS (
+           SELECT 1 FROM sam_licenses l
+           WHERE l.product_id = p.id
+             AND l.valid_until IS NOT NULL
+             AND l.valid_until < current_date
+       ) AS has_expired_license
+FROM sam_installations i
+LEFT JOIN sam_products p ON p.id = i.product_id
+WHERE i.asset_id = $1
+ORDER BY lower(coalesce(p.name, i.detected_name)), i.id
+`
+
+type ListSamHostInstallationsRow struct {
+	ID                int64       `json:"id"`
+	ProductID         pgtype.Int8 `json:"product_id"`
+	DetectedName      string      `json:"detected_name"`
+	Version           string      `json:"version"`
+	ProductName       pgtype.Text `json:"product_name"`
+	ProductVendor     pgtype.Text `json:"product_vendor"`
+	ProductCategory   pgtype.Text `json:"product_category"`
+	ProductStatus     pgtype.Text `json:"product_status"`
+	HasActiveLicense  bool        `json:"has_active_license"`
+	HasExpiredLicense bool        `json:"has_expired_license"`
+}
+
+func (q *Queries) ListSamHostInstallations(ctx context.Context, assetID int64) ([]ListSamHostInstallationsRow, error) {
+	rows, err := q.db.Query(ctx, listSamHostInstallations, assetID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListSamHostInstallationsRow{}
+	for rows.Next() {
+		var i ListSamHostInstallationsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.ProductID,
+			&i.DetectedName,
+			&i.Version,
+			&i.ProductName,
+			&i.ProductVendor,
+			&i.ProductCategory,
+			&i.ProductStatus,
+			&i.HasActiveLicense,
+			&i.HasExpiredLicense,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listSamProductHosts = `-- name: ListSamProductHosts :many
+SELECT a.id AS asset_id,
+       a.hostname,
+       a.platform,
+       a.owner,
+       max(i.version::text)::text AS version,
+       max(i.last_seen_at)::timestamptz AS last_seen_at,
+       p.status AS product_status,
+       EXISTS (
+           SELECT 1 FROM sam_licenses l
+           WHERE l.product_id = p.id
+             AND l.seats_total > 0
+             AND (l.valid_until IS NULL OR l.valid_until >= current_date)
+       ) AS has_active_license,
+       EXISTS (
+           SELECT 1 FROM sam_licenses l
+           WHERE l.product_id = p.id
+             AND l.valid_until IS NOT NULL
+             AND l.valid_until < current_date
+       ) AS has_expired_license
+FROM sam_installations i
+JOIN sam_assets a ON a.id = i.asset_id
+JOIN sam_products p ON p.id = i.product_id
+WHERE i.product_id = $1::bigint
+GROUP BY a.id, a.hostname, a.platform, a.owner, p.id, p.status
+ORDER BY lower(a.hostname), a.id
+`
+
+type ListSamProductHostsRow struct {
+	AssetID           int64              `json:"asset_id"`
+	Hostname          string             `json:"hostname"`
+	Platform          string             `json:"platform"`
+	Owner             string             `json:"owner"`
+	Version           string             `json:"version"`
+	LastSeenAt        pgtype.Timestamptz `json:"last_seen_at"`
+	ProductStatus     string             `json:"product_status"`
+	HasActiveLicense  bool               `json:"has_active_license"`
+	HasExpiredLicense bool               `json:"has_expired_license"`
+}
+
+func (q *Queries) ListSamProductHosts(ctx context.Context, dollar_1 int64) ([]ListSamProductHostsRow, error) {
+	rows, err := q.db.Query(ctx, listSamProductHosts, dollar_1)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListSamProductHostsRow{}
+	for rows.Next() {
+		var i ListSamProductHostsRow
+		if err := rows.Scan(
+			&i.AssetID,
+			&i.Hostname,
+			&i.Platform,
+			&i.Owner,
+			&i.Version,
+			&i.LastSeenAt,
+			&i.ProductStatus,
+			&i.HasActiveLicense,
+			&i.HasExpiredLicense,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listSamProductLicenses = `-- name: ListSamProductLicenses :many
+SELECT l.id,
+       l.kind,
+       l.seats_total,
+       l.seats_used,
+       l.cost_per_seat,
+       l.currency,
+       l.valid_until,
+       CASE
+           WHEN l.valid_until IS NULL THEN 'active'
+           WHEN l.valid_until < current_date THEN 'expired'
+           WHEN l.valid_until <= current_date + 30 THEN 'expiring'
+           ELSE 'active'
+       END::text AS status
+FROM sam_licenses l
+WHERE l.product_id = $1
+ORDER BY l.valid_until NULLS LAST, l.id
+`
+
+type ListSamProductLicensesRow struct {
+	ID          int64       `json:"id"`
+	Kind        string      `json:"kind"`
+	SeatsTotal  int32       `json:"seats_total"`
+	SeatsUsed   int32       `json:"seats_used"`
+	CostPerSeat int64       `json:"cost_per_seat"`
+	Currency    string      `json:"currency"`
+	ValidUntil  pgtype.Date `json:"valid_until"`
+	Status      string      `json:"status"`
+}
+
+func (q *Queries) ListSamProductLicenses(ctx context.Context, productID int64) ([]ListSamProductLicensesRow, error) {
+	rows, err := q.db.Query(ctx, listSamProductLicenses, productID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListSamProductLicensesRow{}
+	for rows.Next() {
+		var i ListSamProductLicensesRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Kind,
+			&i.SeatsTotal,
+			&i.SeatsUsed,
+			&i.CostPerSeat,
+			&i.Currency,
+			&i.ValidUntil,
+			&i.Status,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const samComplianceProduct = `-- name: SamComplianceProduct :one
 WITH license_totals AS (
     SELECT l.product_id,
-           coalesce(sum(l.seats) FILTER (
-               WHERE l.status = 'active' AND (l.expires_at IS NULL OR l.expires_at >= current_date)
-           ), 0)::bigint AS seats,
-           coalesce(sum(l.seats) FILTER (
-               WHERE l.status = 'active' AND l.expires_at < current_date
+           count(*)::bigint AS licenses,
+           coalesce(sum(l.seats_total), 0)::bigint AS purchased_seats,
+           coalesce(sum(l.seats_total) FILTER (
+               WHERE l.valid_until IS NULL OR l.valid_until >= current_date
+           ), 0)::bigint AS active_seats,
+           coalesce(sum(l.seats_total) FILTER (
+               WHERE l.valid_until IS NOT NULL AND l.valid_until < current_date
            ), 0)::bigint AS expired_seats,
-           coalesce(sum(l.seats * l.cost_per_seat) FILTER (
-               WHERE l.status = 'active' AND (l.expires_at IS NULL OR l.expires_at >= current_date)
+           coalesce(sum(l.seats_total * l.cost_per_seat) FILTER (
+               WHERE l.valid_until IS NULL OR l.valid_until >= current_date
            ), 0)::bigint AS annual_cost,
            coalesce(round(
-               sum(l.seats * l.cost_per_seat) FILTER (WHERE l.status = 'active')::numeric
-               / nullif(sum(l.seats) FILTER (WHERE l.status = 'active'), 0)
+               sum(l.seats_total * l.cost_per_seat)::numeric
+               / nullif(sum(l.seats_total), 0)
            ), 0)::bigint AS avg_cost
     FROM sam_licenses l
     GROUP BY l.product_id
@@ -33,7 +274,9 @@ SELECT p.id,
        p.vendor,
        p.category,
        p.status,
-       coalesce(l.seats, 0)::bigint AS licensed_seats,
+       coalesce(l.licenses, 0)::bigint AS licenses,
+       coalesce(l.purchased_seats, 0)::bigint AS purchased_seats,
+       coalesce(l.active_seats, 0)::bigint AS licensed_seats,
        coalesce(l.expired_seats, 0)::bigint AS expired_seats,
        coalesce(l.annual_cost, 0)::bigint AS annual_cost,
        coalesce(l.avg_cost, 0)::bigint AS avg_cost_per_seat,
@@ -44,12 +287,97 @@ FROM sam_products p
 LEFT JOIN license_totals l ON l.product_id = p.id
 LEFT JOIN LATERAL (
     SELECT count(*)::bigint AS installations,
-           count(DISTINCT coalesce(nullif(i.device_name, ''), 'installation:' || i.id))::bigint AS devices
+           count(DISTINCT i.asset_id)::bigint AS devices
     FROM sam_installations i
-    WHERE i.product_id = p.id AND i.status = 'installed'
+    WHERE i.product_id = p.id
+) inst ON true
+WHERE p.id = $1
+`
+
+type SamComplianceProductRow struct {
+	ID                  int64  `json:"id"`
+	Name                string `json:"name"`
+	Vendor              string `json:"vendor"`
+	Category            string `json:"category"`
+	Status              string `json:"status"`
+	Licenses            int64  `json:"licenses"`
+	PurchasedSeats      int64  `json:"purchased_seats"`
+	LicensedSeats       int64  `json:"licensed_seats"`
+	ExpiredSeats        int64  `json:"expired_seats"`
+	AnnualCost          int64  `json:"annual_cost"`
+	AvgCostPerSeat      int64  `json:"avg_cost_per_seat"`
+	InstalledDevices    int64  `json:"installed_devices"`
+	Installations       int64  `json:"installations"`
+	BannedInstallations int64  `json:"banned_installations"`
+}
+
+func (q *Queries) SamComplianceProduct(ctx context.Context, id int64) (SamComplianceProductRow, error) {
+	row := q.db.QueryRow(ctx, samComplianceProduct, id)
+	var i SamComplianceProductRow
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Vendor,
+		&i.Category,
+		&i.Status,
+		&i.Licenses,
+		&i.PurchasedSeats,
+		&i.LicensedSeats,
+		&i.ExpiredSeats,
+		&i.AnnualCost,
+		&i.AvgCostPerSeat,
+		&i.InstalledDevices,
+		&i.Installations,
+		&i.BannedInstallations,
+	)
+	return i, err
+}
+
+const samComplianceProducts = `-- name: SamComplianceProducts :many
+WITH license_totals AS (
+    SELECT l.product_id,
+           count(*)::bigint AS licenses,
+           coalesce(sum(l.seats_total), 0)::bigint AS purchased_seats,
+           coalesce(sum(l.seats_total) FILTER (
+               WHERE l.valid_until IS NULL OR l.valid_until >= current_date
+           ), 0)::bigint AS active_seats,
+           coalesce(sum(l.seats_total) FILTER (
+               WHERE l.valid_until IS NOT NULL AND l.valid_until < current_date
+           ), 0)::bigint AS expired_seats,
+           coalesce(sum(l.seats_total * l.cost_per_seat) FILTER (
+               WHERE l.valid_until IS NULL OR l.valid_until >= current_date
+           ), 0)::bigint AS annual_cost,
+           coalesce(round(
+               sum(l.seats_total * l.cost_per_seat)::numeric
+               / nullif(sum(l.seats_total), 0)
+           ), 0)::bigint AS avg_cost
+    FROM sam_licenses l
+    GROUP BY l.product_id
+)
+SELECT p.id,
+       p.name,
+       p.vendor,
+       p.category,
+       p.status,
+       coalesce(l.licenses, 0)::bigint AS licenses,
+       coalesce(l.purchased_seats, 0)::bigint AS purchased_seats,
+       coalesce(l.active_seats, 0)::bigint AS licensed_seats,
+       coalesce(l.expired_seats, 0)::bigint AS expired_seats,
+       coalesce(l.annual_cost, 0)::bigint AS annual_cost,
+       coalesce(l.avg_cost, 0)::bigint AS avg_cost_per_seat,
+       coalesce(inst.devices, 0)::bigint AS installed_devices,
+       coalesce(inst.installations, 0)::bigint AS installations,
+       CASE WHEN p.status = 'banned' THEN coalesce(inst.devices, 0) ELSE 0 END::bigint AS banned_installations
+FROM sam_products p
+LEFT JOIN license_totals l ON l.product_id = p.id
+LEFT JOIN LATERAL (
+    SELECT count(*)::bigint AS installations,
+           count(DISTINCT i.asset_id)::bigint AS devices
+    FROM sam_installations i
+    WHERE i.product_id = p.id
 ) inst ON true
 ORDER BY CASE p.status WHEN 'banned' THEN 0 WHEN 'archived' THEN 3 ELSE 1 END,
-         greatest(coalesce(inst.devices, 0) - coalesce(l.seats, 0), 0) DESC,
+         greatest(coalesce(inst.devices, 0) - coalesce(l.active_seats, 0), 0) DESC,
          p.name,
          p.id
 `
@@ -60,6 +388,8 @@ type SamComplianceProductsRow struct {
 	Vendor              string `json:"vendor"`
 	Category            string `json:"category"`
 	Status              string `json:"status"`
+	Licenses            int64  `json:"licenses"`
+	PurchasedSeats      int64  `json:"purchased_seats"`
 	LicensedSeats       int64  `json:"licensed_seats"`
 	ExpiredSeats        int64  `json:"expired_seats"`
 	AnnualCost          int64  `json:"annual_cost"`
@@ -84,6 +414,8 @@ func (q *Queries) SamComplianceProducts(ctx context.Context) ([]SamCompliancePro
 			&i.Vendor,
 			&i.Category,
 			&i.Status,
+			&i.Licenses,
+			&i.PurchasedSeats,
 			&i.LicensedSeats,
 			&i.ExpiredSeats,
 			&i.AnnualCost,
@@ -105,18 +437,19 @@ func (q *Queries) SamComplianceProducts(ctx context.Context) ([]SamCompliancePro
 const samComplianceSummary = `-- name: SamComplianceSummary :one
 WITH license_totals AS (
     SELECT l.product_id,
-           coalesce(sum(l.seats) FILTER (
-               WHERE l.status = 'active' AND (l.expires_at IS NULL OR l.expires_at >= current_date)
-           ), 0)::bigint AS seats,
-           coalesce(sum(l.seats) FILTER (
-               WHERE l.status = 'active' AND l.expires_at < current_date
+           coalesce(sum(l.seats_total), 0)::bigint AS purchased_seats,
+           coalesce(sum(l.seats_total) FILTER (
+               WHERE l.valid_until IS NULL OR l.valid_until >= current_date
+           ), 0)::bigint AS active_seats,
+           coalesce(sum(l.seats_total) FILTER (
+               WHERE l.valid_until IS NOT NULL AND l.valid_until < current_date
            ), 0)::bigint AS expired_seats,
-           coalesce(sum(l.seats * l.cost_per_seat) FILTER (
-               WHERE l.status = 'active' AND (l.expires_at IS NULL OR l.expires_at >= current_date)
+           coalesce(sum(l.seats_total * l.cost_per_seat) FILTER (
+               WHERE l.valid_until IS NULL OR l.valid_until >= current_date
            ), 0)::bigint AS annual_cost,
            coalesce(round(
-               sum(l.seats * l.cost_per_seat) FILTER (WHERE l.status = 'active')::numeric
-               / nullif(sum(l.seats) FILTER (WHERE l.status = 'active'), 0)
+               sum(l.seats_total * l.cost_per_seat)::numeric
+               / nullif(sum(l.seats_total), 0)
            ), 0)::bigint AS avg_cost
     FROM sam_licenses l
     GROUP BY l.product_id
@@ -124,7 +457,8 @@ WITH license_totals AS (
 product_usage AS (
     SELECT p.id,
            p.status,
-           coalesce(l.seats, 0) AS licensed,
+           coalesce(l.purchased_seats, 0) AS purchased,
+           coalesce(l.active_seats, 0) AS licensed,
            coalesce(l.expired_seats, 0) AS expired,
            coalesce(l.annual_cost, 0) AS annual,
            coalesce(l.avg_cost, 0) AS avg_cost,
@@ -132,24 +466,25 @@ product_usage AS (
     FROM sam_products p
     LEFT JOIN license_totals l ON l.product_id = p.id
     LEFT JOIN LATERAL (
-        SELECT count(DISTINCT coalesce(nullif(i.device_name, ''), 'installation:' || i.id))::bigint AS devices
+        SELECT count(DISTINCT i.asset_id)::bigint AS devices
         FROM sam_installations i
-        WHERE i.product_id = p.id AND i.status = 'installed'
+        WHERE i.product_id = p.id
     ) inst ON true
 )
 SELECT
     (SELECT count(*) FROM sam_products)::bigint AS products,
     (SELECT count(*) FROM sam_products WHERE status = 'active')::bigint AS active_products,
     (SELECT count(*) FROM sam_products WHERE status = 'banned')::bigint AS banned_products,
-    (SELECT count(*) FROM sam_installations WHERE status = 'installed')::bigint AS installations,
-    (SELECT count(DISTINCT coalesce(nullif(device_name, ''), 'installation:' || id))
-     FROM sam_installations WHERE status = 'installed')::bigint AS devices,
-    (SELECT count(*) FROM sam_installations
-     WHERE status = 'installed' AND product_id IS NULL)::bigint AS unmatched_installations,
+    (SELECT count(*) FROM sam_assets)::bigint AS assets,
+    (SELECT count(*) FROM sam_licenses)::bigint AS licenses,
+    (SELECT count(*) FROM sam_installations)::bigint AS installations,
+    (SELECT count(DISTINCT asset_id) FROM sam_installations)::bigint AS devices,
+    (SELECT count(*) FROM sam_installations WHERE product_id IS NULL)::bigint AS unmatched_installations,
+    coalesce(sum(purchased) FILTER (WHERE status <> 'banned'), 0)::bigint AS purchased_seats,
     coalesce(sum(licensed) FILTER (WHERE status <> 'banned'), 0)::bigint AS licensed_seats,
+    coalesce(sum(expired) FILTER (WHERE status <> 'banned'), 0)::bigint AS expired_seats,
     coalesce(sum(greatest(devices - licensed, 0)) FILTER (WHERE status <> 'banned'), 0)::bigint AS overused_seats,
     coalesce(sum(greatest(licensed - devices, 0)) FILTER (WHERE status <> 'banned'), 0)::bigint AS idle_seats,
-    coalesce(sum(expired) FILTER (WHERE status <> 'banned'), 0)::bigint AS expired_seats,
     coalesce(sum(annual) FILTER (WHERE status <> 'banned'), 0)::bigint AS annual_cost,
     coalesce(sum(greatest(devices - licensed, 0) * avg_cost) FILTER (WHERE status <> 'banned'), 0)::bigint AS overuse_cost,
     coalesce(sum(greatest(licensed - devices, 0) * avg_cost) FILTER (WHERE status <> 'banned'), 0)::bigint AS idle_cost,
@@ -162,13 +497,16 @@ type SamComplianceSummaryRow struct {
 	Products               int64 `json:"products"`
 	ActiveProducts         int64 `json:"active_products"`
 	BannedProducts         int64 `json:"banned_products"`
+	Assets                 int64 `json:"assets"`
+	Licenses               int64 `json:"licenses"`
 	Installations          int64 `json:"installations"`
 	Devices                int64 `json:"devices"`
 	UnmatchedInstallations int64 `json:"unmatched_installations"`
+	PurchasedSeats         int64 `json:"purchased_seats"`
 	LicensedSeats          int64 `json:"licensed_seats"`
+	ExpiredSeats           int64 `json:"expired_seats"`
 	OverusedSeats          int64 `json:"overused_seats"`
 	IdleSeats              int64 `json:"idle_seats"`
-	ExpiredSeats           int64 `json:"expired_seats"`
 	AnnualCost             int64 `json:"annual_cost"`
 	OveruseCost            int64 `json:"overuse_cost"`
 	IdleCost               int64 `json:"idle_cost"`
@@ -183,13 +521,16 @@ func (q *Queries) SamComplianceSummary(ctx context.Context) (SamComplianceSummar
 		&i.Products,
 		&i.ActiveProducts,
 		&i.BannedProducts,
+		&i.Assets,
+		&i.Licenses,
 		&i.Installations,
 		&i.Devices,
 		&i.UnmatchedInstallations,
+		&i.PurchasedSeats,
 		&i.LicensedSeats,
+		&i.ExpiredSeats,
 		&i.OverusedSeats,
 		&i.IdleSeats,
-		&i.ExpiredSeats,
 		&i.AnnualCost,
 		&i.OveruseCost,
 		&i.IdleCost,

@@ -16,6 +16,3 @@ WHERE id=$1 RETURNING *;
 DELETE FROM planner_blocks WHERE id=$1;
 -- name: SetPlannerBlockMergeRequest :exec
 UPDATE planner_blocks SET branch=$2,merge_request_iid=$3,updated_at=now() WHERE id=$1;
--- name: StartPlannerBlock :one
-UPDATE planner_blocks SET started_at=coalesce(started_at,now()),updated_at=now()
-WHERE id=$1 RETURNING *;

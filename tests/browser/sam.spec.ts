@@ -1,5 +1,243 @@
 import { expect, type Page, test } from "@playwright/test";
 
+type Mode = "loading" | "empty" | "error" | "success";
+
+const summary = {
+	products: 5,
+	activeProducts: 4,
+	bannedProducts: 1,
+	assets: 12,
+	licenses: 5,
+	installations: 146,
+	devices: 146,
+	unmatchedInstallations: 3,
+	purchasedSeats: 155,
+	licensedSeats: 155,
+	expiredSeats: 10,
+	overusedSeats: 18,
+	idleSeats: 40,
+	bannedInstallations: 8,
+	annualCost: 125000,
+	overuseCost: 18000,
+	idleCost: 20000,
+	expiredCost: 8000,
+	costAtRisk: 26000,
+	compliancePercent: 60,
+	riskLevel: "high",
+	recommendations: [
+		"Удалить запрещённое ПО с 8 устройств.",
+		"Докупить 18 мест или удалить лишние установки.",
+		"Сопоставить 3 установок с каталогом.",
+	],
+	categories: [
+		{
+			category: "Office",
+			products: 2,
+			installedDevices: 128,
+			overusedSeats: 18,
+			riskCost: 18000,
+		},
+	],
+	statuses: [
+		{ status: "active", products: 4, installedDevices: 140 },
+		{ status: "inactive", products: 0, installedDevices: 0 },
+		{ status: "archived", products: 0, installedDevices: 0 },
+		{ status: "banned", products: 1, installedDevices: 8 },
+	],
+};
+
+const emptySummary = {
+	...summary,
+	products: 0,
+	activeProducts: 0,
+	bannedProducts: 0,
+	assets: 0,
+	licenses: 0,
+	installations: 0,
+	devices: 0,
+	unmatchedInstallations: 0,
+	purchasedSeats: 0,
+	licensedSeats: 0,
+	expiredSeats: 0,
+	overusedSeats: 0,
+	idleSeats: 0,
+	bannedInstallations: 0,
+	annualCost: 0,
+	overuseCost: 0,
+	idleCost: 0,
+	expiredCost: 0,
+	costAtRisk: 0,
+	compliancePercent: 0,
+	riskLevel: "low",
+	recommendations: ["Критических действий не требуется."],
+	categories: [],
+	statuses: [],
+};
+
+const products = [
+	{
+		id: 1,
+		name: "Microsoft Office",
+		vendor: "Microsoft",
+		category: "Office",
+		status: "active",
+		licenses: 1,
+		purchasedSeats: 100,
+		licensedSeats: 100,
+		expiredSeats: 0,
+		installedDevices: 118,
+		installations: 120,
+		bannedInstallations: 0,
+		overusedSeats: 18,
+		idleSeats: 0,
+		deltaSeats: 18,
+		annualCost: 100000,
+		avgCostPerSeat: 1000,
+		riskCost: 18000,
+		riskLevel: "high",
+		recommendation: "Докупить 18 мест или удалить лишние установки.",
+	},
+	{
+		id: 4,
+		name: "Radmin",
+		vendor: "Famatech",
+		category: "Remote access",
+		status: "banned",
+		licenses: 0,
+		purchasedSeats: 0,
+		licensedSeats: 0,
+		expiredSeats: 0,
+		installedDevices: 8,
+		installations: 8,
+		bannedInstallations: 8,
+		overusedSeats: 0,
+		idleSeats: 0,
+		deltaSeats: 8,
+		annualCost: 0,
+		avgCostPerSeat: 0,
+		riskCost: 0,
+		riskLevel: "high",
+		recommendation: "Удалить запрещённое ПО с 8 устройств.",
+	},
+];
+
+const risks = [
+	{
+		code: "license_overuse",
+		severity: "high",
+		productId: 1,
+		productName: "Microsoft Office",
+		category: "Office",
+		affected: 18,
+		cost: 18000,
+		recommendation: "Докупить 18 мест или удалить лишние установки.",
+	},
+	{
+		code: "unmatched_installations",
+		severity: "high",
+		affected: 3,
+		cost: 0,
+		recommendation: "Сопоставить 3 установок с каталогом.",
+	},
+];
+
+const productDetail = {
+	product: products[0],
+	licenses: [
+		{
+			id: 1,
+			kind: "subscription",
+			seatsTotal: 100,
+			seatsUsed: 100,
+			costPerSeat: 1000,
+			currency: "RUB",
+			validUntil: "2027-01-15",
+			status: "active",
+		},
+	],
+	hosts: [
+		{
+			assetId: 1,
+			hostname: "alpha-linux",
+			platform: "Linux",
+			owner: "Леонид",
+			version: "16.89",
+			lastSeenAt: "2026-11-14T09:30:00Z",
+			licenseStatus: "licensed",
+		},
+	],
+};
+
+const hostDetail = {
+	id: 1,
+	hostname: "alpha-linux",
+	platform: "Linux",
+	owner: "Леонид",
+	lastSeenAt: "2026-11-14T09:30:00Z",
+	installations: [
+		{
+			id: 1,
+			productId: 1,
+			product: "Microsoft Office",
+			vendor: "Microsoft",
+			category: "Office",
+			detectedName: "Microsoft 365",
+			version: "16.89",
+			status: "licensed",
+		},
+	],
+	licensed: 1,
+	expired: 0,
+	unlicensed: 0,
+	banned: 0,
+	inactive: 0,
+};
+
+async function mockBase(page: Page) {
+	await page.route("**/api/public/site-config", (route) =>
+		route.fulfill({
+			json: {
+				publicBaseUrl: "https://portal.test/",
+				plannerBaseUrl: "https://planner.test/team",
+				links: [],
+			},
+		}),
+	);
+	await page.route("**/api/me", (route) =>
+		route.fulfill({ status: 401, json: { detail: "auth.required" } }),
+	);
+}
+
+async function mockCompliance(page: Page) {
+	await mockBase(page);
+	const state = { mode: "success" as Mode };
+	await page.route("**/api/public/sam/compliance/**", async (route) => {
+		const path = new URL(route.request().url()).pathname;
+		if (state.mode === "loading") {
+			await new Promise((resolve) => setTimeout(resolve, 250));
+		}
+		if (state.mode === "error") {
+			return route.fulfill({
+				status: 503,
+				json: { detail: "sam.storage_unavailable" },
+			});
+		}
+		if (state.mode === "empty") {
+			if (path.endsWith("/summary")) return route.fulfill({ json: emptySummary });
+			return route.fulfill({ json: [] });
+		}
+		if (path.endsWith("/summary")) return route.fulfill({ json: summary });
+		if (path.endsWith("/products/1")) {
+			return route.fulfill({ json: productDetail });
+		}
+		if (path.endsWith("/hosts/1")) return route.fulfill({ json: hostDetail });
+		if (path.endsWith("/products")) return route.fulfill({ json: products });
+		if (path.endsWith("/risks")) return route.fulfill({ json: risks });
+		return route.fulfill({ status: 404, json: { detail: "not_found" } });
+	});
+	return state;
+}
+
 type SamCase = {
 	path: string;
 	api: string;
@@ -11,35 +249,6 @@ type SamCase = {
 };
 
 const cases: SamCase[] = [
-	{
-		path: "/sam",
-		api: "/api/public/sam/dashboard",
-		heading: "SAM: обзор",
-		empty: {
-			products: 0,
-			assets: 0,
-			licenses: 0,
-			seatsTotal: 0,
-			seatsUsed: 0,
-			openFindings: 0,
-			pendingMatches: 0,
-			expiringLicenses: 0,
-			unlicensedInstallations: 0,
-		},
-		success: {
-			products: 4,
-			assets: 5,
-			licenses: 6,
-			seatsTotal: 70,
-			seatsUsed: 42,
-			openFindings: 3,
-			pendingMatches: 2,
-			expiringLicenses: 1,
-			unlicensedInstallations: 7,
-		},
-		emptyText: "Показателей пока нет",
-		successText: "Продукты",
-	},
 	{
 		path: "/sam/catalog",
 		api: "/api/public/sam/catalog",
@@ -98,26 +307,6 @@ const cases: SamCase[] = [
 		successText: "alpha",
 	},
 	{
-		path: "/sam/compliance",
-		api: "/api/public/sam/compliance",
-		heading: "SAM: комплаенс",
-		empty: [],
-		success: [
-			{
-				id: 3,
-				code: "unlicensed-software",
-				severity: "critical",
-				status: "open",
-				product: "Design Suite",
-				asset: "alpha",
-				details: "No active license",
-				detectedAt: "2026-11-14T10:00:00Z",
-			},
-		],
-		emptyText: "Нарушений не найдено",
-		successText: "Критическая",
-	},
-	{
 		path: "/sam/matching",
 		api: "/api/public/sam/matching",
 		heading: "SAM: сопоставление",
@@ -152,26 +341,16 @@ const cases: SamCase[] = [
 	},
 ];
 
-type Mode = "loading" | "empty" | "error" | "success";
-
 async function mockSam(page: Page) {
-	await page.route("**/api/public/site-config", (route) =>
-		route.fulfill({
-			json: {
-				publicBaseUrl: "https://portal.test/",
-				plannerBaseUrl: "https://planner.test/team",
-				links: [],
-			},
-		}),
-	);
-	await page.route("**/api/me", (route) =>
-		route.fulfill({ status: 401, json: { detail: "auth.required" } }),
-	);
+	await mockBase(page);
 	const state = { mode: "success" as Mode };
 	await page.route("**/api/public/sam/**", async (route) => {
 		const path = new URL(route.request().url()).pathname;
+		if (path.startsWith("/api/public/sam/compliance")) {
+			return route.fallback();
+		}
 		const item = cases.find((candidate) => candidate.api === path);
-		if (!item) return route.continue();
+		if (!item) return route.fulfill({ status: 404, json: { detail: "not_found" } });
 		if (state.mode === "loading") {
 			await new Promise((resolve) => setTimeout(resolve, 250));
 		}
@@ -189,13 +368,77 @@ async function mockSam(page: Page) {
 }
 
 test("SAM opens from the public header navigation", async ({ page }) => {
-	const state = await mockSam(page);
-	state.mode = "success";
+	await mockCompliance(page);
 	await page.goto("/");
 	await page.getByRole("link", { name: "SAM", exact: true }).click();
 	await expect(page).toHaveURL(/\/sam$/);
 	await expect(page.getByRole("heading", { name: "SAM: обзор" })).toBeVisible();
 	await expect(page.getByRole("navigation", { name: "Разделы SAM" })).toBeVisible();
+});
+
+test("dashboard exposes loading, empty, error and success", async ({ page }) => {
+	const state = await mockCompliance(page);
+
+	state.mode = "loading";
+	await page.goto("/sam");
+	await expect(page.getByRole("heading", { name: "SAM: обзор" })).toBeVisible();
+	await expect(page.locator('[aria-busy="true"]')).toBeVisible();
+	await expect(page.getByText("Комплаенс", { exact: false }).first()).toBeVisible();
+
+	state.mode = "empty";
+	await page.goto("/sam");
+	await expect(page.getByText("Показателей пока нет", { exact: true })).toBeVisible();
+
+	state.mode = "error";
+	await page.goto("/sam");
+	await expect(page.getByRole("alert")).toBeVisible();
+	await expect(
+		page.getByRole("button", { name: "Обновить", exact: true }),
+	).toBeVisible();
+
+	state.mode = "success";
+	await page.goto("/sam");
+	await expect(page.getByText("Microsoft Office", { exact: false }).first()).toBeVisible();
+});
+
+test("compliance table exposes loading, empty, error and success", async ({
+	page,
+}) => {
+	const state = await mockCompliance(page);
+
+	state.mode = "loading";
+	await page.goto("/sam/compliance");
+	await expect(page.getByRole("heading", { name: "SAM: комплаенс" })).toBeVisible();
+	await expect(page.locator('[aria-busy="true"]')).toBeVisible();
+	await expect(page.getByText("Microsoft Office", { exact: false }).first()).toBeVisible();
+
+	state.mode = "empty";
+	await page.goto("/sam/compliance");
+	await expect(page.getByText("Нарушений не найдено", { exact: true })).toBeVisible();
+
+	state.mode = "error";
+	await page.goto("/sam/compliance");
+	await expect(page.getByRole("alert")).toBeVisible();
+
+	state.mode = "success";
+	await page.goto("/sam/compliance");
+	await expect(page.getByText("Microsoft Office", { exact: false }).first()).toBeVisible();
+	await expect(page.getByText("Куплено", { exact: true }).first()).toBeVisible();
+});
+
+test("risk rows lead to product and host details", async ({ page }) => {
+	await mockCompliance(page);
+	await page.goto("/sam/compliance");
+	await page.getByRole("link", { name: "Microsoft Office", exact: true }).click();
+	await expect(page).toHaveURL(/\/sam\/catalog\/1$/);
+	await expect(
+		page.getByRole("heading", { name: "Microsoft Office" }),
+	).toBeVisible();
+	await page.getByRole("link", { name: "alpha-linux", exact: true }).click();
+	await expect(page).toHaveURL(/\/sam\/inventory\/1$/);
+	await expect(
+		page.getByRole("heading", { name: "alpha-linux" }),
+	).toBeVisible();
 });
 
 test("every SAM page exposes loading, empty, error and success", async ({
@@ -229,15 +472,25 @@ test("every SAM page exposes loading, empty, error and success", async ({
 test("SAM pages fit 375px and 1280px without horizontal scrolling", async ({
 	page,
 }) => {
-	const state = await mockSam(page);
-	state.mode = "success";
+	const compliance = await mockCompliance(page);
+	compliance.mode = "success";
+	const sam = await mockSam(page);
+	sam.mode = "success";
+	const paths = [
+		"/sam",
+		"/sam/compliance",
+		"/sam/catalog",
+		"/sam/catalog/1",
+		"/sam/licenses",
+		"/sam/inventory",
+		"/sam/inventory/1",
+		"/sam/matching",
+		"/sam/assistant",
+	];
 	for (const width of [375, 1280]) {
 		await page.setViewportSize({ width, height: 900 });
-		for (const item of cases) {
-			await page.goto(item.path);
-			await expect(
-				page.getByRole("heading", { name: item.heading }),
-			).toBeVisible();
+		for (const path of paths) {
+			await page.goto(path);
 			await expect(
 				page.getByRole("navigation", { name: "Разделы SAM" }),
 			).toBeVisible();

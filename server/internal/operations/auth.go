@@ -17,7 +17,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/danielgtaylor/huma/v2"
 	"github.com/jackc/pgx/v5/pgtype"
 	db "hackathon/internal/db/sqlc"
 	"hackathon/internal/identity"
@@ -40,34 +39,14 @@ func remoteIP(r *http.Request) string {
 		return ""
 	}
 	ip := net.ParseIP(host)
-	// The API is only published through the internal nginx container on the
-	// dedicated Docker bridge. That container is the reverse proxy, so the
-	// original client address from X-Forwarded-For is authoritative there.
-	// Direct clients (for example a VPN peer) cannot use the header.
-	if ip != nil && (ip.IsLoopback() || internalProxyNetwork.Contains(ip)) {
-		// nginx overwrites X-Real-IP with the real peer address. Falling back
-		// to the last X-Forwarded-For entry avoids trusting a client-supplied
-		// prefix of the chain.
-		forwarded := strings.TrimSpace(r.Header.Get("X-Real-IP"))
-		if forwarded == "" {
-			chain := strings.Split(r.Header.Get("X-Forwarded-For"), ",")
-			forwarded = strings.TrimSpace(chain[len(chain)-1])
-		}
+	if ip != nil && ip.IsLoopback() {
+		forwarded := strings.TrimSpace(strings.Split(r.Header.Get("X-Forwarded-For"), ",")[0])
 		if forwardedIP := net.ParseIP(forwarded); forwardedIP != nil {
 			return forwardedIP.String()
 		}
 	}
 	return host
 }
-
-var internalProxyNetwork = func() *net.IPNet {
-	_, network, err := net.ParseCIDR("172.30.0.0/24")
-	if err != nil {
-		panic("invalid internal proxy network")
-	}
-	return network
-}()
-
 func allowedUser(u string) bool {
 	switch u {
 	case "niktar411", "reznak", "kvant", "hensy":
@@ -121,8 +100,7 @@ func (s *Service) Authenticate(next http.Handler) http.Handler {
 		}
 		if r.Method != "GET" && r.Method != "HEAD" {
 			origin := r.Header.Get("Origin")
-			if origin != s.config.PublicURL && origin != s.config.PlannerURL &&
-				(s.config.AIURL == "" || origin != s.config.AIURL) {
+			if origin != s.config.PublicURL && origin != s.config.PlannerURL {
 				http.Error(w, "auth.csrf", 403)
 				return
 			}
@@ -284,24 +262,16 @@ func (s *Service) Callback(w http.ResponseWriter, r *http.Request) {
 	http.SetCookie(w, &http.Cookie{Name: "portal_session", Value: id, Path: "/", MaxAge: int(lifetime), HttpOnly: true, Secure: strings.HasPrefix(s.config.PublicURL, "https:"), SameSite: http.SameSiteLaxMode})
 	http.Redirect(w, r, "/", http.StatusFound)
 }
-
-type logoutOutput struct {
-	SetCookie string `header:"Set-Cookie"`
-}
-
-func (s *Service) Logout(ctx context.Context) (*logoutOutput, error) {
-	p, err := identity.FromContext(ctx)
+func (s *Service) Logout(w http.ResponseWriter, r *http.Request) {
+	p, err := identity.FromContext(r.Context())
 	if err != nil {
-		return nil, err
+		http.Error(w, "auth.required", 401)
+		return
 	}
-	if err := s.db.DeleteSession(ctx, p.Session.ID); err != nil {
-		return nil, huma.Error503ServiceUnavailable("auth.unavailable")
+	if err := s.db.DeleteSession(r.Context(), p.Session.ID); err != nil {
+		http.Error(w, "auth.unavailable", 503)
+		return
 	}
-	secure := ""
-	if strings.HasPrefix(s.config.PublicURL, "https:") {
-		secure = "; Secure"
-	}
-	return &logoutOutput{
-		SetCookie: "portal_session=; Path=/; Max-Age=0; HttpOnly; SameSite=Lax" + secure,
-	}, nil
+	http.SetCookie(w, &http.Cookie{Name: "portal_session", Path: "/", MaxAge: -1, HttpOnly: true, SameSite: http.SameSiteLaxMode})
+	w.WriteHeader(http.StatusNoContent)
 }

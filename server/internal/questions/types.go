@@ -5,7 +5,6 @@ import "time"
 const (
 	maxQuestionLength  = 4000
 	maxGroundingLength = 100000
-	maxAnswerLength    = 8000
 )
 
 // Link is a canonical link selected from the server-owned registry.
