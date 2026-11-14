@@ -76,4 +76,9 @@ func TestAdminToolsRequireAdministratorAndFixedOperations(t *testing.T) {
 	if err != nil || !output.OK || planner.calls != 1 {
 		t.Fatalf("valid planner operation failed: %+v, %v", output, err)
 	}
+	iid := int64(5)
+	output, err = service.callAdminOperation(ctx, ToolMergeMergeRequest, ToolInput{MRIID: &iid, SHA: "abc123"})
+	if err != nil || !output.OK || deployment.calls != 2 || deployment.action != "merge" {
+		t.Fatalf("admin merge operation failed: %+v, %v", output, err)
+	}
 }
