@@ -72,8 +72,6 @@ func taskError(err error) error {
 		return huma.Error400BadRequest("coding_task.invalid_input")
 	case errors.Is(err, ErrConflict):
 		return huma.Error409Conflict("coding_task.invalid_phase")
-	case errors.Is(err, ErrBusy):
-		return huma.Error429TooManyRequests("coding_task.busy")
 	case errors.Is(err, ErrForbidden):
 		return huma.Error403Forbidden("coding_task.access_denied")
 	default:

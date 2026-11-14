@@ -46,12 +46,6 @@ func TestCompleteRecordsActualUsageWithoutMetadataInProviderPayload(t *testing.T
 		if r.Header.Get("Authorization") != "Bearer provider-key" {
 			t.Error("provider credential missing")
 		}
-		if r.Header.Get("x-opencode-session") != "chat-17" {
-			t.Error("stable provider session header missing")
-		}
-		if r.Header.Get("User-Agent") != "hackathon-portal/1.0" {
-			t.Error("provider user agent missing")
-		}
 		var payload map[string]any
 		if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
 			t.Error(err)
@@ -73,7 +67,7 @@ func TestCompleteRecordsActualUsageWithoutMetadataInProviderPayload(t *testing.T
 	defer provider.Close()
 	store := &recordingStore{settings: map[string]string{}}
 	service := newService(store, Config{URL: provider.URL, APIKey: "provider-key", Model: "deepseek-test"}, provider.Client())
-	response, err := service.Complete(t.Context(), Request{Messages: []Message{{Role: "user", Content: "question"}}, Actor: "public", RequestID: "faq-test-request", Session: "chat-17"})
+	response, err := service.Complete(t.Context(), Request{Messages: []Message{{Role: "user", Content: "question"}}, Actor: "public", RequestID: "faq-test-request"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -82,54 +76,6 @@ func TestCompleteRecordsActualUsageWithoutMetadataInProviderPayload(t *testing.T
 	}
 	if store.finish.InputTokens.Int64 != 11 || store.finish.OutputTokens.Int64 != 7 || store.finish.TotalTokens.Int64 != 18 {
 		t.Fatalf("wrong token usage: %+v", store.finish)
-	}
-}
-
-func TestStreamCollectsReasoningAndContent(t *testing.T) {
-	provider := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		var payload map[string]any
-		if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
-			t.Error(err)
-		}
-		if payload["stream"] != true {
-			t.Error("streaming was not requested")
-		}
-		options, ok := payload["stream_options"].(map[string]any)
-		if !ok || options["include_usage"] != true {
-			t.Error("usage was not requested in the stream")
-		}
-		w.Header().Set("Content-Type", "text/event-stream")
-		frames := []string{
-			`data: {"choices":[{"delta":{"role":"assistant","content":""}}]}`,
-			`data: {"choices":[{"delta":{"reasoning_content":"Let me "}}]}`,
-			`data: {"choices":[{"delta":{"reasoning_content":"think."}}]}`,
-			`data: {"choices":[{"delta":{"content":"The answer"}}]}`,
-			`data: {"choices":[{"delta":{"content":" is 4."}}],"usage":{"prompt_tokens":5,"completion_tokens":3,"total_tokens":8}}`,
-			`data: [DONE]`,
-		}
-		for _, frame := range frames {
-			if _, err := w.Write([]byte(frame + "\n\n")); err != nil {
-				t.Error(err)
-			}
-		}
-	}))
-	defer provider.Close()
-	store := &recordingStore{settings: map[string]string{}}
-	service := newService(store, Config{URL: provider.URL, APIKey: "provider-key", Model: "deepseek-test"}, provider.Client())
-	var reasoning, content strings.Builder
-	response, err := service.Stream(t.Context(), Request{Messages: []Message{{Role: "user", Content: "question"}}}, func(delta Delta) error {
-		reasoning.WriteString(delta.Reasoning)
-		content.WriteString(delta.Content)
-		return nil
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-	if reasoning.String() != "Let me think." || content.String() != "The answer is 4." {
-		t.Fatalf("unexpected deltas: %q / %q", reasoning.String(), content.String())
-	}
-	if response.Message.Content != "The answer is 4." || response.Usage == nil || response.Usage.TotalTokens == nil || *response.Usage.TotalTokens != 8 {
-		t.Fatalf("unexpected aggregated response: %+v", response)
 	}
 }
 

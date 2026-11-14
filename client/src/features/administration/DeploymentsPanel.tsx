@@ -28,57 +28,26 @@ const targets: { id: Target; label: () => string }[] = [
 	{ id: "test", label: () => m.targetTest() },
 ];
 
-export function DeploymentsPanel(props: { csrf?: string; member?: boolean }) {
+export function DeploymentsPanel(props: { csrf?: string }) {
 	const toast = useToast();
-	const member = () => props.member === true;
 	const [offset, setOffset] = createSignal(0);
-	const [items, { refetch }] = createResource(offset, async (value) => {
-		if (member()) {
-			return unwrap(
-				await api.GET("/api/deployments", {
-					params: { query: { limit: 50, offset: value } },
-				}),
-			);
-		}
-		return unwrap(
-			await api.GET("/api/admin/deployments", {
-				params: { query: { limit: 50, offset: value } },
-			}),
-		);
-	});
+	const [items, { refetch }] = createResource(offset, async (value) =>
+		unwrap(await api.GET("/api/admin/deployments", { params: { query: { limit: 50, offset: value } } })),
+	);
 	const [action, setAction] = createSignal<Action>();
-	const [target, setTarget] = createSignal<Target>(member() ? "coding" : "production");
+	const [target, setTarget] = createSignal<Target>("production");
 	const [release, setRelease] = createSignal("");
 	const [pending, setPending] = createSignal(false);
-	const availableTargets = () =>
-		member() ? targets.filter((item) => item.id !== "production") : targets;
 
 	async function run() {
 		const current = action();
 		if (!current || pending()) return;
 		setPending(true);
 		try {
-			const body = {
-				target: target(),
-				...(release().trim() ? { release: release().trim() } : {}),
-			};
-			if (member()) {
-				unwrap(
-					await api.POST("/api/deployments/{action}", {
-						headers: csrfHeaders(props.csrf),
-						params: { path: { action: current } },
-						body,
-					}),
-				);
-			} else {
-				unwrap(
-					await api.POST("/api/admin/deployments/{action}", {
-						headers: csrfHeaders(props.csrf),
-						params: { path: { action: current } },
-						body,
-					}),
-				);
-			}
+			unwrap(await api.POST("/api/admin/deployments/{action}", {
+				headers: csrfHeaders(props.csrf), params: { path: { action: current } },
+				body: { target: target(), ...(release().trim() ? { release: release().trim() } : {}) },
+			}));
 			setAction(undefined); setRelease(""); await refetch(); toast.show(m.success());
 		} catch {
 			toast.show(m.loadError());
@@ -89,7 +58,7 @@ export function DeploymentsPanel(props: { csrf?: string; member?: boolean }) {
 
 	return (
 		<section class={s.panel}>
-			<div><h2>{member() ? m.teamDeployments() : m.adminDeployments()}</h2><p class={s.muted}>{member() ? m.teamDeploymentsHint() : m.deploymentsHint()}</p></div>
+			<div><h2>{m.adminDeployments()}</h2><p class={s.muted}>{m.deploymentsHint()}</p></div>
 			<div class={s.choices}>
 				<For each={actions}>{(item) => <Button variant={item.id === "stop" || item.id === "drop_test_database" ? "danger" : "secondary"} onClick={() => setAction(item.id)}>{item.label()}</Button>}</For>
 			</div>
@@ -121,7 +90,7 @@ export function DeploymentsPanel(props: { csrf?: string; member?: boolean }) {
 				onClose={() => { if (!pending()) setAction(undefined); }} onConfirm={() => void run()}
 			>
 				<fieldset><legend>{m.deploymentTarget()}</legend><div class={s.choices}>
-					<For each={availableTargets()}>{(item) => <Button data-selected={target() === item.id} aria-pressed={target() === item.id} onClick={() => setTarget(item.id)}>{item.label()}</Button>}</For>
+					<For each={targets}>{(item) => <Button data-selected={target() === item.id} aria-pressed={target() === item.id} onClick={() => setTarget(item.id)}>{item.label()}</Button>}</For>
 				</div></fieldset>
 				<Input label={m.deploymentRelease()} maxlength={128} value={release()} onInput={(event) => setRelease(event.currentTarget.value)} hint={m.deploymentReleaseHint()} />
 				<p>{m.deploymentConfirmationHint()}</p>

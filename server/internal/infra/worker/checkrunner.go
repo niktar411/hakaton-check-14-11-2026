@@ -40,15 +40,7 @@ func runCheck(check string, paths CheckPaths) int {
 	}
 	switch check {
 	case "bun-check":
-		// .git is intentionally absent from the disposable copy, so the slop
-		// check (git status/diff) cannot run here. The remaining quality gates
-		// still run and are the ones the agent needs before opening an MR.
-		for _, args := range [][]string{{"run", "lint"}, {"run", "typecheck"}, {"run", "test"}} {
-			if code := run(paths.Root, "bun", args...); code != 0 {
-				return code
-			}
-		}
-		return 0
+		return run(paths.Root, "bun", "run", "check")
 	case "client-build":
 		if code := run(paths.Root, "bun", "run", "build:client"); code != 0 {
 			return code
@@ -85,17 +77,8 @@ func prepare(paths CheckPaths) error {
 	if info, err := os.Stat(paths.Dependencies); err == nil && info.IsDir() {
 		target := filepath.Join(paths.Root, "node_modules")
 		if _, err := os.Lstat(target); errors.Is(err, os.ErrNotExist) {
-			if err := os.MkdirAll(target, 0o755); err != nil {
+			if err := os.Symlink(paths.Dependencies, target); err != nil {
 				return err
-			}
-			entries, err := os.ReadDir(paths.Dependencies)
-			if err != nil {
-				return err
-			}
-			for _, entry := range entries {
-				if err := os.Symlink(filepath.Join(paths.Dependencies, entry.Name()), filepath.Join(target, entry.Name())); err != nil {
-					return err
-				}
 			}
 		}
 	}

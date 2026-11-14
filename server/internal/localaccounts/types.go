@@ -12,7 +12,6 @@ const (
 type Config struct {
 	PublicURL     string
 	PlannerURL    string
-	AIURL         string
 	AdminUser     string
 	AdminIP       string
 	SecureCookies bool

@@ -37,15 +37,10 @@ type Request struct {
 	MaxTokens      int             `json:"max_tokens"`
 	Actor          string          `json:"-"`
 	RequestID      string          `json:"-"`
-	Session        string          `json:"-"`
 }
 
 type ResponseFormat struct {
 	Type string `json:"type"`
-}
-
-type StreamOptions struct {
-	IncludeUsage bool `json:"include_usage"`
 }
 
 type Usage struct {
@@ -57,11 +52,4 @@ type Usage struct {
 type Response struct {
 	Message Message
 	Usage   *Usage
-}
-
-// Delta is one streamed piece of a model response. Reasoning is the model's
-// private chain of thought; Content is the visible answer.
-type Delta struct {
-	Reasoning string
-	Content   string
 }

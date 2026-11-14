@@ -9,7 +9,6 @@ import (
 	"strings"
 	"sync"
 	"testing"
-	"time"
 
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/danielgtaylor/huma/v2/humatest"
@@ -165,20 +164,6 @@ func (s *fakeStore) SetPlannerBlockMergeRequest(_ context.Context, arg db.SetPla
 	block.MergeRequestIid = arg.MergeRequestIid
 	s.blocks[arg.ID] = block
 	return nil
-}
-
-func (s *fakeStore) StartPlannerBlock(_ context.Context, id int64) (db.PlannerBlock, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	block, ok := s.blocks[id]
-	if !ok {
-		return db.PlannerBlock{}, pgx.ErrNoRows
-	}
-	if !block.StartedAt.Valid {
-		block.StartedAt = pgtype.Timestamptz{Time: time.Now().UTC(), Valid: true}
-	}
-	s.blocks[id] = block
-	return block, nil
 }
 
 func (s *fakeStore) GetLocalAccountByID(_ context.Context, id int64) (db.LocalAccount, error) {
@@ -401,28 +386,6 @@ func TestApprovalsFailureDoesNotFabricateOrEraseKnownProgress(t *testing.T) {
 	}
 	if blocks[0].Progress.State != ProgressReview || blocks[0].Progress.Approvals != nil {
 		t.Fatalf("progress = %+v", blocks[0].Progress)
-	}
-}
-
-func TestOwnerCanStartOnlyOwnBlock(t *testing.T) {
-	svc, store, _ := newTestService()
-	store.blocks[1] = db.PlannerBlock{ID: 1, Title: "Mine", OwnerID: 1}
-	store.blocks[2] = db.PlannerBlock{ID: 2, Title: "Other", OwnerID: 2}
-	ctx := identity.WithPrincipal(t.Context(), memberPrincipal())
-
-	block, err := svc.Start(ctx, 1)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if block.Progress.State != ProgressVerifying || block.StartedAt == nil {
-		t.Fatalf("started block progress = %#v", block)
-	}
-	if _, err := svc.Start(ctx, 2); err == nil {
-		t.Fatal("member started another owner's block")
-	}
-	started, err := svc.StartForOwner(t.Context(), 1, "alice")
-	if err != nil || started.Progress.State != ProgressVerifying {
-		t.Fatalf("AI start for owner failed: %#v, %v", started, err)
 	}
 }
 

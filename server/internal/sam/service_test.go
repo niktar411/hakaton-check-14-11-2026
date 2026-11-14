@@ -13,7 +13,7 @@ import (
 
 type fakeStore struct {
 	dashboard db.SamDashboardRow
-	products  []db.SamPublicProductsRow
+	products  []db.ListSamProductsRow
 	licenses  []db.ListSamLicensesRow
 	assets    []db.ListSamAssetsRow
 	findings  []db.ListSamFindingsRow
@@ -25,7 +25,7 @@ func (s *fakeStore) SamDashboard(context.Context) (db.SamDashboardRow, error) {
 	return s.dashboard, s.err
 }
 
-func (s *fakeStore) SamPublicProducts(context.Context, db.SamPublicProductsParams) ([]db.SamPublicProductsRow, error) {
+func (s *fakeStore) ListSamProducts(context.Context, db.ListSamProductsParams) ([]db.ListSamProductsRow, error) {
 	return s.products, s.err
 }
 
@@ -69,10 +69,8 @@ func TestDashboardMapsAggregates(t *testing.T) {
 
 func TestProductsMapUsageCounts(t *testing.T) {
 	now := time.Date(2026, 11, 14, 12, 0, 0, 0, time.UTC)
-	store := &fakeStore{products: []db.SamPublicProductsRow{{
+	store := &fakeStore{products: []db.ListSamProductsRow{{
 		ID: 7, Name: "Design Suite", Vendor: "Acme", Category: "Design",
-		SectionCode: "04", ClassCode: "04.12", LicenseMetric: "user",
-		RegistryRf: true, RegistryEntry: "12345", IsTrackable: false,
 		LicenseCount: 2, InstallationCount: 5, UpdatedAt: timestamp(now),
 	}}}
 	got, err := newService(store).Products(t.Context())
@@ -88,18 +86,13 @@ func TestProductsMapUsageCounts(t *testing.T) {
 		!product.UpdatedAt.Equal(now) {
 		t.Fatalf("unexpected product: %#v", product)
 	}
-	if product.SectionCode != "04" || product.ClassCode != "04.12" || product.LicenseMetric != "user" ||
-		!product.RegistryRf || product.RegistryEntry != "12345" || product.IsTrackable {
-		t.Fatalf("classification and registry fields were not mapped: %#v", product)
-	}
 }
 
 func TestLicensesMapStatusAndOptionalDate(t *testing.T) {
 	store := &fakeStore{licenses: []db.ListSamLicensesRow{
 		{
 			ID: 1, ProductName: "Design Suite", ProductVendor: "Acme", Kind: "subscription",
-			SeatsTotal: 10, SeatsUsed: 4, Contract: "Договор-1",
-			ValidUntil: pgtype.Date{Time: time.Date(2027, 1, 15, 0, 0, 0, 0, time.UTC), Valid: true},
+			SeatsTotal: 10, SeatsUsed: 4, ValidUntil: pgtype.Date{Time: time.Date(2027, 1, 15, 0, 0, 0, 0, time.UTC), Valid: true},
 			Status: "active",
 		},
 		{
@@ -114,8 +107,7 @@ func TestLicensesMapStatusAndOptionalDate(t *testing.T) {
 	if len(got) != 2 {
 		t.Fatalf("licenses = %d, want 2", len(got))
 	}
-	if got[0].ValidUntil == nil || *got[0].ValidUntil != "2027-01-15" || got[0].Status != "active" ||
-		got[0].Contract != "Договор-1" {
+	if got[0].ValidUntil == nil || *got[0].ValidUntil != "2027-01-15" || got[0].Status != "active" {
 		t.Fatalf("unexpected dated license: %#v", got[0])
 	}
 	if got[1].ValidUntil != nil || got[1].Status != "active" {

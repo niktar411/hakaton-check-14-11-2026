@@ -29,24 +29,6 @@ type Orchestrator interface {
 	Run(ctx context.Context, action, target, release string) (AgentResult, error)
 }
 
-// TargetOrchestrator sends production operations to SERVER 1 and the coding,
-// review and test targets to the SERVER 2 worker agent.
-type TargetOrchestrator struct {
-	production Orchestrator
-	worker     Orchestrator
-}
-
-func NewTargetOrchestrator(production, worker Orchestrator) *TargetOrchestrator {
-	return &TargetOrchestrator{production: production, worker: worker}
-}
-
-func (t *TargetOrchestrator) Run(ctx context.Context, action, target, release string) (AgentResult, error) {
-	if target == TargetProduction {
-		return t.production.Run(ctx, action, target, release)
-	}
-	return t.worker.Run(ctx, action, target, release)
-}
-
 // AgentOrchestrator is an authenticated HTTP client for the restricted agent.
 // It has no command or endpoint parameter supplied by callers.
 type AgentOrchestrator struct {

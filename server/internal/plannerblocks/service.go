@@ -7,7 +7,6 @@ import (
 	"log/slog"
 	"strings"
 	"sync"
-	"time"
 	"unicode/utf8"
 
 	"github.com/danielgtaylor/huma/v2"
@@ -57,7 +56,6 @@ type Store interface {
 	UpdatePlannerBlock(ctx context.Context, arg db.UpdatePlannerBlockParams) (db.PlannerBlock, error)
 	DeletePlannerBlock(ctx context.Context, id int64) error
 	SetPlannerBlockMergeRequest(ctx context.Context, arg db.SetPlannerBlockMergeRequestParams) error
-	StartPlannerBlock(ctx context.Context, id int64) (db.PlannerBlock, error)
 	GetLocalAccountByID(ctx context.Context, id int64) (db.LocalAccount, error)
 }
 
@@ -88,7 +86,22 @@ func (s *Service) List(ctx context.Context) ([]PlannerBlock, error) {
 	}
 	blocks := make([]PlannerBlock, len(rows))
 	for i, row := range rows {
-		blocks[i] = plannerBlockFromRow(row)
+		blocks[i] = PlannerBlock{
+			ID:          row.ID,
+			Title:       row.Title,
+			Description: row.Description,
+			Position:    row.Position,
+			Owner: Owner{
+				Username:    row.OwnerUsername,
+				DisplayName: row.OwnerDisplayName,
+				Color:       row.OwnerColor,
+			},
+			Branch:    row.Branch,
+			MRIID:     nullableInt64(row.MergeRequestIid),
+			ParentID:  nullableInt64(row.ParentID),
+			UpdatedAt: row.UpdatedAt.Time,
+			Progress:  Progress{State: ProgressPlanned},
+		}
 	}
 
 	var wg sync.WaitGroup
@@ -109,39 +122,6 @@ func (s *Service) List(ctx context.Context) ([]PlannerBlock, error) {
 	return blocks, nil
 }
 
-// Snapshot returns the plan without calling GitLab. The chat project context
-// needs a quick, bounded read; live MR progress is fetched by List instead.
-func (s *Service) Snapshot(ctx context.Context) ([]PlannerBlock, error) {
-	rows, err := s.store.ListPlannerBlocks(ctx, db.ListPlannerBlocksParams{Limit: publicListLimit})
-	if err != nil {
-		return nil, fmt.Errorf("snapshot planner blocks: %w", err)
-	}
-	blocks := make([]PlannerBlock, len(rows))
-	for i, row := range rows {
-		blocks[i] = plannerBlockFromRow(row)
-	}
-	return blocks, nil
-}
-
-func plannerBlockFromRow(row db.ListPlannerBlocksRow) PlannerBlock {
-	return PlannerBlock{
-		ID:          row.ID,
-		Title:       row.Title,
-		Description: row.Description,
-		Position:    row.Position,
-		Owner: Owner{
-			Username:    row.OwnerUsername,
-			DisplayName: row.OwnerDisplayName,
-			Color:       row.OwnerColor,
-		},
-		Branch:    row.Branch,
-		MRIID:     nullableInt64(row.MergeRequestIid),
-		ParentID:  nullableInt64(row.ParentID),
-		UpdatedAt: row.UpdatedAt.Time,
-		Progress:  initialProgress(row.StartedAt),
-	}
-}
-
 // ListPublic returns the compact anonymous view. It reuses the same GitLab
 // progress calculation but strips every field that is reserved for the team.
 func (s *Service) ListPublic(ctx context.Context) ([]PublicPlannerBlock, error) {
@@ -151,21 +131,12 @@ func (s *Service) ListPublic(ctx context.Context) ([]PublicPlannerBlock, error) 
 	}
 	public := make([]PublicPlannerBlock, len(blocks))
 	for i, block := range blocks {
-		// Anonymous visitors only receive real content for completed stages.
-		// Unfinished stages stay in the tree as empty placeholders so the shape
-		// of the plan is visible without exposing work in progress.
-		title := ""
-		updatedAt := time.Time{}
-		if block.Progress.State == ProgressDone {
-			title = block.Title
-			updatedAt = block.UpdatedAt
-		}
 		public[i] = PublicPlannerBlock{
 			ID:        block.ID,
-			Title:     title,
+			Title:     block.Title,
 			Position:  block.Position,
 			ParentID:  block.ParentID,
-			UpdatedAt: updatedAt,
+			UpdatedAt: block.UpdatedAt,
 			Progress:  PublicProgress{State: block.Progress.State},
 		}
 	}
@@ -175,9 +146,6 @@ func (s *Service) ListPublic(ctx context.Context) ([]PublicPlannerBlock, error) 
 func (s *Service) populateProgress(ctx context.Context, block *PlannerBlock) {
 	if block.MRIID == nil {
 		block.Progress = Progress{State: ProgressPlanned}
-		if block.StartedAt != nil {
-			block.Progress.State = ProgressVerifying
-		}
 		return
 	}
 	if s.gitLab == nil {
@@ -216,13 +184,6 @@ func (s *Service) populateProgress(ctx context.Context, block *PlannerBlock) {
 	}
 }
 
-func initialProgress(startedAt pgtype.Timestamptz) Progress {
-	if startedAt.Valid {
-		return Progress{State: ProgressVerifying}
-	}
-	return Progress{State: ProgressPlanned}
-}
-
 func progressForMergeRequest(mergeRequest gitlab.MergeRequest) Progress {
 	progress := Progress{PipelineStatus: strings.ToLower(strings.TrimSpace(mergeRequest.HeadPipeline.Status))}
 	mergeRequestState := strings.ToLower(strings.TrimSpace(mergeRequest.State))
@@ -248,72 +209,6 @@ func progressForMergeRequest(mergeRequest gitlab.MergeRequest) Progress {
 	progress.State = ProgressUnknown
 	progress.ErrorCode = gitLabProgressError
 	return progress
-}
-
-// Start marks a block as in progress. A team member may start only a block
-// they own; the AI worker uses the same ownership check through StartForOwner.
-func (s *Service) Start(ctx context.Context, id int64) (PlannerBlock, error) {
-	principal, err := identity.FromContext(ctx)
-	if err != nil {
-		return PlannerBlock{}, err
-	}
-	return s.StartForOwner(ctx, id, principal.Account.Username)
-}
-
-func (s *Service) StartForOwner(ctx context.Context, id int64, username string) (PlannerBlock, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	existing, err := s.store.GetPlannerBlock(ctx, id)
-	if err != nil {
-		return PlannerBlock{}, fmt.Errorf("get planner block %d: %w", id, classifyMutationError(err))
-	}
-	owner, err := s.owner(ctx, existing.OwnerID)
-	if err != nil {
-		return PlannerBlock{}, err
-	}
-	if owner.Username != username {
-		return PlannerBlock{}, huma.Error403Forbidden("planner.owner_required")
-	}
-	started, err := s.store.StartPlannerBlock(ctx, id)
-	if err != nil {
-		return PlannerBlock{}, fmt.Errorf("start planner block %d: %w", id, classifyMutationError(err))
-	}
-	block := plannerBlockFromModel(started, owner)
-	s.populateProgress(ctx, &block)
-	return block, nil
-}
-
-// ListOwned returns the current user's blocks for the coding prompt. It does
-// not query GitLab, because the prompt only needs stable IDs and titles.
-func (s *Service) ListOwned(ctx context.Context, username string) ([]PlannerBlock, error) {
-	rows, err := s.store.ListPlannerBlocks(ctx, db.ListPlannerBlocksParams{Limit: publicListLimit})
-	if err != nil {
-		return nil, fmt.Errorf("list owned planner blocks: %w", err)
-	}
-	blocks := make([]PlannerBlock, 0)
-	for _, row := range rows {
-		if row.OwnerUsername != username {
-			continue
-		}
-		blocks = append(blocks, PlannerBlock{
-			ID:          row.ID,
-			Title:       row.Title,
-			Description: row.Description,
-			Position:    row.Position,
-			Owner: Owner{
-				Username:    row.OwnerUsername,
-				DisplayName: row.OwnerDisplayName,
-				Color:       row.OwnerColor,
-			},
-			Branch:    row.Branch,
-			MRIID:     nullableInt64(row.MergeRequestIid),
-			ParentID:  nullableInt64(row.ParentID),
-			StartedAt: nullableTime(row.StartedAt),
-			UpdatedAt: row.UpdatedAt.Time,
-			Progress:  initialProgress(row.StartedAt),
-		})
-	}
-	return blocks, nil
 }
 
 // Create authorizes the HTTP actor before allocating a position or writing.
@@ -496,9 +391,8 @@ func plannerBlockFromModel(model db.PlannerBlock, owner db.LocalAccount) Planner
 		Branch:    model.Branch,
 		MRIID:     nullableInt64(model.MergeRequestIid),
 		ParentID:  nullableInt64(model.ParentID),
-		StartedAt: nullableTime(model.StartedAt),
 		UpdatedAt: model.UpdatedAt.Time,
-		Progress:  initialProgress(model.StartedAt),
+		Progress:  Progress{State: ProgressPlanned},
 	}
 }
 
@@ -537,14 +431,6 @@ func nullableInt64(value pgtype.Int8) *int64 {
 		return nil
 	}
 	result := value.Int64
-	return &result
-}
-
-func nullableTime(value pgtype.Timestamptz) *time.Time {
-	if !value.Valid {
-		return nil
-	}
-	result := value.Time
 	return &result
 }
 

@@ -1,4 +1,3 @@
-import { A } from "@solidjs/router";
 import { createResource, For } from "solid-js";
 import * as m from "@/paraglide/messages";
 import { api, unwrap } from "@/shared/api";
@@ -32,11 +31,7 @@ export default function SamCatalogPage() {
 							{(product) => (
 								<li class={s.row}>
 									<div>
-										<h2 class={s.rowTitle}>
-											<A class={s.inlineLink} href={`/sam/catalog/${product.id}`}>
-												{product.name}
-											</A>
-										</h2>
+										<h2 class={s.rowTitle}>{product.name}</h2>
 										<p class={s.rowMeta}>
 											{product.vendor} · {product.category}
 										</p>

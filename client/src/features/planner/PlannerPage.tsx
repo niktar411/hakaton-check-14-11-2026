@@ -1,6 +1,5 @@
-import { useNavigate } from "@solidjs/router";
+import { A } from "@solidjs/router";
 import {
-	createEffect,
 	createMemo,
 	createResource,
 	createSignal,
@@ -10,14 +9,13 @@ import {
 	Show,
 } from "solid-js";
 import * as m from "@/paraglide/messages";
-import { api, csrfHeaders, unwrap } from "@/shared/api";
+import { useSiteConfig } from "@/app/site-config";
+import { api, unwrap } from "@/shared/api";
 import type { components } from "@/shared/api/schema";
 import { safeColor } from "@/shared/lib/color";
 import { formatDate } from "@/shared/lib/format";
-import { Dialog } from "@/shared/ui/Dialog";
 import { Button } from "@/shared/ui/Button";
 import { EmptyState, ErrorState, LoadingState } from "@/shared/ui/State";
-import { useToast } from "@/shared/ui/Toast";
 import s from "./PlannerPage.module.css";
 
 type Progress = components["schemas"]["Progress"];
@@ -26,7 +24,7 @@ type PublicBlock = components["schemas"]["PublicPlannerBlock"];
 type AnyBlock = PlannerBlock | PublicBlock;
 
 type PlannerView =
-	| { team: true; username: string; csrf: string; blocks: PlannerBlock[] }
+	| { team: true; blocks: PlannerBlock[] }
 	| { team: false; blocks: PublicBlock[] };
 
 type LayoutNode = {
@@ -37,21 +35,7 @@ type LayoutNode = {
 	y: number;
 };
 
-type Edge = {
-	id: string;
-	path: string;
-	done: boolean;
-	endX: number;
-	endY: number;
-};
-
-type Spark = { x: number; y: number };
-
-const SPARKS: Spark[] = Array.from({ length: 12 }, (_, index) => {
-	const angle = (Math.PI * 2 * index) / 12;
-	const radius = index % 3 === 0 ? 34 : index % 2 === 0 ? 26 : 20;
-	return { x: Math.cos(angle) * radius, y: Math.sin(angle) * radius };
-});
+type Edge = { id: string; path: string };
 
 type Layout = {
 	nodes: LayoutNode[];
@@ -187,7 +171,6 @@ function buildLayout(blocks: AnyBlock[], team: boolean): Layout {
 	for (const node of nodes) {
 		for (const child of node.children) {
 			const id = `${node.block.id}-${child.block.id}`;
-			const done = child.block.progress.state === "done";
 			if (child.x > node.x + 0.5) {
 				const startX = node.x + card.width / 2;
 				const endX = child.x - card.width / 2;
@@ -195,9 +178,6 @@ function buildLayout(blocks: AnyBlock[], team: boolean): Layout {
 				edges.push({
 					id,
 					path: `M ${startX} ${node.y} H ${middleX} V ${child.y} H ${endX}`,
-					done,
-					endX,
-					endY: child.y,
 				});
 			} else if (child.x < node.x - 0.5) {
 				const startX = node.x - card.width / 2;
@@ -206,9 +186,6 @@ function buildLayout(blocks: AnyBlock[], team: boolean): Layout {
 				edges.push({
 					id,
 					path: `M ${startX} ${node.y} H ${middleX} V ${child.y} H ${endX}`,
-					done,
-					endX,
-					endY: child.y,
 				});
 			} else {
 				const direction = child.y >= node.y ? 1 : -1;
@@ -218,22 +195,18 @@ function buildLayout(blocks: AnyBlock[], team: boolean): Layout {
 				edges.push({
 					id,
 					path: `M ${node.x} ${startY} V ${middleY} H ${child.x} V ${endY}`,
-					done,
-					endX: child.x,
-					endY,
 				});
 			}
 		}
 	}
 
-	const anchor = root ?? roots[0];
 	return {
 		nodes,
 		edges,
 		width,
 		height,
-		rootX: anchor ? anchor.x : width / 2,
-		rootY: anchor ? anchor.y : height / 2,
+		rootX: root ? root.x : width / 2,
+		rootY: root ? root.y : height / 2,
 		cardWidth: card.width,
 		cardHeight: card.height,
 	};
@@ -256,38 +229,13 @@ export function plannerStatus(status: Progress["state"]) {
 	}
 }
 
-function PlannerNode(props: {
-	node: LayoutNode;
-	team: boolean;
-	onSelect: (block: AnyBlock) => void;
-	suppressClick: () => boolean;
-}) {
+function PlannerNode(props: { node: LayoutNode; team: boolean }) {
 	const block = () => props.node.block;
 	const card = props.team ? CARD.team : CARD.public;
-	const visible = () => props.team || block().progress.state === "done";
-	const inProgress = () =>
-		block().progress.state === "verifying" || block().progress.state === "review";
 	return (
 		<article
 			class={s.nodeCard}
 			data-root={props.node.depth === 0}
-			data-empty={!visible()}
-			data-clickable={visible()}
-			data-active={inProgress()}
-			role={visible() ? "button" : undefined}
-			tabIndex={visible() ? 0 : undefined}
-			title={visible() ? m.plannerOpenDetails() : undefined}
-			onClick={(event) => {
-				if (!visible() || props.suppressClick()) return;
-				if ((event.target as HTMLElement).closest("a, button")) return;
-				props.onSelect(block());
-			}}
-			onKeyDown={(event) => {
-				if (!visible()) return;
-				if (event.key !== "Enter" && event.key !== " ") return;
-				event.preventDefault();
-				props.onSelect(block());
-			}}
 			style={{
 				left: `${props.node.x - card.width / 2}px`,
 				top: `${props.node.y - card.height / 2}px`,
@@ -296,17 +244,11 @@ function PlannerNode(props: {
 				"--owner-color":
 					props.team && "owner" in block()
 						? safeColor((block() as PlannerBlock).owner.color)
-						: "var(--text-muted)",
+						: "var(--border)",
 			}}
 		>
-			<Show when={inProgress()}>
-				<svg class={s.activeBorder} aria-hidden="true">
-					<rect class={s.activeBorderRect} />
-				</svg>
-			</Show>
-			<Show when={visible()}>
-				<div class={s.blockHeader}>
-					<h2>{block().title}</h2>
+			<div class={s.blockHeader}>
+				<h2>{block().title}</h2>
 				<span class={s.status} data-status={block().progress.state}>
 					{plannerStatus(block().progress.state)}
 				</span>
@@ -384,68 +326,19 @@ function PlannerNode(props: {
 					);
 				})()}
 			</Show>
-			</Show>
 		</article>
 	);
 }
 
-export function PlannerBoard(props: {
-	blocks: AnyBlock[];
-	team: boolean;
-	onSelect: (block: AnyBlock) => void;
-	contained?: boolean;
-	wheelZoom?: boolean;
-}) {
+function PlannerBoard(props: { blocks: AnyBlock[]; team: boolean }) {
 	const [board, setBoard] = createSignal<HTMLDivElement>();
 	const [zoom, setZoom] = createSignal(1);
 	const [pan, setPan] = createSignal({ x: 0, y: 0 });
 	const [dragging, setDragging] = createSignal(false);
-	const [dragged, setDragged] = createSignal(false);
-	const [celebrating, setCelebrating] = createSignal<Set<string>>(new Set());
 	const layout = createMemo(() => buildLayout(props.blocks, props.team));
-	let knownDone: Set<string> | undefined;
-	let celebrationTimer: number | undefined;
 	let drag:
-		| {
-				pointerId: number;
-				x: number;
-				y: number;
-				panX: number;
-				panY: number;
-				captured: boolean;
-		  }
+		| { pointerId: number; x: number; y: number; panX: number; panY: number }
 		| undefined;
-
-	createEffect(() => {
-		const done = new Set<string>(
-			layout()
-				.edges.filter((edge) => edge.done)
-				.map((edge) => edge.id),
-		);
-		if (knownDone === undefined) {
-			// Opening the board should not replay the explosion for every edge
-			// that was already completed before this visit.
-			knownDone = done;
-			return;
-		}
-		const fresh = [...done].filter((id) => !knownDone?.has(id));
-		knownDone = done;
-		if (!fresh.length) return;
-		setCelebrating(new Set<string>(fresh));
-		if (celebrationTimer !== undefined) {
-			window.clearTimeout(celebrationTimer);
-		}
-		celebrationTimer = window.setTimeout(() => {
-			setCelebrating(new Set<string>());
-			celebrationTimer = undefined;
-		}, 2400);
-	});
-
-	onCleanup(() => {
-		if (celebrationTimer !== undefined) {
-			window.clearTimeout(celebrationTimer);
-		}
-	});
 
 	const fit = (showAll = false) => {
 		const element = board();
@@ -453,33 +346,27 @@ export function PlannerBoard(props: {
 		const rect = element.getBoundingClientRect();
 		if (rect.width < 32 || rect.height < 32) return;
 		const current = layout();
-		const minX = Math.min(
-			...current.nodes.map((node) => node.x - current.cardWidth / 2),
-		);
 		const maxX = Math.max(
-			...current.nodes.map((node) => node.x + current.cardWidth / 2),
-		);
-		const minY = Math.min(
-			...current.nodes.map((node) => node.y - current.cardHeight / 2),
+			...current.nodes.map(
+				(node) => Math.abs(node.x - current.rootX) + current.cardWidth / 2,
+			),
 		);
 		const maxY = Math.max(
-			...current.nodes.map((node) => node.y + current.cardHeight / 2),
+			...current.nodes.map(
+				(node) => Math.abs(node.y - current.rootY) + current.cardHeight / 2,
+			),
 		);
-		const width = Math.max(1, maxX - minX);
-		const height = Math.max(1, maxY - minY);
 		const allZoom = Math.max(
 			0.12,
-			Math.min((rect.width - 96) / width, (rect.height - 96) / height, 1.4),
+			Math.min((rect.width - 96) / (maxX * 2), (rect.height - 96) / (maxY * 2), 1.4),
 		);
 		// Open at a readable scale around the centre. "Show all" zooms out far
 		// enough to see every branch; the wheel and +/- go in both directions.
 		const next = showAll ? allZoom : Math.max(allZoom, 0.8);
-		const centerX = showAll ? (minX + maxX) / 2 : current.rootX;
-		const centerY = showAll ? (minY + maxY) / 2 : current.rootY;
 		setZoom(next);
 		setPan({
-			x: rect.width / 2 - centerX * next,
-			y: rect.height / 2 - centerY * next,
+			x: rect.width / 2 - current.rootX * next,
+			y: rect.height / 2 - current.rootY * next,
 		});
 	};
 
@@ -506,13 +393,10 @@ export function PlannerBoard(props: {
 			event.preventDefault();
 			zoomBy(event.deltaY < 0 ? 1.12 : 0.89, event.clientX, event.clientY);
 		};
-		if (props.wheelZoom !== false) {
-			element.addEventListener("wheel", wheel, { passive: false });
-		}
-		const resetView = () => fit();
-		const observer = new ResizeObserver(resetView);
+		element.addEventListener("wheel", wheel, { passive: false });
+		const observer = new ResizeObserver(() => fit());
 		observer.observe(element);
-		resetView();
+		fit();
 		onCleanup(() => {
 			element.removeEventListener("wheel", wheel);
 			observer.disconnect();
@@ -521,54 +405,47 @@ export function PlannerBoard(props: {
 
 	const pointerDown = (event: PointerEvent) => {
 		if ((event.target as HTMLElement).closest("a, button")) return;
-		setDragged(false);
 		drag = {
 			pointerId: event.pointerId,
 			x: event.clientX,
 			y: event.clientY,
 			panX: pan().x,
 			panY: pan().y,
-			captured: false,
 		};
 		setDragging(true);
+		(event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
 	};
 	const pointerMove = (event: PointerEvent) => {
 		if (!drag || drag.pointerId !== event.pointerId) return;
-		if (
-			Math.abs(event.clientX - drag.x) > 4 ||
-			Math.abs(event.clientY - drag.y) > 4
-		) {
-			setDragged(true);
-			// Capture only after a real drag. Capturing on pointerdown made the
-			// browser retarget the click to the board, so card clicks never fired.
-			if (!drag.captured) {
-				(event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
-				drag.captured = true;
-			}
-		}
 		setPan({
 			x: drag.panX + event.clientX - drag.x,
 			y: drag.panY + event.clientY - drag.y,
 		});
 	};
-	const pointerUp = (event: PointerEvent) => {
-		if (drag?.captured) {
-			(event.currentTarget as HTMLElement).releasePointerCapture(event.pointerId);
-		}
-		drag = undefined;
-		setDragging(false);
-	};
-	const pointerLeave = () => {
+	const pointerUp = () => {
 		drag = undefined;
 		setDragging(false);
 	};
 
 	return (
-		<section
-			class={s.boardSection}
-			classList={{ [s.boardContained]: props.contained === true }}
-			aria-label={m.plannerBoard()}
-		>
+		<section class={s.boardSection} aria-label={m.plannerBoard()}>
+			<div class={s.boardToolbar}>
+				<Button
+					aria-label={m.plannerZoomOut()}
+					onClick={() => zoomBy(0.83)}
+				>
+					−
+				</Button>
+				<span class={s.zoomValue}>{Math.round(zoom() * 100)}%</span>
+				<Button
+					aria-label={m.plannerZoomIn()}
+					onClick={() => zoomBy(1.2)}
+				>
+					+
+				</Button>
+				<Button onClick={() => fit(true)}>{m.plannerZoomFit()}</Button>
+				<Button onClick={() => fit(false)}>{m.plannerZoomReset()}</Button>
+			</div>
 			<div
 				class={s.board}
 				ref={setBoard}
@@ -577,40 +454,7 @@ export function PlannerBoard(props: {
 				onPointerMove={pointerMove}
 				onPointerUp={pointerUp}
 				onPointerCancel={pointerUp}
-				onPointerLeave={pointerLeave}
 			>
-				<fieldset
-					class={s.zoomControls}
-					aria-label={m.plannerZoomControls()}
-				>
-					<button
-						type="button"
-						class={s.zoomButton}
-						aria-label={m.plannerZoomOut()}
-						title={m.plannerZoomOut()}
-						onClick={() => zoomBy(0.86)}
-					>
-						−
-					</button>
-					<button
-						type="button"
-						class={s.zoomButton}
-						aria-label={m.plannerZoomIn()}
-						title={m.plannerZoomIn()}
-						onClick={() => zoomBy(1.16)}
-					>
-						+
-					</button>
-					<button
-						type="button"
-						class={s.zoomButton}
-						aria-label={m.plannerFit()}
-						title={m.plannerFit()}
-						onClick={() => fit(true)}
-					>
-						⤢
-					</button>
-				</fieldset>
 				<div
 					class={s.world}
 					style={{
@@ -638,126 +482,62 @@ export function PlannerBoard(props: {
 							>
 								<path d="M 0 0 L 10 5 L 0 10 z" class={s.arrowHead} />
 							</marker>
-							<marker
-								id="planner-arrow-done"
-								viewBox="0 0 10 10"
-								refX="9"
-								refY="5"
-								markerWidth="6"
-								markerHeight="6"
-								orient="auto-start-reverse"
-							>
-								<path d="M 0 0 L 10 5 L 0 10 z" class={s.arrowHeadDone} />
-							</marker>
 						</defs>
 						<For each={layout().edges}>
 							{(edge) => (
-								<g
-									class={s.edgeGroup}
-									data-done={edge.done}
-									data-celebrating={celebrating().has(edge.id)}
-								>
-									<path
-										d={edge.path}
-										class={s.edge}
-										marker-end={
-											edge.done ? undefined : "url(#planner-arrow)"
-										}
-									/>
-									<Show when={edge.done && !celebrating().has(edge.id)}>
-										<path
-											d={edge.path}
-											class={s.edgeDone}
-											marker-end="url(#planner-arrow-done)"
-										/>
-									</Show>
-									<Show when={celebrating().has(edge.id)}>
-										<path
-											d={edge.path}
-											pathLength={1}
-											class={s.edgeDraw}
-											marker-end="url(#planner-arrow-done)"
-										/>
-										<path
-											d={edge.path}
-											pathLength={1}
-											class={s.edgeBulge}
-										/>
-										<circle r="5" class={s.edgeBall}>
-											<animateMotion
-												dur="1.2s"
-												fill="freeze"
-												path={edge.path}
-												calcMode="spline"
-												keyPoints="0;1"
-												keyTimes="0;1"
-												keySplines="0.35 0 0.25 1"
-											/>
-										</circle>
-										<g class={s.sparkBurst}>
-											<For each={SPARKS}>
-												{(spark) => (
-													<circle
-														cx={edge.endX}
-														cy={edge.endY}
-														r="2.2"
-														class={s.spark}
-														style={{
-															"--spark-x": `${spark.x}px`,
-															"--spark-y": `${spark.y}px`,
-														}}
-													/>
-												)}
-											</For>
-											<circle
-												cx={edge.endX}
-												cy={edge.endY}
-												r="10"
-												class={s.burstRing}
-											/>
-										</g>
-									</Show>
-								</g>
+								<path
+									d={edge.path}
+									class={s.edge}
+									marker-end="url(#planner-arrow)"
+								/>
 							)}
 						</For>
 					</svg>
 					<For each={layout().nodes}>
-						{(node) => (
-							<PlannerNode
-								node={node}
-								team={props.team}
-								onSelect={props.onSelect}
-								suppressClick={() => dragged()}
-							/>
-						)}
+						{(node) => <PlannerNode node={node} team={props.team} />}
 					</For>
 				</div>
 			</div>
+			<p class={s.boardHint}>{m.plannerBoardHint()}</p>
 		</section>
 	);
 }
 
 export default function PlannerPage() {
-	const toast = useToast();
-	const navigate = useNavigate();
-	const [selected, setSelected] = createSignal<AnyBlock>();
-	const [starting, setStarting] = createSignal(false);
-	const [planner, { refetch }] = createResource(
-		async (): Promise<PlannerView> => {
+	const { config } = useSiteConfig();
+	const onPlannerHost = () => {
+		const base = config()?.plannerBaseUrl;
+		if (base) {
 			try {
-				const me = unwrap(await api.GET("/api/me"));
+				return window.location.hostname === new URL(base).hostname;
+			} catch {
+				return false;
+			}
+		}
+		return window.location.hostname.startsWith("planner.");
+	};
+	const [planner, { refetch }] = createResource(
+		// Solid's createResource treats `false` as "no source" and skips the
+		// fetcher, so the mode is a string rather than a boolean.
+		() => (config.loading ? undefined : onPlannerHost() ? "public" : "team"),
+		async (mode): Promise<PlannerView> => {
+			if (mode === "team") {
+				try {
+					unwrap(await api.GET("/api/me"));
+				} catch {
+					return {
+						team: false,
+						blocks: unwrap(await api.GET("/api/public/planner")) ?? [],
+					};
+				}
 				try {
 					return {
 						team: true,
-						username: me.username,
-						csrf: me.csrf,
 						blocks: unwrap(await api.GET("/api/planner")) ?? [],
 					};
 				} catch {
-					// Fall through to the public projection if the session expired.
+					// Fall through to the public projection.
 				}
-			} catch {
-				// Anonymous visitor.
 			}
 			return {
 				team: false,
@@ -766,48 +546,22 @@ export default function PlannerPage() {
 		},
 	);
 	const team = () => planner()?.team === true;
-	const currentUsername = () => {
-		const view = planner();
-		return view?.team ? view.username : "";
-	};
-	createEffect(() => {
-		// Anonymous visitors get the plan inside the single public page.
-		if (!planner.loading && !team()) {
-			navigate("/", { replace: true });
-		}
-	});
-	async function startWork(block: AnyBlock) {
-		if (starting()) return;
-		setStarting(true);
-		try {
-			const view = planner();
-			const csrf = view?.team ? view.csrf : undefined;
-			const updated = unwrap(
-				await api.POST("/api/planner/blocks/{id}/start", {
-					headers: csrfHeaders(csrf),
-					params: { path: { id: block.id } },
-				}),
-			);
-			setSelected(updated);
-			await refetch();
-			toast.show(m.plannerWorkStarted());
-		} catch {
-			toast.show(m.loadError());
-		} finally {
-			setStarting(false);
-		}
-	}
-	onMount(() => {
-		const timer = window.setInterval(() => void refetch(), 15000);
-		const onFocus = () => void refetch();
-		window.addEventListener("focus", onFocus);
-		onCleanup(() => {
-			window.clearInterval(timer);
-			window.removeEventListener("focus", onFocus);
-		});
-	});
 	return (
 		<main class={s.page}>
+			<header class={s.header}>
+				<div>
+					<h1>{m.plannerPageTitle()}</h1>
+					<p>{team() ? m.plannerTeamHint() : m.plannerPublicHint()}</p>
+				</div>
+				<div class={s.headerActions}>
+					<Show when={team()}>
+						<A href="/coding">{m.codingPageTitle()}</A>
+					</Show>
+					<Button disabled={planner.loading} onClick={() => void refetch()}>
+						{m.retry()}
+					</Button>
+				</div>
+			</header>
 			<Show
 				when={!planner.loading || !!planner.latest}
 				fallback={<LoadingState />}
@@ -828,112 +582,10 @@ export default function PlannerPage() {
 						<PlannerBoard
 							blocks={(planner()?.blocks as AnyBlock[]) ?? []}
 							team={team()}
-							onSelect={setSelected}
 						/>
 					</Show>
 				</Show>
 			</Show>
-			<Dialog
-				open={!!selected()}
-				title={selected()?.title || m.plannerDetails()}
-				onClose={() => setSelected(undefined)}
-			>
-				<Show when={selected()}>
-					{(block) => {
-						const teamBlock = () =>
-							team() && "owner" in block() ? (block() as PlannerBlock) : undefined;
-						return (
-							<div class="grid min-w-0 gap-4">
-								<div class="flex flex-wrap items-center gap-3">
-									<span class={s.status} data-status={block().progress.state}>
-										{plannerStatus(block().progress.state)}
-									</span>
-									<Show when={teamBlock()}>
-										{(item) => (
-											<span class={s.owner}>
-												{item().owner.displayName} · {item().owner.username}
-											</span>
-										)}
-									</Show>
-								</div>
-								<Show when={teamBlock()}>
-									{(item) => (
-										<Show when={item().description}>
-											<p class={s.description}>{item().description}</p>
-										</Show>
-									)}
-								</Show>
-								<Show when={!teamBlock()}>
-									<p class="text-text-muted">{m.plannerPublicHint()}</p>
-								</Show>
-								<dl class={s.dates}>
-									<div>
-										<dt>{m.plannerUpdated()}</dt>
-										<dd>
-											<time datetime={block().updatedAt}>
-												{formatDate(block().updatedAt)}
-											</time>
-										</dd>
-									</div>
-									<Show when={teamBlock()}>
-										{(item) => (
-											<>
-												<Show when={item().branch}>
-													<div>
-														<dt>{m.plannerBranch()}</dt>
-														<dd>{item().branch}</dd>
-													</div>
-												</Show>
-												<Show when={item().progress.pipelineStatus}>
-													<div>
-														<dt>{m.pipelineStatus()}</dt>
-														<dd>{item().progress.pipelineStatus}</dd>
-													</div>
-												</Show>
-												<Show when={item().progress.approvals}>
-													{(approvals) => (
-														<div>
-															<dt>{m.plannerApprovalState()}</dt>
-															<dd>
-																{approvals().approved
-																	? m.approved()
-																	: m.pendingApproval()}
-															</dd>
-														</div>
-													)}
-												</Show>
-											</>
-										)}
-									</Show>
-								</dl>
-								<Show
-									when={
-										teamBlock()?.owner.username === currentUsername() &&
-										block().progress.state === "planned"
-									}
-								>
-									<Button
-										variant="primary"
-										disabled={starting()}
-										onClick={() => void startWork(block())}
-									>
-										{starting() ? m.loading() : m.plannerStartWork()}
-									</Button>
-								</Show>
-								<Show when={teamBlock()?.mrUrl}>
-									<a
-										href={teamBlock()?.mrUrl}
-										target="_blank"
-										rel="noopener noreferrer"
-									>
-										{m.openMergeRequest()}
-									</a>
-								</Show>
-							</div>
-						);
-					}}
-				</Show>
-			</Dialog>
 		</main>
 	);
 }
