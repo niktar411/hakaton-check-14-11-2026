@@ -20,6 +20,7 @@ import { EmptyState, LoadingState } from "@/shared/ui/State";
 import { useToast } from "@/shared/ui/Toast";
 import { AgentRunCard } from "./AgentRunCard";
 import { ChatModeTabs } from "./ChatModeTabs";
+import { ChatUpdateCard } from "./ChatUpdateCard";
 import { ContextPopover, type ContextBreakdown } from "./ContextPopover";
 import s from "./ChatPage.module.css";
 
@@ -28,6 +29,7 @@ type ChatHistory = components["schemas"]["ChatHistory"];
 type Identity = components["schemas"]["Identity"];
 type CodingTask = components["schemas"]["CodingTask"];
 type CodingTaskDetails = components["schemas"]["CodingTaskDetails"];
+type ChatUpdate = components["schemas"]["ChatUpdate"];
 
 type Attachment = {
 	id: string;
@@ -158,6 +160,14 @@ export default function ChatPage() {
 			return null;
 		}
 	});
+	const [updates, { refetch: refetchUpdates }] = createResource(
+		() => (session.loading ? undefined : session() ? "auth" : "anon"),
+		async (mode): Promise<ChatUpdate[]> => {
+			if (mode !== "auth") return [];
+			return unwrap(await api.GET("/api/chat/updates")) ?? [];
+		},
+	);
+	const [updateBusy, setUpdateBusy] = createSignal(false);
 	const [conversations, { refetch: refetchConversations }] = createResource(
 		() => (session.loading ? undefined : session() ? "auth" : "anon"),
 		async (mode): Promise<ChatSummary[]> => {
@@ -396,6 +406,40 @@ export default function ChatPage() {
 		}, 4000);
 		onCleanup(() => window.clearInterval(timer));
 	});
+
+	// Completed blocks arrive as chat prompts. Polling mirrors the planner
+	// page cadence; the server deduplicates, so a repeat poll never duplicates.
+	createEffect(() => {
+		if (!session()) return;
+		const timer = window.setInterval(() => void refetchUpdates(), 15000);
+		onCleanup(() => window.clearInterval(timer));
+	});
+
+	async function pullUpdate(update: ChatUpdate) {
+		if (updateBusy()) return;
+		setUpdateBusy(true);
+		try {
+			unwrap(
+				await api.POST("/api/chat/updates/{id}/pull", {
+					headers: csrfHeaders(session()?.csrf),
+					params: { path: { id: update.id } },
+				}),
+			);
+			toast.show(m.chatUpdatePulled());
+			await refetchUpdates();
+			setAgentMode(false);
+			await send(false, m.chatUpdatePrompt({
+				title: update.title,
+				owner: update.ownerName,
+				branch: update.branch,
+				url: update.mrUrl,
+			}));
+		} catch {
+			toast.show(m.chatUpdatePullError());
+		} finally {
+			setUpdateBusy(false);
+		}
+	}
 
 	async function addFiles(files: FileList | File[]) {
 		const selectedFiles = Array.from(files);
@@ -779,6 +823,11 @@ export default function ChatPage() {
 								{m.modelUnavailable()}
 							</p>
 						</Show>
+						<ChatUpdateCard
+							updates={updates() ?? []}
+							busy={updateBusy()}
+							onPull={(update) => void pullUpdate(update)}
+						/>
 						<div
 							class={s.messages}
 							ref={messageList}

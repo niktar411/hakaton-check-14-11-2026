@@ -23,6 +23,15 @@ type AuditEvent struct {
 	CreatedAt pgtype.Timestamptz `json:"created_at"`
 }
 
+type ChatChangePrompt struct {
+	ID        int64              `json:"id"`
+	Username  string             `json:"username"`
+	BlockID   int64              `json:"block_id"`
+	MrUrl     string             `json:"mr_url"`
+	PulledAt  pgtype.Timestamptz `json:"pulled_at"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+}
+
 type CodingMessage struct {
 	ID        int64              `json:"id"`
 	TaskID    int64              `json:"task_id"`
@@ -127,6 +136,7 @@ type PlannerBlock struct {
 	UpdatedAt       pgtype.Timestamptz `json:"updated_at"`
 	ParentID        pgtype.Int8        `json:"parent_id"`
 	StartedAt       pgtype.Timestamptz `json:"started_at"`
+	CompletedAt     pgtype.Timestamptz `json:"completed_at"`
 }
 
 type SamAiAction struct {

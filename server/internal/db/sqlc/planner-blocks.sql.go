@@ -13,7 +13,7 @@ import (
 
 const createPlannerBlock = `-- name: CreatePlannerBlock :one
 INSERT INTO planner_blocks(title,description,owner_id,branch,merge_request_iid,position,created_by,parent_id)
-VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING id, title, description, owner_id, branch, merge_request_iid, position, created_by, created_at, updated_at, parent_id, started_at
+VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING id, title, description, owner_id, branch, merge_request_iid, position, created_by, created_at, updated_at, parent_id, started_at, completed_at
 `
 
 type CreatePlannerBlockParams struct {
@@ -52,6 +52,7 @@ func (q *Queries) CreatePlannerBlock(ctx context.Context, arg CreatePlannerBlock
 		&i.UpdatedAt,
 		&i.ParentID,
 		&i.StartedAt,
+		&i.CompletedAt,
 	)
 	return i, err
 }
@@ -66,7 +67,7 @@ func (q *Queries) DeletePlannerBlock(ctx context.Context, id int64) error {
 }
 
 const getPlannerBlock = `-- name: GetPlannerBlock :one
-SELECT id, title, description, owner_id, branch, merge_request_iid, position, created_by, created_at, updated_at, parent_id, started_at FROM planner_blocks WHERE id=$1
+SELECT id, title, description, owner_id, branch, merge_request_iid, position, created_by, created_at, updated_at, parent_id, started_at, completed_at FROM planner_blocks WHERE id=$1
 `
 
 func (q *Queries) GetPlannerBlock(ctx context.Context, id int64) (PlannerBlock, error) {
@@ -85,12 +86,13 @@ func (q *Queries) GetPlannerBlock(ctx context.Context, id int64) (PlannerBlock, 
 		&i.UpdatedAt,
 		&i.ParentID,
 		&i.StartedAt,
+		&i.CompletedAt,
 	)
 	return i, err
 }
 
 const listPlannerBlocks = `-- name: ListPlannerBlocks :many
-SELECT b.id, b.title, b.description, b.owner_id, b.branch, b.merge_request_iid, b.position, b.created_by, b.created_at, b.updated_at, b.parent_id, b.started_at,a.username AS owner_username,a.display_name AS owner_display_name,a.color AS owner_color
+SELECT b.id, b.title, b.description, b.owner_id, b.branch, b.merge_request_iid, b.position, b.created_by, b.created_at, b.updated_at, b.parent_id, b.started_at, b.completed_at,a.username AS owner_username,a.display_name AS owner_display_name,a.color AS owner_color
 FROM planner_blocks b JOIN local_accounts a ON a.id=b.owner_id
 ORDER BY b.position,b.id LIMIT $1 OFFSET $2
 `
@@ -113,6 +115,7 @@ type ListPlannerBlocksRow struct {
 	UpdatedAt        pgtype.Timestamptz `json:"updated_at"`
 	ParentID         pgtype.Int8        `json:"parent_id"`
 	StartedAt        pgtype.Timestamptz `json:"started_at"`
+	CompletedAt      pgtype.Timestamptz `json:"completed_at"`
 	OwnerUsername    string             `json:"owner_username"`
 	OwnerDisplayName string             `json:"owner_display_name"`
 	OwnerColor       string             `json:"owner_color"`
@@ -140,6 +143,7 @@ func (q *Queries) ListPlannerBlocks(ctx context.Context, arg ListPlannerBlocksPa
 			&i.UpdatedAt,
 			&i.ParentID,
 			&i.StartedAt,
+			&i.CompletedAt,
 			&i.OwnerUsername,
 			&i.OwnerDisplayName,
 			&i.OwnerColor,
@@ -165,6 +169,18 @@ func (q *Queries) NextPlannerPosition(ctx context.Context) (int32, error) {
 	return position, err
 }
 
+const setPlannerBlockCompleted = `-- name: SetPlannerBlockCompleted :one
+UPDATE planner_blocks SET completed_at=now(),updated_at=now()
+WHERE id=$1 AND completed_at IS NULL RETURNING id
+`
+
+func (q *Queries) SetPlannerBlockCompleted(ctx context.Context, id int64) (int64, error) {
+	row := q.db.QueryRow(ctx, setPlannerBlockCompleted, id)
+	var id_2 int64
+	err := row.Scan(&id_2)
+	return id_2, err
+}
+
 const setPlannerBlockMergeRequest = `-- name: SetPlannerBlockMergeRequest :exec
 UPDATE planner_blocks SET branch=$2,merge_request_iid=$3,updated_at=now() WHERE id=$1
 `
@@ -182,7 +198,7 @@ func (q *Queries) SetPlannerBlockMergeRequest(ctx context.Context, arg SetPlanne
 
 const startPlannerBlock = `-- name: StartPlannerBlock :one
 UPDATE planner_blocks SET started_at=coalesce(started_at,now()),updated_at=now()
-WHERE id=$1 RETURNING id, title, description, owner_id, branch, merge_request_iid, position, created_by, created_at, updated_at, parent_id, started_at
+WHERE id=$1 RETURNING id, title, description, owner_id, branch, merge_request_iid, position, created_by, created_at, updated_at, parent_id, started_at, completed_at
 `
 
 func (q *Queries) StartPlannerBlock(ctx context.Context, id int64) (PlannerBlock, error) {
@@ -201,13 +217,14 @@ func (q *Queries) StartPlannerBlock(ctx context.Context, id int64) (PlannerBlock
 		&i.UpdatedAt,
 		&i.ParentID,
 		&i.StartedAt,
+		&i.CompletedAt,
 	)
 	return i, err
 }
 
 const updatePlannerBlock = `-- name: UpdatePlannerBlock :one
 UPDATE planner_blocks SET title=$2,description=$3,owner_id=$4,position=$5,parent_id=$6,updated_at=now()
-WHERE id=$1 RETURNING id, title, description, owner_id, branch, merge_request_iid, position, created_by, created_at, updated_at, parent_id, started_at
+WHERE id=$1 RETURNING id, title, description, owner_id, branch, merge_request_iid, position, created_by, created_at, updated_at, parent_id, started_at, completed_at
 `
 
 type UpdatePlannerBlockParams struct {
@@ -242,6 +259,7 @@ func (q *Queries) UpdatePlannerBlock(ctx context.Context, arg UpdatePlannerBlock
 		&i.UpdatedAt,
 		&i.ParentID,
 		&i.StartedAt,
+		&i.CompletedAt,
 	)
 	return i, err
 }

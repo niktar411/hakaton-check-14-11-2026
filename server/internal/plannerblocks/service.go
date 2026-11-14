@@ -58,6 +58,9 @@ type Store interface {
 	DeletePlannerBlock(ctx context.Context, id int64) error
 	SetPlannerBlockMergeRequest(ctx context.Context, arg db.SetPlannerBlockMergeRequestParams) error
 	StartPlannerBlock(ctx context.Context, id int64) (db.PlannerBlock, error)
+	SetPlannerBlockCompleted(ctx context.Context, id int64) (int64, error)
+	ListChatPromptRecipients(ctx context.Context, owner string) ([]string, error)
+	CreateChatPromptIfAbsent(ctx context.Context, arg db.CreateChatPromptIfAbsentParams) error
 	GetLocalAccountByID(ctx context.Context, id int64) (db.LocalAccount, error)
 }
 
@@ -194,6 +197,9 @@ func (s *Service) populateProgress(ctx context.Context, block *PlannerBlock) {
 
 	block.MRURL = mergeRequest.WebURL
 	block.Progress = progressForMergeRequest(mergeRequest)
+	if block.Progress.State == ProgressDone {
+		s.fanOutCompletion(ctx, *block, mergeRequest.WebURL)
+	}
 	if block.Progress.State != ProgressReview {
 		return
 	}
@@ -221,6 +227,31 @@ func initialProgress(startedAt pgtype.Timestamptz) Progress {
 		return Progress{State: ProgressVerifying}
 	}
 	return Progress{State: ProgressPlanned}
+}
+
+// fanOutCompletion records the first observation of a merged merge request and
+// enqueues exactly one chat change prompt per other team member. The database
+// unique constraint on (block_id, username) makes repeated fan-out a no-op, so
+// the prompt never spams a member twice.
+func (s *Service) fanOutCompletion(ctx context.Context, block PlannerBlock, mrURL string) {
+	if _, err := s.store.SetPlannerBlockCompleted(ctx, block.ID); err != nil {
+		if !errors.Is(err, pgx.ErrNoRows) {
+			slog.ErrorContext(ctx, "planner completion transition failed", "block_id", block.ID, "error", err)
+		}
+		return
+	}
+	recipients, err := s.store.ListChatPromptRecipients(ctx, block.Owner.Username)
+	if err != nil {
+		slog.ErrorContext(ctx, "list chat prompt recipients failed", "block_id", block.ID, "error", err)
+		return
+	}
+	for _, username := range recipients {
+		if err := s.store.CreateChatPromptIfAbsent(ctx, db.CreateChatPromptIfAbsentParams{
+			Username: username, BlockID: block.ID, MrUrl: mrURL,
+		}); err != nil {
+			slog.ErrorContext(ctx, "create chat change prompt failed", "block_id", block.ID, "username", username, "error", err)
+		}
+	}
 }
 
 func progressForMergeRequest(mergeRequest gitlab.MergeRequest) Progress {
