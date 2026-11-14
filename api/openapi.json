@@ -479,6 +479,58 @@
         ],
         "type": "object"
       },
+      "ChatUpdate": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/ChatUpdate.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "blockId": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "branch": {
+            "type": "string"
+          },
+          "completedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "id": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "mrUrl": {
+            "type": "string"
+          },
+          "ownerName": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "blockId",
+          "title",
+          "branch",
+          "mrUrl",
+          "ownerName",
+          "description",
+          "completedAt"
+        ],
+        "type": "object"
+      },
       "CodingMessage": {
         "additionalProperties": false,
         "properties": {
@@ -5060,6 +5112,78 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ChatHistory"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        }
+      }
+    },
+    "/api/chat/updates": {
+      "get": {
+        "operationId": "chat-updates",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ChatUpdate"
+                  },
+                  "type": [
+                    "array",
+                    "null"
+                  ]
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        }
+      }
+    },
+    "/api/chat/updates/{id}/pull": {
+      "post": {
+        "operationId": "chat-update-pull",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "int64",
+              "minimum": 1,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatUpdate"
                 }
               }
             },

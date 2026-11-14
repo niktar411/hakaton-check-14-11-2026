@@ -72,6 +72,8 @@ services:
     ports:
       - "${PUBLIC_HTTP_BIND:-0.0.0.0}:80:80"
       - "${PUBLIC_HTTPS_BIND:-0.0.0.0}:443:443"
+      # QUIC/HTTP3 listener (nginx `listen 443 quic`).
+      - "${PUBLIC_HTTPS_BIND:-0.0.0.0}:443:443/udp"
     volumes:
       - ${TLS_CERTIFICATE_FILE:-/etc/hackathon/tls/tls.crt}:/etc/nginx/tls/tls.crt:ro
       - ${TLS_KEY_FILE:-/etc/hackathon/tls/tls.key}:/etc/nginx/tls/tls.key:ro

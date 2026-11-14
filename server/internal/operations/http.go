@@ -40,7 +40,7 @@ func (s *Service) Router() http.Handler {
 			w.Header().Set("X-Content-Type-Options", "nosniff")
 			w.Header().Set("X-Frame-Options", "DENY")
 			w.Header().Set("Referrer-Policy", "no-referrer")
-			w.Header().Set("Content-Security-Policy", "default-src 'self'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'")
+			w.Header().Set("Content-Security-Policy", "default-src 'self'; script-src 'self' 'sha256-RYZ7hb5+dT+ee9Mqca4WpMMUtltzUrign0b4dxb+7vY='; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'")
 			next.ServeHTTP(w, r)
 		})
 	})
@@ -49,7 +49,9 @@ func (s *Service) Router() http.Handler {
 			next.ServeHTTP(w, r.WithContext(identity.WithRequestIP(r.Context(), remoteIP(r))))
 		})
 	})
-	r.Get("/sitemap.xml", s.sitemap)
+	r.Get("/sitemap.xml", func(w http.ResponseWriter, r *http.Request) {
+		cachePublic(http.HandlerFunc(s.sitemap)).ServeHTTP(w, r)
+	})
 	r.Get("/robots.txt", s.robots)
 	r.Get("/llms.txt", s.llms)
 	r.Get("/admin/login", s.serveIndex)
@@ -63,6 +65,7 @@ func (s *Service) Router() http.Handler {
 	r.Get("/auth/login", s.Login)
 	r.Get("/auth/callback", s.Callback)
 	r.Group(func(r chi.Router) {
+		r.Use(cachePublic)
 		api := humachi.New(r, APIConfig())
 		localaccounts.RegisterPublic(api, s.accounts)
 		questions.RegisterPublic(api, s.questions)

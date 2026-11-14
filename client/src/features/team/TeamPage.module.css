@@ -330,11 +330,14 @@
 .progressFill {
 	position: relative;
 	display: block;
+	width: 100%;
 	height: 100%;
 	overflow: hidden;
 	border-radius: var(--radius-full);
 	background: linear-gradient(90deg, var(--primary), var(--teal-600));
-	transition: width 0.8s var(--ease);
+	transform-origin: 0 50%;
+	transition: transform 0.8s var(--ease);
+	will-change: transform;
 }
 
 .progressFill::after {
@@ -540,12 +543,46 @@
 	opacity: 1;
 }
 
+.memberCard:focus-visible {
+	outline: 2px solid var(--primary);
+	outline-offset: 2px;
+}
+
+/* Вся карточка, кроме ссылки Telegram, открывает подробности участника. */
+.memberButton {
+	display: flex;
+	width: 100%;
+	min-width: 0;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: var(--space-2);
+	padding: 0;
+	border: 0;
+	background: transparent;
+	color: inherit;
+	font: inherit;
+	text-align: left;
+	cursor: pointer;
+}
+
+.memberButton:focus-visible {
+	outline: 2px solid var(--primary);
+	outline-offset: 2px;
+}
+
+.avatarPhoto {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
 .avatar {
 	display: grid;
 	width: 58px;
 	aspect-ratio: 1;
 	place-items: center;
 	margin-bottom: var(--space-2);
+	overflow: hidden;
 	border: 1px solid color-mix(in srgb, var(--primary) 30%, var(--border));
 	border-radius: 50%;
 	background: linear-gradient(
@@ -839,5 +876,56 @@
 		opacity: 1;
 		translate: 0 0;
 		animation: none;
+	}
+}
+
+/* Карточка участника в диалоге: фото, роль, цитата и био из README. */
+.memberDialog {
+	display: flex;
+	min-width: min(560px, 80vw);
+	gap: var(--space-4);
+	align-items: flex-start;
+}
+
+.memberDialogPhoto {
+	width: 120px;
+	aspect-ratio: 1;
+	border-radius: var(--radius-md);
+	object-fit: cover;
+}
+
+.memberDialogBody {
+	display: flex;
+	min-width: 0;
+	flex-direction: column;
+	gap: var(--space-3);
+}
+
+.memberDialogBody .memberRole {
+	margin: 0;
+}
+
+.memberQuote {
+	margin: 0;
+	padding-inline-start: var(--space-3);
+	border-left: 3px solid color-mix(in srgb, var(--primary) 50%, var(--border));
+	color: var(--text-muted);
+}
+
+.memberBio {
+	margin: 0;
+	color: var(--text-muted);
+}
+
+@media (max-width: 720px) {
+	.memberDialog {
+		min-width: 0;
+		flex-direction: column;
+		align-items: center;
+		text-align: left;
+	}
+
+	.memberDialogPhoto {
+		width: 96px;
 	}
 }

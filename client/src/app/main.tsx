@@ -9,6 +9,7 @@ import {
 	createEffect,
 	createResource,
 	createSignal,
+	onMount,
 	type JSX,
 	Show,
 } from "solid-js";
@@ -22,34 +23,49 @@ import { LoadingState } from "@/shared/ui/State";
 import { Toast } from "@/shared/ui/Toast";
 import { DragonMark } from "@/shared/ui/DragonMark";
 import { CookieBanner } from "@/shared/ui/CookieBanner";
-import { ConsentPage, CookiesPage, PolicyPage, TermsPage } from "@/features/legal/LegalPage";
 import { ThemeToggle } from "@/app/theme";
-import { TeamLoginPage } from "@/features/auth/TeamLoginPage";
-import ChatPage from "@/features/chat/ChatPage";
-import TeamDeploymentsPage from "@/features/deployments/TeamDeploymentsPage";
-import PlannerPage from "@/features/planner/PlannerPage";
 import TeamPage from "@/features/team/TeamPage";
-import CodingPage from "@/features/coding/CodingPage";
-import AdminLoginPage from "@/features/administration/AdminLoginPage";
-import AdministrationPage from "@/features/administration/AdministrationPage";
-import { SamLayout } from "@/features/sam/SamLayout";
-import SamDashboardPage from "@/features/sam/SamDashboardPage";
-import SamCatalogPage from "@/features/sam/SamCatalogPage";
-import SamLicensesPage from "@/features/sam/SamLicensesPage";
-import SamInventoryPage from "@/features/sam/SamInventoryPage";
-import SamCompliancePage from "@/features/sam/SamCompliancePage";
-import SamProductPage from "@/features/sam/SamProductPage";
-import SamHostPage from "@/features/sam/SamHostPage";
-import SamMatchingPage from "@/features/sam/SamMatchingPage";
-import SamAssistantPage from "@/features/sam/SamAssistantPage";
 import { SiteConfigProvider } from "@/app/site-config";
+import { lazyPage } from "@/app/lazyPage";
+
+// Route components are code-split: every screen except the public landing
+// is fetched on demand, so the first bundle stays small.
+const TeamLoginPage = lazyPage(() => import("@/features/auth/TeamLoginPage"));
+const ChatPage = lazyPage(() => import("@/features/chat/ChatPage"));
+const TeamDeploymentsPage = lazyPage(() => import("@/features/deployments/TeamDeploymentsPage"));
+const PlannerPage = lazyPage(() => import("@/features/planner/PlannerPage"));
+const CodingPage = lazyPage(() => import("@/features/coding/CodingPage"));
+const AdminLoginPage = lazyPage(() => import("@/features/administration/AdminLoginPage"));
+const AdministrationPage = lazyPage(() => import("@/features/administration/AdministrationPage"));
+const SamLayout = lazyPage(() =>
+	import("@/features/sam/SamLayout").then((m) => ({ default: m.SamLayout })),
+);
+const SamDashboardPage = lazyPage(() => import("@/features/sam/SamDashboardPage"));
+const SamCatalogPage = lazyPage(() => import("@/features/sam/SamCatalogPage"));
+const SamLicensesPage = lazyPage(() => import("@/features/sam/SamLicensesPage"));
+const SamInventoryPage = lazyPage(() => import("@/features/sam/SamInventoryPage"));
+const SamCompliancePage = lazyPage(() => import("@/features/sam/SamCompliancePage"));
+const SamProductPage = lazyPage(() => import("@/features/sam/SamProductPage"));
+const SamHostPage = lazyPage(() => import("@/features/sam/SamHostPage"));
+const SamMatchingPage = lazyPage(() => import("@/features/sam/SamMatchingPage"));
+const SamAssistantPage = lazyPage(() => import("@/features/sam/SamAssistantPage"));
+const TermsPage = lazyPage(() =>
+	import("@/features/legal/LegalPage").then((m) => ({ default: m.TermsPage })),
+);
+const PolicyPage = lazyPage(() =>
+	import("@/features/legal/LegalPage").then((m) => ({ default: m.PolicyPage })),
+);
+const ConsentPage = lazyPage(() =>
+	import("@/features/legal/LegalPage").then((m) => ({ default: m.ConsentPage })),
+);
+const CookiesPage = lazyPage(() =>
+	import("@/features/legal/LegalPage").then((m) => ({ default: m.CookiesPage })),
+);
 
 function PublicNavigation() {
 	return (
 		<nav class="flex flex-wrap gap-x-5 gap-y-2" aria-label={m.mainNavigation()}>
-			<a href="/">{m.footerHome()}</a>
-			<A href="/questions">{m.questionsPageTitle()}</A>
-			<A href="/planner">{m.plannerPageTitle()}</A>
+			<A href="/">{m.teamPageTitle()}</A>
 			<A href="/sam">{m.samNavigation()}</A>
 		</nav>
 	);
@@ -87,6 +103,13 @@ function LogoutButton(props: { csrf?: string; onLoggedOut: () => void }) {
 function App(props: { children?: JSX.Element }) {
 	const location = useLocation();
 	const navigate = useNavigate();
+	// Solid render appends instead of clearing the mount node, so the static
+	// first-paint splash would stay on top of the page and block clicks.
+	onMount(() => {
+		for (const node of document.querySelectorAll("[data-boot]")) {
+			node.remove();
+		}
+	});
 	const [config, { refetch }] = createResource(async () =>
 		unwrap(await api.GET("/api/public/site-config")),
 	);
@@ -150,7 +173,9 @@ function App(props: { children?: JSX.Element }) {
 		!plannerHost() &&
 		(location.pathname === "/" ||
 			location.pathname === "/team" ||
-			location.pathname === "/questions");
+			location.pathname === "/questions" ||
+			location.pathname === "/sam" ||
+			location.pathname.startsWith("/sam/"));
 	createEffect(() => {
 		document.documentElement.toggleAttribute("data-mono", monoPage());
 	});

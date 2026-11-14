@@ -6,6 +6,8 @@
 @layer base {
   html {
     background: var(--bg);
+    /* Якоря и навигация прокручиваются плавно, а не телепортом. */
+    scroll-behavior: smooth;
   }
 
   body {
