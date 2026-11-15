@@ -337,6 +337,53 @@
 	.row > .rowMeta {
 		grid-column: 1 / -1;
 	}
+
+	.row > .rowTools {
+		justify-self: end;
+		grid-column: 1 / -1;
+	}
+}
+
+/* Кнопки редактирования — пилюли в стиле раздела: маленькие, тонкие,
+   удаление приглушённо-красным текстом без заливки. */
+.addAction > button,
+.rowTools button {
+	min-height: 32px;
+	padding: var(--space-1) var(--space-4);
+	border-radius: var(--radius-full);
+	background: var(--surface);
+	font-size: var(--text-sm);
+	font-weight: 600;
+}
+
+.addAction > button {
+	border-color: var(--text);
+	background: var(--text);
+	color: var(--bg);
+}
+
+.addAction > button:hover {
+	background: var(--primary-hover);
+	border-color: var(--primary-hover);
+}
+
+.rowTools button {
+	border-color: var(--border);
+	color: var(--text-muted);
+}
+
+.rowTools button:hover {
+	border-color: var(--divider);
+	color: var(--text);
+}
+
+.rowTools button:last-child {
+	color: var(--danger);
+}
+
+.rowTools button:last-child:hover {
+	border-color: var(--danger);
+	color: var(--danger);
 }
 
 .section {

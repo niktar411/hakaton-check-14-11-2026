@@ -20,28 +20,42 @@ const cacheableControl = "public, max-age=60, stale-while-revalidate=300"
 // them — this turns most of those round trips into either a browser cache
 // hit or a 304 with no body. Successful responses get the cache policy and
 // a strong ETag; failures stay uncacheable.
+
+// cacheRevalidate: то же кеширование, но браузер обязан ревалидировать
+// каждый GET (ETag/304). Данные SAM меняются кнопкой «Сохранить», поэтому
+// после мутации список не должен застревать в кеше на минуту.
+func cacheRevalidate(next http.Handler) http.Handler {
+	return cacheWithControl("public, no-cache")(next)
+}
+
 func cachePublic(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Range semantics are not implemented; such requests pass through.
-		if r.Method != http.MethodGet || r.Header.Get("Range") != "" {
-			next.ServeHTTP(w, r)
-			return
-		}
-		rec := &cacheRecorder{ResponseWriter: w}
-		next.ServeHTTP(rec, r)
-		if !rec.bufferedOK() {
+	return cacheWithControl(cacheableControl)(next)
+}
+
+func cacheWithControl(control string) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			// Range-запросы идут мимо буфера напрямую.
+			if r.Method != http.MethodGet || r.Header.Get("Range") != "" {
+				next.ServeHTTP(w, r)
+				return
+			}
+			rec := &cacheRecorder{ResponseWriter: w}
+			next.ServeHTTP(rec, r)
+			if !rec.bufferedOK() {
+				rec.flush()
+				return
+			}
+			w.Header().Set("Cache-Control", control)
+			etag := rec.etag()
+			w.Header().Set("ETag", etag)
+			if ifNoneMatch(r) == etag {
+				w.WriteHeader(http.StatusNotModified)
+				return
+			}
 			rec.flush()
-			return
-		}
-		w.Header().Set("Cache-Control", cacheableControl)
-		etag := rec.etag()
-		w.Header().Set("ETag", etag)
-		if ifNoneMatch(r) == etag {
-			w.WriteHeader(http.StatusNotModified)
-			return
-		}
-		rec.flush()
-	})
+		})
+	}
 }
 
 // ifNoneMatch returns the client's If-None-Match value with W/ prefixes and

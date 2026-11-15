@@ -17,8 +17,10 @@ type fakeStore struct {
 	licenses  []db.ListSamLicensesRow
 	assets    []db.ListSamAssetsRow
 	findings  []db.ListSamFindingsRow
-	matches   []db.ListSamMatchesRow
-	err       error
+	matches        []db.ListSamMatchesRow
+	err            error
+	nameExists     bool
+	productByIDErr error
 }
 
 func (s *fakeStore) SamDashboard(context.Context) (db.SamDashboardRow, error) {
@@ -43,6 +45,95 @@ func (s *fakeStore) ListSamFindings(context.Context, db.ListSamFindingsParams) (
 
 func (s *fakeStore) ListSamMatches(context.Context, db.ListSamMatchesParams) ([]db.ListSamMatchesRow, error) {
 	return s.matches, s.err
+}
+
+// Edit stubs: фиксированное поведение для тестов контракта и прав.
+
+func (s *fakeStore) SamProductNameExists(context.Context, string) (bool, error) {
+	return s.nameExists, nil
+}
+
+func (s *fakeStore) SamProductByID(context.Context, int64) (db.SamProduct, error) {
+	return db.SamProduct{}, nil
+}
+
+func (s *fakeStore) SamDeleteProduct(context.Context, int64) (int64, error) {
+	return 1, nil
+}
+
+func (s *fakeStore) SamCreateAliases(context.Context, db.SamCreateAliasesParams) ([]db.SamProductAlias, error) {
+	return nil, nil
+}
+
+func (s *fakeStore) SamDeleteAliases(context.Context, []int64) (int64, error) {
+	return 1, nil
+}
+
+func (s *fakeStore) SamEditProductByID(context.Context, int64) (db.SamEditProductByIDRow, error) {
+	return db.SamEditProductByIDRow{}, s.productByIDErr
+}
+
+func (s *fakeStore) SamEditCreateProduct(_ context.Context, arg db.SamEditCreateProductParams) (db.SamEditCreateProductRow, error) {
+	return db.SamEditCreateProductRow{
+		ID:   1,
+		Name: arg.Name,
+	}, nil
+}
+
+func (s *fakeStore) SamEditUpdateProduct(context.Context, db.SamEditUpdateProductParams) (db.SamEditUpdateProductRow, error) {
+	return db.SamEditUpdateProductRow{}, nil
+}
+
+func (s *fakeStore) SamEditProductUsage(context.Context, int64) (db.SamEditProductUsageRow, error) {
+	return db.SamEditProductUsageRow{}, nil
+}
+
+func (s *fakeStore) SamEditLicenseByID(context.Context, int64) (db.SamEditLicenseByIDRow, error) {
+	return db.SamEditLicenseByIDRow{}, nil
+}
+
+func (s *fakeStore) SamEditCreateLicense(context.Context, db.SamEditCreateLicenseParams) (db.SamEditCreateLicenseRow, error) {
+	return db.SamEditCreateLicenseRow{}, nil
+}
+
+func (s *fakeStore) SamEditUpdateLicense(context.Context, db.SamEditUpdateLicenseParams) (db.SamEditUpdateLicenseRow, error) {
+	return db.SamEditUpdateLicenseRow{}, nil
+}
+
+func (s *fakeStore) SamEditLicenseView(context.Context, int64) (db.SamEditLicenseViewRow, error) {
+	return db.SamEditLicenseViewRow{}, nil
+}
+
+func (s *fakeStore) SamEditDeleteLicense(context.Context, int64) (int64, error) {
+	return 1, nil
+}
+
+func (s *fakeStore) SamEditInstallationByID(context.Context, int64) (db.SamEditInstallationByIDRow, error) {
+	return db.SamEditInstallationByIDRow{}, nil
+}
+
+func (s *fakeStore) SamEditCreateInstallation(context.Context, db.SamEditCreateInstallationParams) (db.SamEditCreateInstallationRow, error) {
+	return db.SamEditCreateInstallationRow{}, nil
+}
+
+func (s *fakeStore) SamEditUpdateInstallation(context.Context, db.SamEditUpdateInstallationParams) (db.SamEditUpdateInstallationRow, error) {
+	return db.SamEditUpdateInstallationRow{}, nil
+}
+
+func (s *fakeStore) SamEditInstallationView(context.Context, int64) (db.SamEditInstallationViewRow, error) {
+	return db.SamEditInstallationViewRow{}, nil
+}
+
+func (s *fakeStore) SamEditDeleteInstallation(context.Context, int64) (int64, error) {
+	return 1, nil
+}
+
+func (s *fakeStore) SamEditAliasesByProduct(context.Context, int64) ([]db.SamEditAliasesByProductRow, error) {
+	return nil, nil
+}
+
+func (s *fakeStore) SamEditAuditInsert(context.Context, db.SamEditAuditInsertParams) error {
+	return nil
 }
 
 func timestamp(value time.Time) pgtype.Timestamptz {

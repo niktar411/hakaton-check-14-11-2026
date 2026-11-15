@@ -1,9 +1,11 @@
 import { A, useParams } from "@solidjs/router";
-import { createEffect, For, on, Show } from "solid-js";
+import { createEffect, createResource, createSignal, For, on, Show } from "solid-js";
 import * as m from "@/paraglide/messages";
-import { api, unwrap } from "@/shared/api";
+import { api, csrfHeaders, unwrap } from "@/shared/api";
 import type { components } from "@/shared/api/schema";
 import { formatDay, formatMoney, formatNumber } from "@/shared/lib/format";
+import { Button } from "@/shared/ui/Button";
+import { useToast } from "@/shared/ui/Toast";
 import { SamBadge, SamPageHeader } from "./SamPage";
 import s from "./SamPage.module.css";
 import { createSamResource, SamPageState } from "./SamPageState";
@@ -19,8 +21,17 @@ import {
 	riskLevelLabel,
 	riskLevelTone,
 } from "./labels";
+import {
+	ProductDialog as ProductFormDialog,
+	requestEdit,
+	SamAliasManager,
+	SamEditGate,
+	SamLoginHint,
+	useSamSession,
+} from "./edit";
 
 type Detail = components["schemas"]["SamComplianceProductDetail"];
+type ProductInput = components["schemas"]["ProductInput"];
 
 export default function SamProductPage() {
 	const params = useParams();
@@ -40,6 +51,47 @@ export default function SamProductPage() {
 			{ defer: true },
 		),
 	);
+	const session = useSamSession();
+	const toast = useToast();
+	const [catalog] = createResource(async () =>
+		unwrap(await api.GET("/api/public/sam/catalog")) ?? [],
+	);
+	const catalogProduct = () =>
+		(catalog() ?? []).find((product) => product.id === Number(params.id));
+	const [aliases, aliasesTools] = createResource(async () => {
+		if (!session.loggedIn()) return [];
+		try {
+			return unwrap(
+				await api.GET("/api/sam/products/{id}/aliases", {
+					params: { path: { id: Number(params.id) } },
+				}),
+			)?.aliases ?? [];
+		} catch {
+			return [];
+		}
+	});
+	const [formOpen, setFormOpen] = createSignal(false);
+	const [pending, setPending] = createSignal(false);
+
+	async function submitProduct(input: ProductInput) {
+		setPending(true);
+		try {
+			await api.PUT("/api/sam/products/{id}", {
+				params: { path: { id: Number(params.id) } },
+				body: input,
+				headers: csrfHeaders(session.csrf()),
+			});
+			setFormOpen(false);
+			void refetch();
+			void aliasesTools.refetch();
+			toast.show(m.samEditSaved());
+		} catch {
+			toast.show(m.samEditFailed());
+		} finally {
+			setPending(false);
+		}
+	}
+
 	const title = () => detail()?.product.name ?? m.samProductPageTitle();
 	const lead = () => {
 		const product = detail()?.product;
@@ -52,6 +104,19 @@ export default function SamProductPage() {
 			<A class={s.backLink} href="/sam/compliance">
 				{m.samProductBack()}
 			</A>
+			<SamLoginHint loggedIn={session.loggedIn()} />
+			<SamEditGate />
+			<Show when={catalogProduct()}>
+				<Button
+					variant="primary"
+					onClick={() => {
+						if (!requestEdit(session.loggedIn())) return;
+						setFormOpen(true);
+					}}
+				>
+					{m.samEditEditProduct()}
+				</Button>
+			</Show>
 			<SamPageState data={detail} onRetry={() => void refetch()}>
 				{(value) => (
 					<div class={s.page}>
@@ -160,6 +225,19 @@ export default function SamProductPage() {
 							</Show>
 						</section>
 
+						<Show when={session.loggedIn()}>
+							<section class={s.section}>
+								<h2 class={s.sectionTitle}>{m.samEditFieldAlias()}</h2>
+								<SamAliasManager
+									loggedIn={session.loggedIn()}
+									csrf={session.csrf()}
+									productID={Number(params.id)}
+									aliases={aliases() ?? []}
+									onChange={() => void aliasesTools.refetch()}
+								/>
+							</section>
+						</Show>
+
 						<section class={s.section}>
 							<h2 class={s.sectionTitle}>{m.samProductHostsTitle()}</h2>
 							<Show
@@ -191,6 +269,14 @@ export default function SamProductPage() {
 					</div>
 				)}
 			</SamPageState>
+			<ProductFormDialog
+				open={formOpen()}
+				title={m.samEditEditProduct()}
+				value={catalogProduct()}
+				pending={pending()}
+				onClose={() => setFormOpen(false)}
+				onSubmit={submitProduct}
+			/>
 		</>
 	);
 }

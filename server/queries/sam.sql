@@ -213,7 +213,9 @@ SELECT
 SELECT p.id,
        p.name,
        p.vendor,
+       p.version,
        p.category,
+       p.status,
        p.section_code,
        p.class_code,
        p.license_metric,
@@ -232,7 +234,7 @@ LIMIT $1 OFFSET $2;
 SELECT l.id,
        p.name AS product_name,
        p.vendor AS product_vendor,
-       CASE l.license_type WHEN 'open_source' THEN 'trial' ELSE l.license_type END::text AS kind,
+       l.license_type AS kind,
        l.seats::int AS seats_total,
        (SELECT count(DISTINCT coalesce(nullif(i.device_name, ''), 'installation:' || i.id))::int
         FROM sam_installations i

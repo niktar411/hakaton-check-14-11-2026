@@ -24,7 +24,7 @@ export function lazyPage(
 		});
 		return (
 			<Suspense fallback={<LoadingState />}>
-				<ErrorBoundary fallback={(err) => <div class="p-8 text-text">{String(err)}</div>}>
+				<ErrorBoundary fallback={(err) => <div class="text-text p-8">{String(err)}</div>}>
 					<Show when={component()}>
 						{(loaded) => <Dynamic component={loaded()} {...props} />}
 					</Show>

@@ -12,8 +12,9 @@ import (
 
 const pageLimit int32 = 100
 
-// Store is the read-only subset of sqlc queries used by SAM. Keeping it behind
-// an interface lets the mapping and suggestion logic be tested without a database.
+// Store is the sqlc subset used by SAM: the public read-only projection plus
+// the direct editing surface. Every edit writes an audit row in the same
+// transaction (see service_edit.go).
 type Store interface {
 	SamDashboard(ctx context.Context) (db.SamDashboardRow, error)
 	SamPublicProducts(ctx context.Context, arg db.SamPublicProductsParams) ([]db.SamPublicProductsRow, error)
@@ -21,15 +22,39 @@ type Store interface {
 	ListSamAssets(ctx context.Context, arg db.ListSamAssetsParams) ([]db.ListSamAssetsRow, error)
 	ListSamFindings(ctx context.Context, arg db.ListSamFindingsParams) ([]db.ListSamFindingsRow, error)
 	ListSamMatches(ctx context.Context, arg db.ListSamMatchesParams) ([]db.ListSamMatchesRow, error)
+	SamProductNameExists(ctx context.Context, name string) (bool, error)
+	SamProductByID(ctx context.Context, id int64) (db.SamProduct, error)
+	SamDeleteProduct(ctx context.Context, id int64) (int64, error)
+	SamCreateAliases(ctx context.Context, arg db.SamCreateAliasesParams) ([]db.SamProductAlias, error)
+	SamDeleteAliases(ctx context.Context, ids []int64) (int64, error)
+	SamEditProductByID(ctx context.Context, id int64) (db.SamEditProductByIDRow, error)
+	SamEditCreateProduct(ctx context.Context, arg db.SamEditCreateProductParams) (db.SamEditCreateProductRow, error)
+	SamEditUpdateProduct(ctx context.Context, arg db.SamEditUpdateProductParams) (db.SamEditUpdateProductRow, error)
+	SamEditProductUsage(ctx context.Context, id int64) (db.SamEditProductUsageRow, error)
+	SamEditLicenseByID(ctx context.Context, id int64) (db.SamEditLicenseByIDRow, error)
+	SamEditCreateLicense(ctx context.Context, arg db.SamEditCreateLicenseParams) (db.SamEditCreateLicenseRow, error)
+	SamEditUpdateLicense(ctx context.Context, arg db.SamEditUpdateLicenseParams) (db.SamEditUpdateLicenseRow, error)
+	SamEditLicenseView(ctx context.Context, id int64) (db.SamEditLicenseViewRow, error)
+	SamEditDeleteLicense(ctx context.Context, id int64) (int64, error)
+	SamEditInstallationByID(ctx context.Context, id int64) (db.SamEditInstallationByIDRow, error)
+	SamEditCreateInstallation(ctx context.Context, arg db.SamEditCreateInstallationParams) (db.SamEditCreateInstallationRow, error)
+	SamEditUpdateInstallation(ctx context.Context, arg db.SamEditUpdateInstallationParams) (db.SamEditUpdateInstallationRow, error)
+	SamEditInstallationView(ctx context.Context, id int64) (db.SamEditInstallationViewRow, error)
+	SamEditDeleteInstallation(ctx context.Context, id int64) (int64, error)
+	SamEditAliasesByProduct(ctx context.Context, productID int64) ([]db.SamEditAliasesByProductRow, error)
+	SamEditAuditInsert(ctx context.Context, arg db.SamEditAuditInsertParams) error
 }
 
-// Service exposes the public read-only SAM projection.
+// Service exposes the public read-only SAM projection and the authenticated
+// editing surface.
 type Service struct {
-	store Store
+	store   Store
+	editRun editRun
 }
 
 func NewService(pool *pgxpool.Pool) *Service {
-	return newService(db.New(pool))
+	queries := db.New(pool)
+	return &Service{store: queries, editRun: newEditRun(pool)}
 }
 
 func newService(store Store) *Service {
@@ -65,10 +90,12 @@ func (s *Service) Products(ctx context.Context) ([]Product, error) {
 			ID:                row.ID,
 			Name:              row.Name,
 			Vendor:            row.Vendor,
+			Version:           row.Version,
 			Category:          row.Category,
 			SectionCode:       row.SectionCode,
 			ClassCode:         row.ClassCode,
 			LicenseMetric:     row.LicenseMetric,
+			Status:            row.Status,
 			RegistryRf:        row.RegistryRf,
 			RegistryEntry:     row.RegistryEntry,
 			IsTrackable:       row.IsTrackable,

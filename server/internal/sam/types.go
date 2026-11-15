@@ -24,7 +24,9 @@ type Product struct {
 	ID                int64     `json:"id"`
 	Name              string    `json:"name"`
 	Vendor            string    `json:"vendor"`
+	Version           string    `json:"version"`
 	Category          string    `json:"category"`
+	Status            string    `json:"status" enum:"active,outdated,banned,archived"`
 	SectionCode       string    `json:"sectionCode"`
 	ClassCode         string    `json:"classCode"`
 	LicenseMetric     string    `json:"licenseMetric" enum:"device,user,installation,none"`
@@ -42,7 +44,7 @@ type License struct {
 	ID         int64   `json:"id"`
 	Product    string  `json:"product"`
 	Vendor     string  `json:"vendor"`
-	Kind       string  `json:"kind" enum:"subscription,perpetual,trial"`
+	Kind       string  `json:"kind" enum:"subscription,perpetual,open_source,trial"`
 	SeatsTotal int32   `json:"seatsTotal"`
 	SeatsUsed  int32   `json:"seatsUsed"`
 	Contract   string  `json:"contract" doc:"Contract or order number"`

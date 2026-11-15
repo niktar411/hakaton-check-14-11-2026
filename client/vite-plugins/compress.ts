@@ -64,11 +64,13 @@ export function compressStatic(distDir: string): Plugin {
 			);
 			const top = entries.slice(0, 10);
 			const totalGz = entries.reduce((sum, e) => sum + e.gz, 0);
+			// biome-ignore lint/suspicious/noConsole: отчёт сборки печатается в stdout vite-плагином
 			console.log(
 				`[compress-static] ${entries.length} files, ${Math.round(totalGz / 1024)} KiB gz total. Largest (gz):`,
 			);
 			for (const e of top) {
 				const saved = e.raw > 0 ? Math.round((1 - e.gz / e.raw) * 100) : 0;
+				// biome-ignore lint/suspicious/noConsole: отчёт сборки печатается в stdout vite-плагином
 				console.log(
 					`  ${e.file.slice(distDir.length + 1)}: ${Math.round(e.gz / 1024)} KiB (-${saved}%)`,
 				);

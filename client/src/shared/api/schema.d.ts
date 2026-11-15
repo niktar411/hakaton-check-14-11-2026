@@ -954,6 +954,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/sam/aliases/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete a product alias */
+        delete: operations["sam-delete-alias"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/sam/assistant/chat": {
         parameters: {
             query?: never;
@@ -1051,6 +1068,76 @@ export interface paths {
         put?: never;
         post?: never;
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sam/installations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Record a manual SAM installation */
+        post: operations["sam-create-installation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sam/installations/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Update a SAM installation row */
+        put: operations["sam-update-installation"];
+        post?: never;
+        /** Delete a SAM installation row */
+        delete: operations["sam-delete-installation"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sam/licenses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create a SAM license */
+        post: operations["sam-create-license"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sam/licenses/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Update a SAM license */
+        put: operations["sam-update-license"];
+        post?: never;
+        /** Delete a SAM license */
+        delete: operations["sam-delete-license"];
         options?: never;
         head?: never;
         patch?: never;
@@ -1226,6 +1313,59 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/sam/products": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create a SAM catalog product */
+        post: operations["sam-create-product"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sam/products/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Update a SAM catalog product */
+        put: operations["sam-update-product"];
+        post?: never;
+        /** Delete an unused SAM catalog product */
+        delete: operations["sam-delete-product"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sam/products/{id}/aliases": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List product aliases */
+        get: operations["sam-list-aliases"];
+        put?: never;
+        /** Add a product alias */
+        post: operations["sam-add-alias"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1239,6 +1379,29 @@ export interface components {
             /** Format: int64 */
             id: number;
             role: string;
+        };
+        Alias: {
+            alias: string;
+            /** Format: int64 */
+            id: number;
+        };
+        AliasInput: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/AliasInput.json
+             */
+            readonly $schema?: string;
+            alias: string;
+        };
+        AliasesOutputBody: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/AliasesOutputBody.json
+             */
+            readonly $schema?: string;
+            aliases: components["schemas"]["Alias"][] | null;
         };
         Answer: {
             /**
@@ -1721,13 +1884,58 @@ export interface components {
             modelReady: boolean;
             username: string;
         };
+        Installation: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/Installation.json
+             */
+            readonly $schema?: string;
+            deviceName: string;
+            /** Format: int64 */
+            id: number;
+            /** Format: date-time */
+            lastSeenAt: string;
+            product: string;
+            /** Format: int64 */
+            productId: number | null;
+            rawName: string;
+            /** @enum {string} */
+            source: "manual" | "inventory";
+            /** @enum {string} */
+            status?: "installed" | "removed" | "unknown";
+            userName: string;
+            version: string;
+        };
+        InstallationInput: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/InstallationInput.json
+             */
+            readonly $schema?: string;
+            deviceName?: string;
+            /** Format: int64 */
+            productId: number | null;
+            rawName: string;
+            /** @enum {string} */
+            status?: "installed" | "removed" | "unknown";
+            userName?: string;
+            version?: string;
+        };
         License: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/License.json
+             */
+            readonly $schema?: string;
             /** @description Contract or order number */
             contract: string;
             /** Format: int64 */
             id: number;
             /** @enum {string} */
-            kind: "subscription" | "perpetual" | "trial";
+            kind: "subscription" | "perpetual" | "open_source" | "trial";
             product: string;
             /** Format: int32 */
             seatsTotal: number;
@@ -1738,6 +1946,26 @@ export interface components {
             /** @description Calendar date in YYYY-MM-DD format */
             validUntil: string | null;
             vendor: string;
+        };
+        LicenseInput: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/LicenseInput.json
+             */
+            readonly $schema?: string;
+            contract?: string;
+            /** Format: int64 */
+            costPerSeat?: number;
+            currency?: string;
+            /** @enum {string} */
+            kind?: "subscription" | "perpetual" | "open_source" | "trial";
+            /** Format: int64 */
+            productId: number;
+            /** Format: int32 */
+            seatsTotal?: number;
+            /** @description Calendar date YYYY-MM-DD or null */
+            validUntil: string | null;
         };
         Link: {
             path: string;
@@ -1874,6 +2102,15 @@ export interface components {
             readonly $schema?: string;
             configured: boolean;
         };
+        OkOutputBody: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/OkOutputBody.json
+             */
+            readonly $schema?: string;
+            ok: boolean;
+        };
         Overview: {
             /**
              * Format: uri
@@ -2004,6 +2241,12 @@ export interface components {
             updatedAt: string;
         };
         Product: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/Product.json
+             */
+            readonly $schema?: string;
             category: string;
             classCode: string;
             /** Format: int64 */
@@ -2022,9 +2265,33 @@ export interface components {
             /** @description Listed in the Russian software registry */
             registryRf: boolean;
             sectionCode: string;
+            /** @enum {string} */
+            status: "active" | "outdated" | "banned" | "archived";
             /** Format: date-time */
             updatedAt: string;
             vendor: string;
+            version: string;
+        };
+        ProductInput: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/ProductInput.json
+             */
+            readonly $schema?: string;
+            category?: string;
+            classCode?: string;
+            isTrackable?: boolean;
+            /** @enum {string} */
+            licenseMetric?: "device" | "user" | "installation" | "none";
+            name: string;
+            registryEntry?: string;
+            registryRf?: boolean;
+            sectionCode?: string;
+            /** @enum {string} */
+            status?: "active" | "outdated" | "banned" | "archived";
+            vendor?: string;
+            version?: string;
         };
         ProfileRequest: {
             /**
@@ -4495,6 +4762,37 @@ export interface operations {
             };
         };
     };
+    "sam-delete-alias": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OkOutputBody"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
     "sam-assistant-chat": {
         parameters: {
             query?: never;
@@ -4665,6 +4963,204 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SamComplianceSummary"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "sam-create-installation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InstallationInput"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Installation"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "sam-update-installation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InstallationInput"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Installation"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "sam-delete-installation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OkOutputBody"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "sam-create-license": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LicenseInput"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["License"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "sam-update-license": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LicenseInput"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["License"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "sam-delete-license": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OkOutputBody"];
                 };
             };
             /** @description Error */
@@ -4986,6 +5482,171 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SamOperatorChatResult"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "sam-create-product": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProductInput"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Product"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "sam-update-product": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProductInput"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Product"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "sam-delete-product": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OkOutputBody"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "sam-list-aliases": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AliasesOutputBody"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "sam-add-alias": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AliasInput"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AliasesOutputBody"];
                 };
             };
             /** @description Error */

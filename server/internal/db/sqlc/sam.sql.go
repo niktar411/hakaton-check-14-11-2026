@@ -322,7 +322,7 @@ const listSamLicenses = `-- name: ListSamLicenses :many
 SELECT l.id,
        p.name AS product_name,
        p.vendor AS product_vendor,
-       CASE l.license_type WHEN 'open_source' THEN 'trial' ELSE l.license_type END::text AS kind,
+       l.license_type AS kind,
        l.seats::int AS seats_total,
        (SELECT count(DISTINCT coalesce(nullif(i.device_name, ''), 'installation:' || i.id))::int
         FROM sam_installations i
@@ -852,7 +852,9 @@ const samPublicProducts = `-- name: SamPublicProducts :many
 SELECT p.id,
        p.name,
        p.vendor,
+       p.version,
        p.category,
+       p.status,
        p.section_code,
        p.class_code,
        p.license_metric,
@@ -877,7 +879,9 @@ type SamPublicProductsRow struct {
 	ID                int64              `json:"id"`
 	Name              string             `json:"name"`
 	Vendor            string             `json:"vendor"`
+	Version           string             `json:"version"`
 	Category          string             `json:"category"`
+	Status            string             `json:"status"`
 	SectionCode       string             `json:"section_code"`
 	ClassCode         string             `json:"class_code"`
 	LicenseMetric     string             `json:"license_metric"`
@@ -902,7 +906,9 @@ func (q *Queries) SamPublicProducts(ctx context.Context, arg SamPublicProductsPa
 			&i.ID,
 			&i.Name,
 			&i.Vendor,
+			&i.Version,
 			&i.Category,
+			&i.Status,
 			&i.SectionCode,
 			&i.ClassCode,
 			&i.LicenseMetric,

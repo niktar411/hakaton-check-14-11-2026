@@ -32,6 +32,73 @@
         ],
         "type": "object"
       },
+      "Alias": {
+        "additionalProperties": false,
+        "properties": {
+          "alias": {
+            "type": "string"
+          },
+          "id": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "alias"
+        ],
+        "type": "object"
+      },
+      "AliasInput": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/AliasInput.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "alias": {
+            "maxLength": 200,
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "alias"
+        ],
+        "type": "object"
+      },
+      "AliasesOutputBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/AliasesOutputBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "aliases": {
+            "items": {
+              "$ref": "#/components/schemas/Alias"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "aliases"
+        ],
+        "type": "object"
+      },
       "Answer": {
         "additionalProperties": false,
         "properties": {
@@ -1425,9 +1492,140 @@
         ],
         "type": "object"
       },
+      "Installation": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/Installation.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "deviceName": {
+            "type": "string"
+          },
+          "id": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "lastSeenAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "product": {
+            "type": "string"
+          },
+          "productId": {
+            "format": "int64",
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "rawName": {
+            "type": "string"
+          },
+          "source": {
+            "enum": [
+              "manual",
+              "inventory"
+            ],
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "installed",
+              "removed",
+              "unknown"
+            ],
+            "type": "string"
+          },
+          "userName": {
+            "type": "string"
+          },
+          "version": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "productId",
+          "product",
+          "rawName",
+          "deviceName",
+          "userName",
+          "version",
+          "source",
+          "lastSeenAt"
+        ],
+        "type": "object"
+      },
+      "InstallationInput": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/InstallationInput.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "deviceName": {
+            "maxLength": 200,
+            "type": "string"
+          },
+          "productId": {
+            "format": "int64",
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "rawName": {
+            "maxLength": 200,
+            "minLength": 1,
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "installed",
+              "removed",
+              "unknown"
+            ],
+            "type": "string"
+          },
+          "userName": {
+            "maxLength": 200,
+            "type": "string"
+          },
+          "version": {
+            "maxLength": 100,
+            "type": "string"
+          }
+        },
+        "required": [
+          "rawName",
+          "productId"
+        ],
+        "type": "object"
+      },
       "License": {
         "additionalProperties": false,
         "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/License.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
           "contract": {
             "description": "Contract or order number",
             "type": "string"
@@ -1440,6 +1638,7 @@
             "enum": [
               "subscription",
               "perpetual",
+              "open_source",
               "trial"
             ],
             "type": "string"
@@ -1484,6 +1683,64 @@
           "contract",
           "validUntil",
           "status"
+        ],
+        "type": "object"
+      },
+      "LicenseInput": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/LicenseInput.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "contract": {
+            "maxLength": 120,
+            "type": "string"
+          },
+          "costPerSeat": {
+            "format": "int64",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "currency": {
+            "maxLength": 8,
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "subscription",
+              "perpetual",
+              "open_source",
+              "trial"
+            ],
+            "type": "string"
+          },
+          "productId": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "seatsTotal": {
+            "format": "int32",
+            "maximum": 1000000,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "validUntil": {
+            "description": "Calendar date YYYY-MM-DD or null",
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "productId",
+          "validUntil"
         ],
         "type": "object"
       },
@@ -1879,6 +2136,27 @@
         ],
         "type": "object"
       },
+      "OkOutputBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/OkOutputBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "ok": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "ok"
+        ],
+        "type": "object"
+      },
       "Overview": {
         "additionalProperties": false,
         "properties": {
@@ -2168,6 +2446,15 @@
       "Product": {
         "additionalProperties": false,
         "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/Product.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
           "category": {
             "type": "string"
           },
@@ -2213,11 +2500,23 @@
           "sectionCode": {
             "type": "string"
           },
+          "status": {
+            "enum": [
+              "active",
+              "outdated",
+              "banned",
+              "archived"
+            ],
+            "type": "string"
+          },
           "updatedAt": {
             "format": "date-time",
             "type": "string"
           },
           "vendor": {
+            "type": "string"
+          },
+          "version": {
             "type": "string"
           }
         },
@@ -2225,7 +2524,9 @@
           "id",
           "name",
           "vendor",
+          "version",
           "category",
+          "status",
           "sectionCode",
           "classCode",
           "licenseMetric",
@@ -2235,6 +2536,77 @@
           "licenseCount",
           "installationCount",
           "updatedAt"
+        ],
+        "type": "object"
+      },
+      "ProductInput": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/ProductInput.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "category": {
+            "maxLength": 300,
+            "type": "string"
+          },
+          "classCode": {
+            "maxLength": 10,
+            "type": "string"
+          },
+          "isTrackable": {
+            "type": "boolean"
+          },
+          "licenseMetric": {
+            "enum": [
+              "device",
+              "user",
+              "installation",
+              "none"
+            ],
+            "type": "string"
+          },
+          "name": {
+            "maxLength": 200,
+            "minLength": 1,
+            "type": "string"
+          },
+          "registryEntry": {
+            "maxLength": 50,
+            "type": "string"
+          },
+          "registryRf": {
+            "type": "boolean"
+          },
+          "sectionCode": {
+            "maxLength": 10,
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "active",
+              "outdated",
+              "banned",
+              "archived"
+            ],
+            "type": "string"
+          },
+          "vendor": {
+            "maxLength": 200,
+            "type": "string"
+          },
+          "version": {
+            "maxLength": 100,
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
         ],
         "type": "object"
       },
@@ -6443,6 +6815,48 @@
         ]
       }
     },
+    "/api/sam/aliases/{id}": {
+      "delete": {
+        "operationId": "sam-delete-alias",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "int64",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OkOutputBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Delete a product alias",
+        "tags": [
+          "SAM"
+        ]
+      }
+    },
     "/api/sam/assistant/chat": {
       "post": {
         "operationId": "sam-assistant-chat",
@@ -6691,6 +7105,272 @@
         "summary": "KPI комплаенса SAM",
         "tags": [
           "SAM compliance"
+        ]
+      }
+    },
+    "/api/sam/installations": {
+      "post": {
+        "operationId": "sam-create-installation",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InstallationInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Installation"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Record a manual SAM installation",
+        "tags": [
+          "SAM"
+        ]
+      }
+    },
+    "/api/sam/installations/{id}": {
+      "delete": {
+        "operationId": "sam-delete-installation",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "int64",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OkOutputBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Delete a SAM installation row",
+        "tags": [
+          "SAM"
+        ]
+      },
+      "put": {
+        "operationId": "sam-update-installation",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "int64",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InstallationInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Installation"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Update a SAM installation row",
+        "tags": [
+          "SAM"
+        ]
+      }
+    },
+    "/api/sam/licenses": {
+      "post": {
+        "operationId": "sam-create-license",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LicenseInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/License"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Create a SAM license",
+        "tags": [
+          "SAM"
+        ]
+      }
+    },
+    "/api/sam/licenses/{id}": {
+      "delete": {
+        "operationId": "sam-delete-license",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "int64",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OkOutputBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Delete a SAM license",
+        "tags": [
+          "SAM"
+        ]
+      },
+      "put": {
+        "operationId": "sam-update-license",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "int64",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LicenseInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/License"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Update a SAM license",
+        "tags": [
+          "SAM"
         ]
       }
     },
@@ -7181,6 +7861,231 @@
         "summary": "Предложить изменение SAM через AI-оператора",
         "tags": [
           "SAM operator"
+        ]
+      }
+    },
+    "/api/sam/products": {
+      "post": {
+        "operationId": "sam-create-product",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProductInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Product"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Create a SAM catalog product",
+        "tags": [
+          "SAM"
+        ]
+      }
+    },
+    "/api/sam/products/{id}": {
+      "delete": {
+        "operationId": "sam-delete-product",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "int64",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OkOutputBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Delete an unused SAM catalog product",
+        "tags": [
+          "SAM"
+        ]
+      },
+      "put": {
+        "operationId": "sam-update-product",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "int64",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProductInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Product"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Update a SAM catalog product",
+        "tags": [
+          "SAM"
+        ]
+      }
+    },
+    "/api/sam/products/{id}/aliases": {
+      "get": {
+        "operationId": "sam-list-aliases",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "int64",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AliasesOutputBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "List product aliases",
+        "tags": [
+          "SAM"
+        ]
+      },
+      "post": {
+        "operationId": "sam-add-alias",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "int64",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AliasInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AliasesOutputBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Add a product alias",
+        "tags": [
+          "SAM"
         ]
       }
     }

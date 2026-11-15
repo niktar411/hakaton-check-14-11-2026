@@ -21,7 +21,14 @@ import {
 import s from "./notifications.module.css";
 
 export function SamNotifications(props: { open: boolean }) {
-	const [findings] = createResource(async () => unwrap(await api.GET("/api/public/sam/compliance")) ?? []);
+	const [findings] = createResource(async () => {
+		try {
+			return unwrap(await api.GET("/api/public/sam/compliance")) ?? [];
+		} catch {
+			// Панель рисков не должна ронять страницу при сбое сети.
+			return [];
+		}
+	});
 	const [seen, setSeen] = createSignal<Set<string>>(new Set());
 
 	onMount(() => {
