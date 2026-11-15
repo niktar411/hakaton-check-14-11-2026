@@ -1,0 +1,22 @@
+[Unit]
+Description=Restricted hackathon VPN control agent
+After=network-online.target docker.service awg-quick@awg0.service
+Requires=awg-quick@awg0.service
+
+[Service]
+EnvironmentFile=/etc/hackathon/agent.env
+WorkingDirectory=/opt/hackathon
+ExecStart=/opt/hackathon/hackathon-agent
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ReadWritePaths=/etc/amnezia/amneziawg /home/perdun/team-access /var/lib/hackathon-agent /var/backups/hackathon
+CapabilityBoundingSet=CAP_NET_ADMIN CAP_DAC_OVERRIDE CAP_FOWNER
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6 AF_NETLINK
+MemoryMax=256M
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target

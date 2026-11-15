@@ -1,0 +1,11 @@
+[Unit]
+Description=Run the GitHub mirror every five minutes
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=5min
+AccuracySec=30s
+Unit=hackathon-mirror.service
+
+[Install]
+WantedBy=timers.target

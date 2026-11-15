@@ -1,0 +1,83 @@
+/* Базовые стили поверх preflight Tailwind (он сбрасывает отступы, списки,
+ * кнопки и наследование шрифта у полей). Здесь — только то, чего в нём нет.
+ * В слое base, чтобы любой утилитарный класс их перебивал.
+ */
+
+@layer base {
+  html {
+    background: var(--bg);
+  }
+
+  body {
+    min-height: 100dvh;
+    font-family: var(--font);
+    font-size: var(--text-base);
+    line-height: 1.5;
+    background: var(--bg);
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Ползунки скрыты во всём проекте; прокрутка колесом, тачем и клавиатурой работает. */
+  * {
+    scrollbar-width: none;
+  }
+  *::-webkit-scrollbar {
+    display: none;
+  }
+
+  a {
+    color: var(--primary);
+  }
+  a:hover {
+    text-decoration: underline;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-weight: 700;
+    letter-spacing: -0.3px;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    background: var(--blue-100);
+  }
+
+  ::placeholder {
+    color: var(--text-muted);
+    opacity: 1;
+  }
+
+  /* Поле мельче 16px на телефоне заставляет iOS приближать страницу при фокусе. */
+  @media (max-width: 720px) {
+    input,
+    textarea {
+      font-size: var(--text-lg);
+    }
+  }
+
+  /* Смена темы: снимок старой страницы растворяется в новой (document.startViewTransition). */
+  html.theme-vt::view-transition-old(root),
+  html.theme-vt::view-transition-new(root) {
+    animation-duration: 0.45s;
+    animation-timing-function: var(--ease);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}

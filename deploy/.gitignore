@@ -1,0 +1,13 @@
+main.env
+worker.env
+agent.env
+portal.env
+gitlab-runner/config.toml
+runner/
+tls/
+secrets/
+*.crt
+*.key
+*.pem
+*.dump
+*.sha256

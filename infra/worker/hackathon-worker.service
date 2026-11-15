@@ -1,0 +1,26 @@
+[Unit]
+Description=Restricted SERVER 2 coding worker
+After=network-online.target docker.service
+Requires=docker.service
+
+[Service]
+Type=simple
+User=hackathon-worker
+Group=hackathon-worker
+SupplementaryGroups=docker
+EnvironmentFile=/etc/hackathon/worker.env
+WorkingDirectory=/opt/hackathon
+ExecStart=/opt/hackathon/worker-agent
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/hackathon-worker
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6 AF_NETLINK
+MemoryMax=512M
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target

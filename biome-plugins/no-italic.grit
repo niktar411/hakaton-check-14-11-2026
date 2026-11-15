@@ -1,0 +1,5 @@
+language css
+
+`font-style: italic` as $decl where {
+  register_diagnostic(span=$decl, message="font-style: italic запрещён: курсив читается как другой шрифт. Выделяй размером и var(--text-muted).", severity="error")
+}

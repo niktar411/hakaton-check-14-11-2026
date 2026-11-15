@@ -1,0 +1,29 @@
+.root {
+	display: flex;
+	min-width: 0;
+	flex-direction: column;
+	gap: var(--space-3);
+	margin-top: auto;
+	padding: var(--space-6) 0 var(--space-4);
+	border-top: 1px solid var(--border);
+}
+
+.root[data-borderless='true'] {
+	border-top: 0;
+}
+
+.links {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--space-3) var(--space-5);
+}
+
+.links a {
+	overflow-wrap: anywhere;
+}
+
+.note {
+	margin: 0;
+	color: var(--text-muted);
+	font-size: var(--text-sm);
+}

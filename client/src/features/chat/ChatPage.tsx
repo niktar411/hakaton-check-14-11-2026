@@ -1,0 +1,993 @@
+import {
+	createEffect,
+	createMemo,
+	createResource,
+	createSignal,
+	For,
+	Index,
+	onCleanup,
+	onMount,
+	Show,
+} from "solid-js";
+import * as m from "@/paraglide/messages";
+import { api, ApiError, csrfHeaders, streamPost, unwrap } from "@/shared/api";
+import type { components } from "@/shared/api/schema";
+import { LocalLoginForm } from "@/features/auth/LocalLoginForm";
+import { formatDate } from "@/shared/lib/format";
+import { Button } from "@/shared/ui/Button";
+import { EmptyState, LoadingState } from "@/shared/ui/State";
+import { useToast } from "@/shared/ui/Toast";
+import s from "./ChatPage.module.css";
+
+type ChatSummary = components["schemas"]["ChatSummary"];
+type ChatHistory = components["schemas"]["ChatHistory"];
+type Identity = components["schemas"]["Identity"];
+
+type Attachment = {
+	id: string;
+	name: string;
+	size: number;
+	text: string;
+};
+
+type StreamMessage = {
+	role: "user" | "assistant";
+	content: string;
+	reasoning?: string;
+	streaming?: boolean;
+};
+
+type StreamMeta = { id: number; phase: string };
+
+type SpeechRecognitionResult = {
+	isFinal: boolean;
+	0: { transcript: string };
+};
+
+type SpeechRecognitionEvent = {
+	resultIndex: number;
+	results: ArrayLike<SpeechRecognitionResult>;
+};
+
+type SpeechRecognitionErrorEvent = {
+	error: string;
+};
+
+type SpeechRecognitionInstance = {
+	lang: string;
+	continuous: boolean;
+	interimResults: boolean;
+	start: () => void;
+	stop: () => void;
+	onresult: ((event: SpeechRecognitionEvent) => void) | null;
+	onerror: ((event: SpeechRecognitionErrorEvent) => void) | null;
+	onend: (() => void) | null;
+};
+
+type SpeechRecognitionConstructor = new () => SpeechRecognitionInstance;
+
+const MAX_FILES = 3;
+const MAX_FILE_BYTES = 200 * 1024;
+const MAX_PROMPT_CHARS = 16000;
+const MAX_FILE_CHARS = 12000;
+const MAX_ATTACHMENT_CHARS = 12000;
+const COMPOSER_MAX_HEIGHT = 220;
+const MIC_REQUESTED_KEY = "portal-mic-permission-requested";
+const TEXT_FILE_PATTERN =
+	/\.(?:txt|md|markdown|json|jsonl|csv|tsv|log|ya?ml|toml|ini|conf|xml|html?|css|scss|jsx?|tsx?|go|py|rs|java|kt|kts|sql|sh|bash|ps1|env|gitignore)$/i;
+
+function isTextFile(file: File) {
+	return (
+		file.type.startsWith("text/") ||
+		file.type === "application/json" ||
+		TEXT_FILE_PATTERN.test(file.name)
+	);
+}
+
+function formatNumber(value: number) {
+	return value.toLocaleString("ru-RU");
+}
+
+function speechRecognitionConstructor() {
+	const target = window as Window & {
+		SpeechRecognition?: SpeechRecognitionConstructor;
+		webkitSpeechRecognition?: SpeechRecognitionConstructor;
+	};
+	return target.SpeechRecognition ?? target.webkitSpeechRecognition;
+}
+
+async function requestMicrophonePermission() {
+	if (!navigator.mediaDevices?.getUserMedia) return;
+	try {
+		if (sessionStorage.getItem(MIC_REQUESTED_KEY)) return;
+		const permission = navigator.permissions
+			? await navigator.permissions.query({
+					name: "microphone" as PermissionName,
+				})
+			: undefined;
+		if (permission && permission.state !== "prompt") return;
+		sessionStorage.setItem(MIC_REQUESTED_KEY, "1");
+	} catch {
+		// Some browsers do not expose the microphone permission descriptor.
+		// The voice button still asks for access when the user starts dictation.
+		return;
+	}
+	try {
+		const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+		stream.getTracks().forEach((track) => {
+			track.stop();
+		});
+	} catch {
+		// A denial is reported by the voice button; do not spam a toast on open.
+	}
+}
+
+export default function ChatPage() {
+	const toast = useToast();
+	const [text, setText] = createSignal("");
+	const [selected, setSelected] = createSignal(0);
+	const [pending, setPending] = createSignal(false);
+	const [attachments, setAttachments] = createSignal<Attachment[]>([]);
+	const [listening, setListening] = createSignal(false);
+	const [voiceError, setVoiceError] = createSignal<string>();
+	const [optimisticPrompt, setOptimisticPrompt] = createSignal("");
+	const [liveAnswer, setLiveAnswer] = createSignal("");
+	const [reasoningByConversation, setReasoningByConversation] = createSignal<
+		Record<number, string>
+	>({});
+	const [contextPinned, setContextPinned] = createSignal(false);
+	const [contextOpen, setContextOpen] = createSignal(false);
+	let contextCloseTimer: number | undefined;
+	let composer: HTMLTextAreaElement | undefined;
+	let filePicker: HTMLInputElement | undefined;
+	let recognition: SpeechRecognitionInstance | undefined;
+	let streamController: AbortController | undefined;
+	let messageList: HTMLDivElement | undefined;
+	let messagesEnd: HTMLDivElement | undefined;
+
+	const [session, { refetch: refetchSession }] = createResource(async () => {
+		try {
+			return unwrap(await api.GET("/api/me")) as Identity;
+		} catch {
+			return null;
+		}
+	});
+	const [conversations, { refetch: refetchConversations }] = createResource(
+		() => (session.loading ? undefined : session() ? "auth" : "anon"),
+		async (mode): Promise<ChatSummary[]> => {
+			if (mode !== "auth") return [];
+			return (
+				unwrap(
+					await api.GET("/api/chat/conversations", {
+						params: { query: { limit: 50, offset: 0 } },
+					}),
+				) ?? []
+			);
+		},
+	);
+	const [history, { refetch: refetchHistory }] = createResource(
+		() => (session() && selected() > 0 ? selected() : undefined),
+		async (id): Promise<ChatHistory | undefined> => {
+			if (!id) return undefined;
+			return unwrap(
+				await api.GET("/api/chat/conversations/{id}", {
+					params: { path: { id } },
+				}),
+			);
+		},
+	);
+
+	// createResource keeps its previous value when the source becomes falsy,
+	// so a new chat would still show the last conversation's messages. Only
+	// trust history that belongs to the conversation selected right now.
+	const currentHistory = createMemo(() => {
+		const id = selected();
+		const data = history();
+		return id > 0 && data?.id === id ? data : undefined;
+	});
+	const messages = () => currentHistory()?.messages ?? [];
+	const visibleConversations = createMemo(
+		() =>
+			conversations()?.filter((conversation) => conversation.messageCount > 0) ??
+			[],
+	);
+	const current = createMemo(() =>
+		conversations()?.find((conversation) => conversation.id === selected()),
+	);
+	const displayMessages = createMemo<StreamMessage[]>(() => {
+		const list: StreamMessage[] = messages().map((message) => ({
+			role: message.role === "user" ? "user" : "assistant",
+			content: message.content,
+		}));
+		const reasoning = reasoningByConversation()[selected()] ?? "";
+		const last = list[list.length - 1];
+		if (reasoning && last?.role === "assistant") {
+			last.reasoning = reasoning;
+		}
+		if (pending()) {
+			list.push({ role: "user", content: optimisticPrompt() });
+			list.push({
+				role: "assistant",
+				content: liveAnswer(),
+				reasoning: reasoningByConversation()[selected()] ?? "",
+				streaming: true,
+			});
+		}
+		return list;
+	});
+	function addReasoning(id: number, text: string) {
+		setReasoningByConversation((previous) => ({
+			...previous,
+			[id]: `${previous[id] ?? ""}${text}`,
+		}));
+	}
+	function showContext() {
+		window.clearTimeout(contextCloseTimer);
+		setContextOpen(true);
+	}
+	function hideContext() {
+		if (contextPinned()) return;
+		contextCloseTimer = window.setTimeout(() => setContextOpen(false), 120);
+	}
+	function toggleContext() {
+		if (contextPinned()) {
+			setContextPinned(false);
+			setContextOpen(false);
+			return;
+		}
+		setContextPinned(true);
+		setContextOpen(true);
+	}
+	const attachmentText = () =>
+		buildPrompt().length - text().trim().length;
+	const contextChars = () => contextText().length;
+	const contextTokens = () => Math.round(contextChars() / 4);
+	const contextPercent = () => Math.min(100, Math.round(contextChars() / 1000));
+	const contextBreakdown = createMemo(() => {
+		const list = messages();
+		const userChars = list
+			.filter((message) => message.role === "user")
+			.reduce((total, message) => total + message.content.length, 0);
+		const assistantChars = list
+			.filter((message) => message.role === "assistant")
+			.reduce((total, message) => total + message.content.length, 0);
+		const draftChars = text().trim().length;
+		const attachmentChars = Math.max(
+			0,
+			buildPrompt().length - text().trim().length,
+		);
+		const total = userChars + assistantChars + draftChars + attachmentChars;
+		const top = list
+			.map((message) => ({
+				role: message.role,
+				chars: message.content.length,
+				preview: message.content.replace(/\s+/g, " ").trim(),
+			}))
+			.sort((left, right) => right.chars - left.chars)
+			.slice(0, 3);
+		return {
+			userChars,
+			assistantChars,
+			draftChars,
+			attachmentChars,
+			total,
+			top,
+			messageCount: list.length,
+			remaining: Math.max(0, 100000 - total),
+		};
+	});
+	const contextShare = (part: number) => {
+		const total = contextBreakdown().total;
+		if (total <= 0) return 0;
+		return Math.max(0, Math.min(100, (part / total) * 100));
+	};
+	const canConfirm = () =>
+		currentHistory()?.phase === "clarifying" && messages().length >= 2;
+	const canSend = () => buildPrompt().trim().length > 0;
+
+	function contextText() {
+		const parts = messages().map((message) => message.content);
+		parts.push(buildPrompt());
+		return parts.join("\n");
+	}
+
+	function buildPrompt() {
+		const base = text().trim();
+		const files = attachments().map(
+			(file) => `${m.chatFileHeader({ name: file.name })}\n${file.text.trim()}`,
+		);
+		if (!files.length) return base;
+		return [base, m.chatAttachmentsHeader(), ...files].filter(Boolean).join("\n\n");
+	}
+
+	function resizeComposer() {
+		if (!composer) return;
+		composer.style.height = "auto";
+		const height = Math.min(composer.scrollHeight, COMPOSER_MAX_HEIGHT);
+		composer.style.height = `${height}px`;
+		composer.style.overflowY =
+			composer.scrollHeight > COMPOSER_MAX_HEIGHT ? "auto" : "hidden";
+	}
+
+	createEffect(() => {
+		// Read the signal so the textarea grows after every change, including
+		// programmatic clears and voice transcription.
+		text();
+		queueMicrotask(resizeComposer);
+	});
+
+	onMount(() => {
+		resizeComposer();
+		void requestMicrophonePermission();
+	});
+	onCleanup(() => {
+		recognition?.stop();
+		streamController?.abort();
+		window.clearTimeout(contextCloseTimer);
+	});
+
+	createEffect(() => {
+		// Follow the growing answer while the model is streaming, but keep the
+		// reader's position when they scrolled up to inspect an earlier message.
+		displayMessages();
+		if (!pending() || !messageList) return;
+		queueMicrotask(() => {
+			if (!messageList) return;
+			const distance =
+				messageList.scrollHeight -
+				messageList.scrollTop -
+				messageList.clientHeight;
+			if (distance < 160) messagesEnd?.scrollIntoView({ block: "end" });
+		});
+	});
+
+	async function addFiles(files: FileList | File[]) {
+		const selectedFiles = Array.from(files);
+		if (!selectedFiles.length) return;
+		const accepted: Attachment[] = [];
+		let remainingChars = MAX_ATTACHMENT_CHARS - attachmentText();
+		for (const file of selectedFiles) {
+			if (attachments().length + accepted.length >= MAX_FILES) {
+				toast.show(m.chatFilesLimit());
+				break;
+			}
+			if (file.size > MAX_FILE_BYTES) {
+				toast.show(`${file.name}: ${m.chatFileTooLarge()}`);
+				continue;
+			}
+			if (!isTextFile(file)) {
+				toast.show(`${file.name}: ${m.chatFileUnsupported()}`);
+				continue;
+			}
+			if (remainingChars <= 0) {
+				toast.show(m.chatFilesLimit());
+				break;
+			}
+			try {
+				const content = (await file.text()).replaceAll("\u0000", "");
+				const clipped = content.slice(
+					0,
+					Math.min(MAX_FILE_CHARS, remainingChars),
+				);
+				remainingChars -= clipped.length;
+				accepted.push({
+					id: crypto.randomUUID(),
+					name: file.name,
+					size: file.size,
+					text: clipped,
+				});
+			} catch {
+				toast.show(`${file.name}: ${m.chatFileReadError()}`);
+			}
+		}
+		if (accepted.length) {
+			setAttachments((currentAttachments) => [...currentAttachments, ...accepted]);
+		}
+	}
+
+	function removeAttachment(id: string) {
+		setAttachments((currentAttachments) =>
+			currentAttachments.filter((attachment) => attachment.id !== id),
+		);
+	}
+
+	async function toggleVoice() {
+		if (listening()) {
+			recognition?.stop();
+			return;
+		}
+		setVoiceError(undefined);
+		const Constructor = speechRecognitionConstructor();
+		if (!Constructor) {
+			toast.show(m.chatVoiceUnsupported());
+			return;
+		}
+		try {
+			const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+			stream.getTracks().forEach((track) => {
+				track.stop();
+			});
+		} catch (error) {
+			const message =
+				error instanceof DOMException && error.name === "NotAllowedError"
+					? m.chatVoicePermissionDenied()
+					: m.chatVoiceNoMicrophone();
+			setVoiceError(message);
+			toast.show(message);
+			return;
+		}
+		recognition = new Constructor();
+		recognition.lang = "ru-RU";
+		recognition.continuous = true;
+		recognition.interimResults = true;
+		let base = text();
+		recognition.onresult = (event) => {
+			let final = "";
+			let interim = "";
+			for (let index = event.resultIndex; index < event.results.length; index += 1) {
+				const result = event.results[index];
+				if (result.isFinal) final += result[0].transcript;
+				else interim += result[0].transcript;
+			}
+			const separator = (value: string) => (value && !value.endsWith(" ") ? " " : "");
+			if (final.trim()) {
+				base = `${base}${separator(base)}${final.trim()}`;
+			}
+			const spoken = base + (interim.trim() ? `${separator(base)}${interim}` : "");
+			setText(spoken);
+		};
+		recognition.onerror = (event) => {
+			setListening(false);
+			if (event.error === "aborted") return;
+			let message = m.chatVoiceError();
+			if (event.error === "not-allowed" || event.error === "service-not-allowed") {
+				message = m.chatVoicePermissionDenied();
+			} else if (event.error === "audio-capture") {
+				message = m.chatVoiceNoMicrophone();
+			} else if (event.error === "network") {
+				message = m.chatVoiceNetworkError();
+			}
+			setVoiceError(message);
+			toast.show(message);
+		};
+		recognition.onend = () => setListening(false);
+		try {
+			recognition.start();
+			setListening(true);
+		} catch {
+			setListening(false);
+			toast.show(m.chatVoiceError());
+		}
+	}
+
+	async function send(confirm = false, override?: string) {
+		const useDraft = !override?.trim();
+		const prompt = override?.trim() || buildPrompt().trim() || (confirm ? m.confirmPrompt() : "");
+		if (!prompt || pending() || !session()) return;
+		if (Array.from(prompt).length > MAX_PROMPT_CHARS) {
+			toast.show(m.chatPromptTooLong());
+			return;
+		}
+		streamController?.abort();
+		const controller = new AbortController();
+		streamController = controller;
+		let conversationID = selected();
+		setPending(true);
+		setOptimisticPrompt(prompt);
+		setLiveAnswer("");
+		setContextPinned(false);
+		setContextOpen(false);
+		setReasoningByConversation((previous) => {
+			const next = { ...previous };
+			delete next[conversationID];
+			return next;
+		});
+		try {
+			await streamPost(
+				"/api/chat/stream",
+				{
+					id: conversationID,
+					prompt,
+					confirm,
+					requestId: crypto.randomUUID().replace(/-/g, ""),
+				},
+				csrfHeaders(session()?.csrf) ?? {},
+				(event, data) => {
+					if (event === "meta") {
+						const meta = JSON.parse(data) as StreamMeta;
+						if (meta.id > 0) {
+							conversationID = meta.id;
+							setSelected(meta.id);
+						}
+					} else if (event === "reasoning") {
+						const payload = JSON.parse(data) as { text?: string };
+						if (payload.text) addReasoning(conversationID, payload.text);
+					} else if (event === "content") {
+						const payload = JSON.parse(data) as { text?: string };
+						const text = payload.text ?? "";
+						if (text) setLiveAnswer((previous) => previous + text);
+					} else if (event === "error") {
+						const payload = JSON.parse(data) as { code?: string };
+						throw new ApiError(502, payload.code || "model.unavailable");
+					}
+				},
+				controller.signal,
+			);
+			await Promise.all([refetchHistory(), refetchConversations()]);
+			if (useDraft) {
+				setText("");
+				setAttachments([]);
+			}
+		} catch (error) {
+			if (controller.signal.aborted) return;
+			toast.show(chatError(error));
+		} finally {
+			if (streamController === controller) streamController = undefined;
+			setPending(false);
+			setOptimisticPrompt("");
+			setLiveAnswer("");
+		}
+	}
+
+	function chatError(error: unknown) {
+		if (!(error instanceof ApiError)) return m.loadError();
+		switch (error.code) {
+			case "model.not_configured":
+				return m.modelUnavailable();
+			case "model.access_denied":
+				return m.modelAccessDenied();
+			case "model.insufficient_funds":
+				return m.modelInsufficientFunds();
+			case "model.unavailable":
+			case "model.empty_response":
+				return m.modelError();
+			case "chat.busy":
+			case "chat.request_already_used":
+				return m.chatBusy();
+			case "chat.prompt_invalid":
+				return m.chatPromptTooLong();
+			case "chat.timeout":
+				return m.chatTimeout();
+			case "chat.start_new":
+				return m.chatStartNew();
+			case "chat.clarify_first":
+				return m.chatClarifyFirst();
+			case "auth.required":
+				return m.loginFailed();
+			default:
+				return m.loadError();
+		}
+	}
+
+	function newChat() {
+		streamController?.abort();
+		setPending(false);
+		setOptimisticPrompt("");
+		setLiveAnswer("");
+		setContextPinned(false);
+		setContextOpen(false);
+		setSelected(0);
+		setText("");
+		setAttachments([]);
+	}
+
+	return (
+		<main class={s.page}>
+			<Show
+				when={!session.loading}
+				fallback={
+					<div class={s.auth}>
+						<LoadingState />
+					</div>
+				}
+			>
+				<Show
+					when={session()}
+					fallback={
+						<div class={s.auth}>
+							<section class={s.authCard}>
+								<h1>{m.teamLoginTitle()}</h1>
+								<p>{m.codingLoginHint()}</p>
+								<LocalLoginForm
+									audience="coding"
+									onSuccess={() => void refetchSession()}
+								/>
+							</section>
+						</div>
+					}
+				>
+					<aside class={s.sidebar}>
+						<Button variant="primary" onClick={newChat}>
+							{m.newChat()}
+						</Button>
+						<h2>{m.chatPast()}</h2>
+						<Show
+							when={visibleConversations().length > 0}
+							fallback={<EmptyState message={m.chatHistoryEmpty()} />}
+						>
+							<For each={visibleConversations()}>
+								{(conversation) => (
+									<button
+										type="button"
+										class={s.conversation}
+										data-selected={selected() === conversation.id}
+										onClick={() => {
+											streamController?.abort();
+											setContextPinned(false);
+											setContextOpen(false);
+											setSelected(conversation.id);
+										}}
+									>
+										<strong>{conversation.title || m.chatUntitled()}</strong>
+										<span>{formatDate(conversation.createdAt)}</span>
+									</button>
+								)}
+							</For>
+						</Show>
+					</aside>
+					<section class={s.chat}>
+						<header class={s.chatHeader}>
+							<div>
+								<h1>{current()?.title || m.aiChatTitle()}</h1>
+								<p>{m.chatHint()}</p>
+							</div>
+							<div class={s.context}>
+								<button
+									type="button"
+									class={s.contextButton}
+									aria-expanded={contextOpen() || contextPinned()}
+									aria-controls="chat-context-details"
+									onMouseEnter={showContext}
+									onMouseLeave={hideContext}
+									onFocus={showContext}
+									onBlur={hideContext}
+									onClick={toggleContext}
+									onKeyDown={(event) => {
+										if (event.key !== "Escape") return;
+										setContextPinned(false);
+										setContextOpen(false);
+									}}
+								>
+									<span>
+										{m.chatContext()}: ~{contextTokens()} · {contextPercent()}%
+									</span>
+								</button>
+								<span
+									class={s.contextBar}
+									role="progressbar"
+									aria-label={m.chatContext()}
+									aria-valuemin={0}
+									aria-valuemax={100}
+									aria-valuenow={contextPercent()}
+								>
+									<span style={{ width: `${contextPercent()}%` }} />
+								</span>
+								<Show when={contextOpen() || contextPinned()}>
+									<section
+										id="chat-context-details"
+										class={s.contextPopover}
+										data-elevated
+										aria-label={m.chatContextTitle()}
+										onMouseEnter={showContext}
+										onMouseLeave={hideContext}
+									>
+									<strong>{m.chatContextTitle()}</strong>
+									<div class={s.contextStack} aria-hidden="true">
+										<span
+											class={s.contextSegment}
+											data-kind="user"
+											style={{ width: `${contextShare(contextBreakdown().userChars)}%` }}
+										/>
+										<span
+											class={s.contextSegment}
+											data-kind="assistant"
+											style={{
+												width: `${contextShare(contextBreakdown().assistantChars)}%`,
+											}}
+										/>
+										<span
+											class={s.contextSegment}
+											data-kind="attachments"
+											style={{
+												width: `${contextShare(contextBreakdown().attachmentChars)}%`,
+											}}
+										/>
+										<span
+											class={s.contextSegment}
+											data-kind="draft"
+											style={{ width: `${contextShare(contextBreakdown().draftChars)}%` }}
+										/>
+									</div>
+									<dl class={s.contextRows}>
+										<div>
+											<dt>{m.chatContextUser()}</dt>
+											<dd>
+												{formatNumber(contextBreakdown().userChars)}{" "}
+												{m.chatContextCharsShort()}
+											</dd>
+										</div>
+										<div>
+											<dt>{m.chatContextAssistant()}</dt>
+											<dd>
+												{formatNumber(contextBreakdown().assistantChars)}{" "}
+												{m.chatContextCharsShort()}
+											</dd>
+										</div>
+										<div>
+											<dt>{m.chatContextAttachments()}</dt>
+											<dd>
+												{formatNumber(contextBreakdown().attachmentChars)}{" "}
+												{m.chatContextCharsShort()}
+											</dd>
+										</div>
+										<div>
+											<dt>{m.chatContextDraft()}</dt>
+											<dd>
+												{formatNumber(contextBreakdown().draftChars)}{" "}
+												{m.chatContextCharsShort()}
+											</dd>
+										</div>
+									</dl>
+									<Show when={attachments().length > 0}>
+										<p class={s.contextSection}>{m.chatContextFiles()}</p>
+										<ul class={s.contextFiles}>
+											<For each={attachments()}>
+												{(file) => (
+													<li>
+														<span title={file.name}>{file.name}</span>
+														<span>
+															{formatNumber(file.text.length)}{" "}
+															{m.chatContextCharsShort()}
+														</span>
+													</li>
+												)}
+											</For>
+										</ul>
+									</Show>
+									<Show when={contextBreakdown().top.length > 0}>
+										<p class={s.contextSection}>{m.chatContextTop()}</p>
+										<ul class={s.contextMessages}>
+											<For each={contextBreakdown().top}>
+												{(item) => (
+													<li>
+														<span class={s.contextMessageRole}>
+															{item.role === "user" ? m.you() : m.assistant()}
+														</span>
+														<span
+															class={s.contextMessagePreview}
+															title={item.preview}
+														>
+															{item.preview}
+														</span>
+														<span class={s.contextMessageChars}>
+															{formatNumber(item.chars)}
+														</span>
+													</li>
+												)}
+											</For>
+										</ul>
+									</Show>
+									<p class={s.contextLimits}>
+										{m.chatContextMessages({
+											count: formatNumber(contextBreakdown().messageCount),
+										})}
+									</p>
+									<p class={s.contextLimits}>{m.chatContextLimits()}</p>
+									<p class={s.contextFree}>
+										{m.chatContextFree()}:{" "}
+										{formatNumber(contextBreakdown().remaining)}{" "}
+										{m.chatContextCharsShort()}
+									</p>
+									<p class={s.contextNote}>{m.chatContextNote()}</p>
+									</section>
+								</Show>
+							</div>
+						</header>
+						<Show when={session()?.modelReady === false}>
+							<p class={s.modelWarning} role="status">
+								{m.modelUnavailable()}
+							</p>
+						</Show>
+						<div
+							class={s.messages}
+							ref={messageList}
+							role="log"
+							aria-live="polite"
+							aria-relevant="additions text"
+							aria-busy={pending()}
+						>
+							<Show
+								when={displayMessages().length > 0}
+								fallback={<EmptyState message={m.chatEmpty()} />}
+							>
+								<Index each={displayMessages()}>
+									{(message) => (
+										<article
+											class={s.bubble}
+											data-role={message().role}
+											data-streaming={message().streaming}
+										>
+											<strong>
+												{message().role === "user" ? m.you() : m.assistant()}
+											</strong>
+											<Show
+												when={
+													message().reasoning ||
+													(message().streaming && !message().content)
+												}
+											>
+												<details
+													class={s.thinking}
+													data-live={message().streaming && !message().content}
+													open={
+														message().streaming && !message().content
+															? true
+															: undefined
+													}
+												>
+													<summary class={s.thinkingSummary}>
+														<span class={s.thinkingOrb} aria-hidden="true" />
+														<span class={s.thinkingLabel}>
+															{message().streaming && !message().content
+																? m.chatThinking()
+																: m.chatThought()}
+														</span>
+														<span class={s.thinkingChevron} aria-hidden="true" />
+													</summary>
+													<div class={s.thinkingBody}>
+														<Show
+															when={message().reasoning}
+															fallback={
+																<p class={s.thinkingWaiting}>
+																	{m.chatThinkingWaiting()}
+																</p>
+															}
+														>
+															<p class={s.thinkingText}>
+																{message().reasoning}
+																<Show
+																	when={
+																		message().streaming && !message().content
+																	}
+																>
+																	<span class={s.caret} aria-hidden="true" />
+																</Show>
+															</p>
+														</Show>
+													</div>
+												</details>
+											</Show>
+											<Show when={message().content}>
+												<p>
+													{message().content}
+													<Show when={message().streaming}>
+														<span class={s.caret} aria-hidden="true" />
+													</Show>
+												</p>
+											</Show>
+										</article>
+									)}
+								</Index>
+							</Show>
+							<div ref={messagesEnd} class={s.messagesEnd} />
+						</div>
+						<form
+							class={s.composer}
+							onSubmit={(event) => {
+								event.preventDefault();
+								void send(false);
+							}}
+						>
+							<Show when={voiceError()}>
+								{(message) => (
+									<div class={s.voiceError} role="alert">
+										<span>{message()}</span>
+										<Button type="button" onClick={() => void toggleVoice()}>
+											{m.chatVoiceRetry()}
+										</Button>
+									</div>
+								)}
+							</Show>
+							<Show when={attachments().length > 0}>
+								<ul class={s.attachments} aria-label={m.chatAttachments()}>
+									<For each={attachments()}>
+										{(file) => (
+											<li class={s.attachment}>
+												<span title={file.name}>{file.name}</span>
+												<button
+													type="button"
+													aria-label={`${m.delete()} ${file.name}`}
+													onClick={() => removeAttachment(file.id)}
+												>
+													×
+												</button>
+											</li>
+										)}
+									</For>
+								</ul>
+								<p class={s.attachmentHint}>{m.chatAttachmentHint()}</p>
+							</Show>
+							<textarea
+								ref={composer}
+								required={attachments().length === 0}
+								rows={1}
+								maxlength={16000}
+								value={text()}
+								onInput={(event) => {
+									setText(event.currentTarget.value);
+									resizeComposer();
+								}}
+								onKeyDown={(event) => {
+									if (event.key !== "Enter" || event.shiftKey || event.isComposing) return;
+									event.preventDefault();
+									void send(false);
+								}}
+								placeholder={m.chatPlaceholder()}
+							/>
+							<div class={s.composerActions}>
+								<div class={s.composerTools}>
+									<input
+										ref={filePicker}
+										class={s.filePicker}
+										type="file"
+										multiple
+										accept=".txt,.md,.markdown,.json,.jsonl,.csv,.tsv,.log,.yaml,.yml,.toml,.ini,.conf,.xml,.html,.css,.scss,.js,.jsx,.ts,.tsx,.go,.py,.rs,.java,.kt,.sql,.sh,.ps1,text/*,application/json"
+										onChange={(event) => {
+											const files = event.currentTarget.files;
+											if (files) void addFiles(files);
+											event.currentTarget.value = "";
+										}}
+									/>
+									<Button
+										type="button"
+										aria-label={m.chatAttach()}
+										onClick={() => filePicker?.click()}
+									>
+										{m.chatAttach()}
+									</Button>
+									<Button
+										type="button"
+										aria-label={
+											listening() ? m.chatVoiceStop() : m.chatVoice()
+										}
+										aria-pressed={listening()}
+										data-listening={listening()}
+										class={s.voiceButton}
+										onClick={() => void toggleVoice()}
+									>
+										{listening() ? m.chatVoiceStop() : m.chatVoice()}
+									</Button>
+								</div>
+								<div class={s.composerSend}>
+									<Show when={canConfirm()}>
+										<Button
+											type="button"
+											disabled={pending()}
+											onClick={() => void send(true, m.chatSkipPrompt())}
+										>
+											{m.chatSkipClarification()}
+										</Button>
+										<Button
+											type="button"
+											disabled={pending()}
+											onClick={() => void send(true)}
+										>
+											{m.confirmSolution()}
+										</Button>
+									</Show>
+									<Button
+										type="submit"
+										variant="primary"
+										disabled={pending() || !canSend()}
+									>
+										{pending() ? m.loading() : m.send()}
+									</Button>
+								</div>
+							</div>
+						</form>
+					</section>
+				</Show>
+			</Show>
+		</main>
+	);
+}

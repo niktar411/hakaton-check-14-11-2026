@@ -1,0 +1,84 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.6.3/schema.json",
+  "vcs": { "enabled": true, "clientKind": "git", "useIgnoreFile": true },
+  "files": {
+    "ignoreUnknown": true,
+    "includes": [
+      "**",
+      "!**/dist",
+      "!**/node_modules",
+      "!scripts/templates",
+      "!client/src/shared/api/*.gen.ts",
+      "!client/src/shared/api/schema.d.ts",
+      "!client/src/paraglide",
+      "!api/openapi.json"
+    ]
+  },
+  "formatter": { "enabled": false },
+  "css": { "parser": { "cssModules": true, "tailwindDirectives": true } },
+  "tailwind": { "attributes": ["class"], "mergeFunctions": ["cx"] },
+  "plugins": ["./biome-plugins/no-native-select.grit", "./biome-plugins/no-italic.grit"],
+  "linter": {
+    "enabled": true,
+    "domains": { "solid": "recommended" },
+    "rules": {
+      "preset": "recommended",
+      "complexity": { "noImportantStyles": "off" },
+      "style": { "noNonNullAssertion": "error" },
+      "suspicious": {
+        "noExplicitAny": "error",
+        "noConsole": { "level": "error", "options": { "allow": [] } }
+      },
+      "nursery": {
+        "noTailwindArbitraryValue": "error",
+        "noTailwindRawColors": "error",
+        "noTailwindLegacyUtilities": "error",
+        "useTailwindStaticClassStrings": "error",
+        "useTailwindShorthandClasses": { "level": "warn", "fix": "safe" },
+        "useTailwindSortedClasses": { "level": "warn", "fix": "safe" }
+      }
+    }
+  },
+  "assist": { "enabled": true, "actions": { "source": { "organizeImports": "off" } } },
+  "overrides": [
+    {
+      "includes": ["scripts/**", ".claude/**"],
+      "linter": { "rules": { "suspicious": { "noConsole": "off" } } }
+    },
+    {
+      "includes": ["client/src/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": ["../**"],
+                    "message": "Импорт из другой папки — через '@/…'. Относительные пути только внутри своей папки."
+                  }
+                ]
+              }
+            },
+            "noRestrictedGlobals": {
+              "level": "error",
+              "options": {
+                "deniedGlobals": {
+                  "alert": "alert() запрещён — useToast() из @/shared/ui/Toast.",
+                  "confirm": "confirm() запрещён — ConfirmDialog из @/shared/ui.",
+                  "prompt": "prompt() запрещён — свой диалог на Dialog из @/shared/ui.",
+                  "fetch": "Голый fetch запрещён — api-клиент из @/shared/api."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "includes": ["client/src/shared/api/**"],
+      "linter": { "rules": { "style": { "noRestrictedGlobals": "off" } } }
+    }
+  ]
+}

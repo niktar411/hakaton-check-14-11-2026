@@ -1,0 +1,39 @@
+{
+  "name": "hackathon",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "check": "bun run lint && bun run slop && bun run typecheck && bun run test",
+    "lint": "biome lint .",
+    "lint:fix": "biome lint --write .",
+    "slop": "bun scripts/slop-check.ts",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "bun test scripts",
+    "new:page": "bun scripts/new/index.ts page",
+    "new:component": "bun scripts/new/index.ts component",
+    "new:route": "bun scripts/new/index.ts route",
+    "new:migration": "bun scripts/new/index.ts migration",
+    "hooks:install": "git config core.hooksPath .githooks",
+    "build:client": "vite build --config client/vite.config.ts",
+    "typecheck:client": "tsc --noEmit -p client/tsconfig.json",
+    "gen:api": "cd server && go run ./cmd/openapi && cd .. && openapi-typescript api/openapi.json -o client/src/shared/api/schema.d.ts"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.6.3",
+    "@inlang/paraglide-js": "^3.0.0",
+    "@inlang/plugin-message-format": "^4.5.7",
+    "@playwright/test": "^1.64.1",
+    "@tailwindcss/vite": "^4.3.4",
+    "@types/bun": "1.4.4",
+    "openapi-typescript": "^7.13.0",
+    "tailwindcss": "^4.3.4",
+    "typescript": "5.9.3",
+    "vite": "^8.3.5",
+    "vite-plugin-solid": "^2.11.15"
+  },
+  "dependencies": {
+    "@solidjs/router": "^1.0.1",
+    "openapi-fetch": "^0.17.0",
+    "solid-js": "^1.9.18"
+  }
+}

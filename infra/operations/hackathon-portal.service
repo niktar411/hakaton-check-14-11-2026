@@ -1,0 +1,21 @@
+[Unit]
+Description=Hackathon team portal
+After=network-online.target docker.service awg-quick@awg0.service
+Requires=docker.service awg-quick@awg0.service
+
+[Service]
+User=hackathon-portal
+Group=hackathon-portal
+EnvironmentFile=/etc/hackathon/portal.env
+ExecStart=/opt/hackathon/portal
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+MemoryMax=384M
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target

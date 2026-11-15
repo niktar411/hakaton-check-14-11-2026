@@ -1,0 +1,230 @@
+.page,
+.panel,
+.section,
+.form,
+.viewer,
+.messages {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-4);
+}
+
+.page {
+	width: 100%;
+	max-width: var(--content-max);
+	margin-inline: auto;
+	padding: var(--space-4) 0;
+}
+
+.heading,
+.toolbar,
+.cardHeader,
+.actions {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--space-3);
+}
+
+.heading h1,
+.heading p,
+.section h2,
+.section p,
+.card h3,
+.card p,
+.viewer h2,
+.viewer p {
+	margin: 0;
+}
+
+.heading p,
+.muted,
+.card time {
+	color: var(--text-muted);
+}
+
+.tabs {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--space-2);
+	padding-bottom: var(--space-3);
+	border-bottom: 1px solid var(--border);
+}
+
+.tabs button {
+	padding: var(--space-2) var(--space-3);
+	border: 1px solid var(--border);
+	border-radius: var(--radius-xs);
+	background: var(--surface);
+	color: var(--text);
+	font: inherit;
+	cursor: pointer;
+}
+
+.tabs button[data-active='true'] {
+	border-color: var(--primary);
+	background: var(--blue-50);
+}
+
+.grid,
+.twoColumns {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+	gap: var(--space-4);
+}
+
+.card,
+.form,
+.viewer {
+	min-width: 0;
+	padding: var(--space-4);
+	border: 1px solid var(--border);
+	border-radius: var(--radius-sm);
+	background: var(--surface);
+}
+
+.card {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-3);
+}
+
+.card dl {
+	display: grid;
+	grid-template-columns: minmax(90px, auto) 1fr;
+	gap: var(--space-2);
+	margin: 0;
+}
+
+.card dt {
+	color: var(--text-muted);
+}
+
+.card dd {
+	min-width: 0;
+	margin: 0;
+	overflow-wrap: anywhere;
+}
+
+.list {
+	display: flex;
+	min-width: 0;
+	flex-direction: column;
+	gap: var(--space-2);
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.row {
+	display: flex;
+	min-width: 0;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--space-3);
+	padding: var(--space-3);
+	border: 1px solid var(--border);
+	border-radius: var(--radius-sm);
+}
+
+.row > div {
+	min-width: 0;
+}
+
+.row p,
+.row h3 {
+	margin: 0;
+	overflow-wrap: anywhere;
+}
+
+.form {
+	align-items: stretch;
+}
+
+.form textarea,
+.yaml,
+.prompt {
+	width: 100%;
+	box-sizing: border-box;
+	padding: var(--space-3);
+	border: 1px solid var(--border);
+	border-radius: var(--radius-sm);
+	background: var(--surface);
+	color: var(--text);
+	font: inherit;
+}
+
+.form textarea {
+	resize: vertical;
+}
+
+.yaml {
+	min-height: 320px;
+	max-height: 65dvh;
+	overflow: auto;
+	white-space: pre-wrap;
+	overflow-wrap: anywhere;
+}
+
+.prompt {
+	max-height: 360px;
+	overflow: auto;
+	white-space: pre-wrap;
+	overflow-wrap: anywhere;
+	font-size: var(--text-xs);
+}
+
+.workspace {
+	display: grid;
+	grid-template-columns: minmax(200px, 280px) minmax(0, 1fr);
+	align-items: start;
+	gap: var(--space-4);
+}
+
+.choiceButton {
+	width: 100%;
+	padding: var(--space-3);
+	border: 1px solid var(--border);
+	border-radius: var(--radius-sm);
+	background: var(--surface);
+	color: var(--text);
+	font: inherit;
+	text-align: left;
+	cursor: pointer;
+	overflow-wrap: anywhere;
+}
+
+.choiceButton[data-active='true'] {
+	border-color: var(--primary);
+	background: var(--blue-50);
+}
+
+.choices {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--space-2);
+}
+
+.choices button[data-selected='true'] {
+	border-color: var(--primary);
+}
+
+.message {
+	padding: var(--space-3);
+	border-radius: var(--radius-sm);
+	background: var(--surface-2);
+	white-space: pre-wrap;
+	overflow-wrap: anywhere;
+}
+
+.message p {
+	margin: var(--space-2) 0 0;
+}
+
+@media (max-width: 800px) {
+	.workspace {
+		grid-template-columns: minmax(0, 1fr);
+	}
+}

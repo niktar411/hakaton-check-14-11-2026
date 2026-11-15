@@ -1,0 +1,57 @@
+stages: [verify]
+
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS
+      when: never
+    - if: $CI_COMMIT_BRANCH
+
+client:
+  stage: verify
+  image: oven/bun:1.4.2
+  before_script:
+    - apt-get update -qq && apt-get install -y --no-install-recommends git
+    - bun install --frozen-lockfile
+  script:
+    - bun run check
+    - bun run build:client
+    - bun run typecheck:client
+    - bun x playwright install --with-deps chromium
+    - bun x playwright test
+
+api-contract:
+  stage: verify
+  image: oven/bun:1.4.2
+  before_script:
+    - apt-get update -qq && apt-get install -y --no-install-recommends git curl ca-certificates
+    - curl -fsSL https://go.dev/dl/go1.27.3.linux-amd64.tar.gz -o /tmp/go.tar.gz
+    - tar -C /usr/local -xzf /tmp/go.tar.gz
+    - ln -s /usr/local/go/bin/go /usr/local/bin/go
+    - bun install --frozen-lockfile
+  script:
+    - bun run gen:api
+    - git diff --exit-code -- api/openapi.json client/src/shared/api/schema.d.ts
+
+server:
+  stage: verify
+  image: golang:1.27.3
+  services:
+    - name: postgres:18
+      alias: postgres
+  variables:
+    POSTGRES_USER: portal
+    POSTGRES_DB: portal_test
+    POSTGRES_HOST_AUTH_METHOD: trust
+    TEST_DATABASE_URL: postgres://portal@postgres:5432/portal_test?sslmode=disable
+    GOMAXPROCS: "2"
+  script:
+    - cd server
+    - go mod tidy
+    - git diff --exit-code -- go.mod go.sum
+    - go install github.com/sqlc-dev/sqlc/cmd/sqlc@v1.31.1
+    - sqlc generate
+    - git diff --exit-code -- internal/db/sqlc
+    - go test -p 1 ./...
+    - go vet ./...
+    - go build ./cmd/...

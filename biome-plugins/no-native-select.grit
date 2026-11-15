@@ -1,0 +1,8 @@
+language js
+
+or {
+  `<select $attrs>$children</select>`,
+  `<select $attrs />`
+} as $el where {
+  register_diagnostic(span=$el, message="Нативный <select> запрещён — используй Select из @/shared/ui/Select.", severity="error")
+}

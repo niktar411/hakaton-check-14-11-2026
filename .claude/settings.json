@@ -1,0 +1,153 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(bun install)",
+      "Bash(bun run lint*)",
+      "Bash(bun run slop*)",
+      "Bash(bun run typecheck*)",
+      "Bash(bun run test*)",
+      "Bash(bun run new:*)",
+      "Bash(bun run gen:api*)",
+      "Bash(bun run i18n:*)",
+      "Bash(bun run --filter client build*)",
+      "Bash(bun run --filter client test*)",
+      "Bash(bun test *)",
+      "Bash(bun x biome lint*)",
+      "Bash(bun x tsc *)",
+      "Bash(bun scripts/slop-check.ts*)",
+      "Bash(go build *)",
+      "Bash(go vet *)",
+      "Bash(go test *)",
+      "Bash(gofmt *)",
+      "Bash(golangci-lint run*)",
+      "Bash(sqlc generate*)",
+      "Bash(git status*)",
+      "Bash(git diff*)",
+      "Bash(git log*)",
+      "Bash(git show*)",
+      "Bash(git branch*)",
+      "Bash(git fetch*)",
+      "Bash(git ls-files*)",
+      "Bash(git rev-parse*)",
+      "Bash(docker ps*)",
+      "Bash(docker logs*)",
+      "PowerShell(git status*)",
+      "PowerShell(git diff*)",
+      "PowerShell(git log*)",
+      "PowerShell(bun run lint*)",
+      "PowerShell(bun run test*)"
+    ],
+    "ask": [
+      "Bash(bun add*)",
+      "Bash(bun remove*)",
+      "Bash(go get*)",
+      "Bash(go mod tidy*)",
+      "Bash(rm -rf*)",
+      "Bash(docker compose down*)",
+      "Bash(git reset --hard*)",
+      "Bash(git clean*)",
+      "Bash(git push*)",
+      "PowerShell(bun add*)",
+      "PowerShell(Remove-Item*)"
+    ],
+    "deny": [
+      "Bash(git push --force*)",
+      "Bash(git push -f*)",
+      "Bash(git push * --force*)",
+      "Bash(git push * -f*)",
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Read(./server/.env)",
+      "Read(~/.ssh/**)"
+    ]
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume|clear",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "PATH=\"$HOME/.bun/bin:$PATH\" bun \"$CLAUDE_PROJECT_DIR/.claude/hooks/session-start.ts\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "PATH=\"$HOME/.bun/bin:$PATH\" bun \"$CLAUDE_PROJECT_DIR/.claude/hooks/prompt-router.ts\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit|NotebookEdit|Bash|PowerShell",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "PATH=\"$HOME/.bun/bin:$PATH\" bun \"$CLAUDE_PROJECT_DIR/.claude/hooks/guard.ts\"",
+            "timeout": 15
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "PATH=\"$HOME/.bun/bin:$PATH\" bun \"$CLAUDE_PROJECT_DIR/.claude/hooks/slop-guard.ts\"",
+            "timeout": 15,
+            "statusMessage": "slop-guard"
+          },
+          {
+            "type": "command",
+            "command": "PATH=\"$HOME/.bun/bin:$PATH\" bun \"$CLAUDE_PROJECT_DIR/.claude/hooks/file-size.ts\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "PATH=\"$HOME/.bun/bin:$PATH\" bun \"$CLAUDE_PROJECT_DIR/.claude/hooks/lint.ts\"",
+            "timeout": 60,
+            "statusMessage": "lint"
+          },
+          {
+            "type": "command",
+            "command": "PATH=\"$HOME/.bun/bin:$PATH\" bun \"$CLAUDE_PROJECT_DIR/.claude/hooks/gen-reminder.ts\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "PATH=\"$HOME/.bun/bin:$PATH\" bun \"$CLAUDE_PROJECT_DIR/.claude/hooks/done-gate.ts\"",
+            "timeout": 30,
+            "statusMessage": "done-gate"
+          },
+          {
+            "type": "command",
+            "command": "PATH=\"$HOME/.bun/bin:$PATH\" bun \"$CLAUDE_PROJECT_DIR/.claude/hooks/typecheck.ts\"",
+            "timeout": 180,
+            "statusMessage": "typecheck"
+          }
+        ]
+      }
+    ]
+  }
+}

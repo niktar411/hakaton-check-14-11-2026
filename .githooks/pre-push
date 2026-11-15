@@ -1,0 +1,42 @@
+#!/bin/sh
+#
+# То же, что CI, — чтобы узнать об ошибке за секунды здесь, а не в упавшем пайплайне.
+# Включается один раз на машину: bun run hooks:install
+# Обойти в исключительном случае: git push --no-verify (Claude это делать запрещено).
+
+set -e
+export PATH="$HOME/.bun/bin:$PATH"
+
+echo "▶ pre-push: линтер"
+bun run lint
+
+echo "▶ pre-push: заглушки и мусор"
+upstream=$(git rev-parse --abbrev-ref --symbolic-full-name '@{u}' 2>/dev/null || echo "")
+if [ -n "$upstream" ]; then
+  bun scripts/slop-check.ts --diff "$upstream...HEAD"
+else
+  bun scripts/slop-check.ts --diff "$(git hash-object -t tree /dev/null)...HEAD"
+fi
+
+echo "▶ pre-push: типы и тесты скриптов"
+bun run typecheck
+bun run test
+
+if [ -f client/package.json ]; then
+  echo "▶ pre-push: сборка и тесты клиента"
+  bun run --filter client build
+  bun run --filter client test
+fi
+
+if [ -f server/go.mod ]; then
+  if command -v go >/dev/null 2>&1; then
+    echo "▶ pre-push: сервер"
+    (cd server && go vet ./... && go test ./...)
+  else
+    echo ""
+    echo "⚠ СЕРВЕР НЕ ПРОВЕРЯЛСЯ — go не установлен. Его проверит CI, но упасть он может уже после push."
+    echo ""
+  fi
+fi
+
+echo "✔ pre-push: всё чисто"

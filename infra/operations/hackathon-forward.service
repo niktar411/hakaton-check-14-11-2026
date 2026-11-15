@@ -1,0 +1,13 @@
+[Unit]
+Description=Allow team VPN traffic to the portal server
+After=docker.service awg-quick@awg0.service
+Requires=awg-quick@awg0.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=true
+ExecStart=/bin/sh -c '/usr/sbin/iptables -C FORWARD -i awg0 -o awg0 -d 10.77.0.10/32 -j ACCEPT || /usr/sbin/iptables -I FORWARD 1 -i awg0 -o awg0 -d 10.77.0.10/32 -j ACCEPT'
+ExecStart=/bin/sh -c '/usr/sbin/iptables -C FORWARD -i awg0 -o awg0 -s 10.77.0.10/32 -j ACCEPT || /usr/sbin/iptables -I FORWARD 1 -i awg0 -o awg0 -s 10.77.0.10/32 -j ACCEPT'
+
+[Install]
+WantedBy=multi-user.target

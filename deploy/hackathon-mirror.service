@@ -1,0 +1,17 @@
+[Unit]
+Description=Mirror the team GitLab repository to GitHub
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=hackathon-mirror
+Group=hackathon-mirror
+EnvironmentFile=/etc/hackathon/mirror.env
+ExecStart=/usr/local/bin/hackathon-mirror
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/hackathon-mirror
+UMask=0077

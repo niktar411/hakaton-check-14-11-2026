@@ -1,0 +1,107 @@
+/* Токены, которые зависят от темы (светлая / тёмная), и шрифт.
+ *
+ * Компоненты используют только семантические имена (--bg, --surface, --text,
+ * --primary…), палитра (--blue-600…) — только здесь. Радиусы и размеры текста
+ * от темы не зависят и объявлены в app.css (@theme static) под именами Tailwind:
+ * --radius-sm, --text-sm — их можно брать и в CSS Modules.
+ *
+ * Сырые цвета (#fff, rgb()) разрешены только в этом файле — slop-check
+ * ловит их везде, кроме него.
+ */
+
+:root {
+  color-scheme: light;
+
+  /* Системный стек: без сетевых шрифтов, лишних ассетов и запросов. */
+  --font: 'Segoe UI Variable Text', 'Segoe UI', system-ui, -apple-system, 'Noto Sans', sans-serif;
+
+  /* Палитра */
+  --navy-900: #0a1f44;
+  --navy-800: #0f2d5e;
+  --navy-700: #153f7c;
+  --blue-600: #2a78ff;
+  --blue-500: #2469d6;
+  --blue-100: #dce9fb;
+  --blue-50: #eef4fd;
+  --teal-600: #0f9b8e;
+
+  /* Семантика */
+  --bg: #ffffff;
+  --surface: #ffffff;
+  --surface-2: #f7f9fc;
+  --border: #e9e9e9;
+  --divider: #cecece;
+  --text: #111827;
+  --text-muted: #979797;
+  --primary: var(--blue-600);
+  --primary-hover: #1c63e6;
+  --on-primary: #ffffff;
+  --danger: #ff3b30;
+  --danger-hover: #a93226;
+  --success: #16a34a;
+  --warning: #ff9300;
+  --warning-bg: #fff1da;
+  --info-bg: #dae8ff;
+  --overlay: rgba(0, 0, 0, 0.45);
+  /* Подложка под белыми карточками на телефоне: блоки читаются без толстых рамок. */
+  --page-mobile: #f2f4f8;
+  --elevated-shadow: none;
+
+  /* Ритм и анимация */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --content-max: 1200px;
+  --dur-fast: 0.15s;
+  --dur: 0.2s;
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+[data-theme='dark'] {
+  color-scheme: dark;
+  /* Нейтральный тёмно-серый: синий канал выше красного максимум на 4–5 пунктов.
+     Синяя «ночь» читалась как ночной режим карты, а не как тёмная тема. */
+  --bg: #0d0d0f;
+  --surface: #17171a;
+  --surface-2: #212124;
+  --border: #2f2f34;
+  --divider: #2f2f34;
+  --text: #f0f0f2;
+  --text-muted: #98979f;
+  --primary: #4f8fee;
+  --primary-hover: #6fa3f2;
+  /* #16a34a на почти чёрном даёт контраст ~3.5:1 — мало для текста. */
+  --success: #34c85f;
+  --warning: #ffb84d;
+  --warning-bg: rgba(255, 147, 0, 0.16);
+  --info-bg: rgba(79, 143, 238, 0.16);
+  --danger-hover: #ff5a50;
+  /* Фон «выделенного» состояния без светлых пятен на тёмных карточках. */
+  --blue-50: #1f2838;
+  --blue-100: #24344d;
+  /* Текст на --blue-100 (инициалы в аватаре). */
+  --navy-800: #b4cdf5;
+  --overlay: rgba(0, 0, 0, 0.65);
+  --page-mobile: var(--bg);
+}
+
+/* Всплывающие поверхности (меню, поповер, модалка, тост) ставят data-elevated
+   на корень. В тёмной теме они на ступень светлее карточки — иначе меню сливается
+   с тем, поверх чего открыто; токены сдвигаются для всего содержимого разом. */
+[data-elevated] {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: var(--elevated-shadow);
+}
+
+[data-theme='dark'] [data-elevated] {
+  --surface: #1e1e22;
+  --surface-2: #2a2a2f;
+  --border: #36363c;
+  --elevated-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+}

@@ -1,0 +1,477 @@
+.page {
+	display: flex;
+	width: 100%;
+	max-width: none;
+	flex: 1;
+	min-height: 0;
+	flex-direction: column;
+	gap: 0;
+	margin: 0;
+	padding: 0;
+}
+
+.header,
+.blockHeader,
+.progressLabel {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: var(--space-4);
+}
+
+.header {
+	flex-wrap: wrap;
+}
+
+.headerActions {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--space-4);
+}
+
+.header h1,
+.header p,
+.block h2,
+.owner,
+.description,
+.updated {
+	margin: 0;
+}
+
+.header p,
+.owner,
+.updated {
+	color: var(--text-muted);
+}
+
+.boardSection {
+	position: relative;
+	display: flex;
+	flex: 1;
+	min-height: 0;
+	flex-direction: column;
+	gap: 0;
+}
+
+.board {
+	position: relative;
+	width: 100%;
+	flex: 1;
+	height: auto;
+	min-height: 520px;
+	overflow: hidden;
+	border: 0;
+	border-radius: 0;
+	background-color: var(--surface-2);
+	background-image: radial-gradient(var(--border) 1px, transparent 1px);
+	background-size: var(--space-6) var(--space-6);
+	cursor: grab;
+	touch-action: none;
+	user-select: none;
+}
+
+.board[data-dragging='true'] {
+	cursor: grabbing;
+}
+
+.world {
+	position: absolute;
+	top: 0;
+	left: 0;
+	transform-origin: 0 0;
+	will-change: transform;
+}
+
+.edges {
+	position: absolute;
+	top: 0;
+	left: 0;
+	overflow: visible;
+	pointer-events: none;
+}
+
+.edgeGroup {
+	pointer-events: none;
+}
+
+.edge {
+	fill: none;
+	stroke: var(--text-muted);
+	stroke-width: 2;
+	stroke-opacity: 0.55;
+}
+
+.edgeDone {
+	fill: none;
+	stroke: var(--success);
+	stroke-width: 2.6;
+	stroke-opacity: 0.95;
+	filter: drop-shadow(0 0 4px color-mix(in srgb, var(--success) 55%, transparent));
+}
+
+.arrowHead {
+	fill: var(--text-muted);
+}
+
+.arrowHeadDone {
+	fill: var(--success);
+}
+
+/* On completion the green stroke is drawn from the parent to the child, while
+   a thick segment and a bright ball race along it. The thick segment is the
+   "tube bulge" around the ball; it returns to the normal width behind it. */
+.edgeDraw {
+	fill: none;
+	stroke: var(--success);
+	stroke-width: 2.6;
+	stroke-linecap: round;
+	stroke-dasharray: 1;
+	stroke-dashoffset: 1;
+	animation: planner-edge-draw 1.2s cubic-bezier(0.35, 0, 0.25, 1) forwards;
+}
+
+.edgeBulge {
+	fill: none;
+	stroke: color-mix(in srgb, var(--success) 74%, var(--on-primary));
+	stroke-width: 12;
+	stroke-linecap: round;
+	stroke-dasharray: 0.1 2.1;
+	stroke-dashoffset: 0;
+	opacity: 0.72;
+	filter: drop-shadow(0 0 6px var(--success));
+	animation: planner-edge-bulge 1.2s cubic-bezier(0.35, 0, 0.25, 1) forwards;
+}
+
+.edgeBall {
+	fill: var(--on-primary);
+	stroke: var(--success);
+	stroke-width: 2;
+	filter: drop-shadow(0 0 7px var(--success));
+}
+
+.spark {
+	fill: var(--on-primary);
+	opacity: 0;
+	transform-box: fill-box;
+	transform-origin: center;
+	animation: planner-spark 0.75s ease-out 1.16s forwards;
+}
+
+.burstRing {
+	fill: none;
+	stroke: var(--on-primary);
+	stroke-width: 1.5;
+	opacity: 0;
+	transform-box: fill-box;
+	transform-origin: center;
+	animation: planner-burst 0.62s ease-out 1.16s forwards;
+}
+
+@keyframes planner-edge-draw {
+	to {
+		stroke-dashoffset: 0;
+	}
+}
+
+@keyframes planner-edge-bulge {
+	to {
+		stroke-dashoffset: -1;
+	}
+}
+
+@keyframes planner-spark {
+	0% {
+		opacity: 0;
+		transform: translate(0, 0) scale(1);
+	}
+	18% {
+		opacity: 1;
+	}
+	100% {
+		opacity: 0;
+		transform: translate(var(--spark-x), var(--spark-y)) scale(0.2);
+	}
+}
+
+@keyframes planner-burst {
+	0% {
+		opacity: 0.95;
+		transform: scale(0.2);
+	}
+	100% {
+		opacity: 0;
+		transform: scale(2.6);
+	}
+}
+
+.block {
+	display: flex;
+	min-width: 0;
+	flex-direction: column;
+	gap: var(--space-4);
+	padding: var(--space-5);
+	border: 2px solid var(--owner-color, var(--border));
+	border-radius: var(--radius-md);
+	background: var(--surface);
+}
+
+.nodeCard {
+	composes: block;
+	position: absolute;
+	box-sizing: border-box;
+	gap: var(--space-1);
+	padding: var(--space-3);
+	overflow: hidden;
+	transform-origin: center;
+	transition:
+		transform var(--dur) var(--ease),
+		box-shadow var(--dur) var(--ease);
+	will-change: transform;
+}
+
+.nodeCard[data-root='true'] {
+	border-width: 3px;
+}
+
+.nodeCard[data-empty='true'] {
+	border-style: dashed;
+	border-color: var(--text-muted);
+	background: var(--surface-2);
+}
+
+.nodeCard[data-clickable='true'] {
+	cursor: pointer;
+}
+
+.nodeCard[data-clickable='true']:hover {
+	z-index: 3;
+	transform: scale(1.045);
+	box-shadow: 0 14px 32px color-mix(in srgb, var(--text) 16%, transparent);
+}
+
+.nodeCard[data-clickable='true']:focus-visible {
+	outline: 2px solid var(--primary);
+	outline-offset: 2px;
+}
+
+.nodeCard[data-active='true'] {
+	border-color: transparent;
+	animation: planner-glow 2.6s ease-in-out infinite;
+}
+
+@keyframes planner-glow {
+	0%,
+	100% {
+		box-shadow:
+			0 0 6px 0 color-mix(in srgb, var(--owner-color, var(--primary)) 35%, transparent),
+			0 0 0 0 color-mix(in srgb, var(--owner-color, var(--primary)) 0%, transparent);
+	}
+	50% {
+		box-shadow:
+			0 0 18px 4px color-mix(in srgb, var(--owner-color, var(--primary)) 62%, transparent),
+			0 0 36px 8px color-mix(in srgb, var(--owner-color, var(--primary)) 22%, transparent);
+	}
+}
+
+.activeBorder {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	overflow: visible;
+	pointer-events: none;
+	color: var(--owner-color, var(--primary));
+}
+
+.activeBorderRect {
+	x: 1px;
+	y: 1px;
+	width: calc(100% - 2px);
+	height: calc(100% - 2px);
+	rx: 8px;
+	fill: none;
+	stroke: currentColor;
+	stroke-width: 2;
+	stroke-dasharray: 8 6;
+	animation: planner-march 0.9s linear infinite;
+}
+
+@keyframes planner-march {
+	to {
+		stroke-dashoffset: -28;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.nodeCard {
+		transition: none;
+	}
+
+	.nodeCard[data-clickable='true']:hover {
+		transform: none;
+	}
+
+	.nodeCard[data-active='true'],
+	.activeBorderRect,
+	.edgeDraw,
+	.edgeBulge,
+	.edgeBall,
+	.spark,
+	.burstRing {
+		animation: none;
+	}
+
+	.edgeDraw {
+		stroke-dasharray: none;
+		stroke-dashoffset: 0;
+	}
+
+	.edgeBulge,
+	.edgeBall,
+	.sparkBurst {
+		display: none;
+	}
+
+	.nodeCard[data-active='true'] {
+		box-shadow: 0 0 12px 2px color-mix(in srgb, var(--owner-color, var(--primary)) 45%, transparent);
+	}
+}
+
+.blockHeader > div {
+	min-width: 0;
+}
+
+.block h2 {
+	font-size: var(--text-xl);
+	overflow-wrap: anywhere;
+}
+
+.nodeCard h2 {
+	font-size: var(--text-sm);
+	line-height: 1.35;
+	overflow-wrap: anywhere;
+}
+
+.nodeCard[data-root='true'] h2 {
+	font-size: var(--text-lg);
+}
+
+.status {
+	flex-shrink: 0;
+	padding: var(--space-1) var(--space-2);
+	border-radius: var(--radius-full);
+	background: var(--info-bg);
+	font-size: var(--text-xs);
+	font-weight: 600;
+	white-space: nowrap;
+}
+
+.status[data-status='done'] {
+	background: var(--success);
+	color: var(--on-primary);
+}
+
+.status[data-status='blocked'] {
+	background: var(--warning-bg);
+}
+
+.description {
+	white-space: pre-wrap;
+	overflow-wrap: anywhere;
+}
+
+.nodeDescription {
+	display: -webkit-box;
+	margin: 0;
+	overflow: hidden;
+	color: var(--text-muted);
+	font-size: var(--text-xs);
+	-webkit-box-orient: vertical;
+	-webkit-line-clamp: 2;
+	white-space: pre-wrap;
+	overflow-wrap: anywhere;
+}
+
+.owner {
+	font-size: var(--text-xs);
+	overflow-wrap: anywhere;
+}
+
+.progressLabel {
+	align-items: center;
+}
+
+.block progress {
+	width: 100%;
+	height: 12px;
+	accent-color: var(--owner-color, var(--primary));
+}
+
+.dates {
+	display: grid;
+	gap: var(--space-2);
+	margin: 0;
+	font-size: var(--text-sm);
+}
+
+.dates div {
+	display: grid;
+	grid-template-columns: minmax(80px, auto) 1fr;
+	gap: var(--space-2);
+}
+
+.dates dt {
+	color: var(--text-muted);
+}
+
+.dates dd {
+	margin: 0;
+}
+
+.nodeMeta {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--space-1) var(--space-3);
+	margin: 0;
+	font-size: var(--text-xs);
+}
+
+.nodeMeta div {
+	display: flex;
+	min-width: 0;
+	gap: var(--space-1);
+}
+
+.nodeMeta dt {
+	color: var(--text-muted);
+}
+
+.nodeMeta dd {
+	margin: 0;
+	overflow-wrap: anywhere;
+}
+
+.nodeCard a {
+	font-size: var(--text-xs);
+	margin-top: auto;
+}
+
+.boardHint {
+	margin: 0;
+	color: var(--text-muted);
+	font-size: var(--text-sm);
+}
+
+.stale {
+	margin: 0;
+	padding: var(--space-3);
+	border-radius: var(--radius-sm);
+	background: var(--warning-bg);
+}
+
+@media (max-width: 640px) {
+	.board {
+		height: 62vh;
+	}
+}

@@ -1,0 +1,224 @@
+.page,
+.header,
+.login,
+.createForm,
+.detail,
+.subsection,
+.actionForm,
+.rework {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-4);
+}
+
+.page {
+	width: 100%;
+	max-width: var(--content-max);
+	margin-inline: auto;
+	padding: var(--space-5) 0;
+}
+
+.header h1,
+.header p,
+.login h2,
+.login p,
+.createForm p,
+.detail h2,
+.detail h3,
+.detail p,
+.message p,
+.activity p,
+.freshHint {
+	margin: 0;
+}
+
+.header p,
+.login p,
+.createForm p,
+.freshHint,
+.message time,
+.activity time,
+.taskButton time {
+	color: var(--text-muted);
+}
+
+.login,
+.createForm,
+.detail,
+.account {
+	padding: var(--space-5);
+	border: 1px solid var(--border);
+	border-radius: var(--radius-md);
+	background: var(--surface);
+}
+
+.createForm {
+	align-items: flex-start;
+}
+
+.createForm label,
+.actionForm label {
+	font-weight: 600;
+}
+
+.createForm textarea,
+.actionForm textarea {
+	width: 100%;
+	box-sizing: border-box;
+	resize: vertical;
+	padding: var(--space-3);
+	border: 1px solid var(--border);
+	border-radius: var(--radius-sm);
+	background: var(--surface);
+	color: var(--text);
+	font: inherit;
+}
+
+.account {
+	flex-direction: row;
+	flex-wrap: wrap;
+	justify-content: space-between;
+	gap: var(--space-3);
+	margin-block: var(--space-4);
+	background: var(--surface-2);
+}
+
+.workspace {
+	display: grid;
+	grid-template-columns: minmax(220px, 300px) minmax(0, 1fr);
+	align-items: start;
+	gap: var(--space-4);
+	margin-top: var(--space-5);
+}
+
+.taskList {
+	display: flex;
+	min-width: 0;
+	flex-direction: column;
+	gap: var(--space-2);
+}
+
+.listHeader,
+.detailHeader {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--space-3);
+}
+
+.listHeader h2 {
+	margin: 0;
+	font-size: var(--text-xl);
+}
+
+.taskButton {
+	display: flex;
+	width: 100%;
+	min-width: 0;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: var(--space-1);
+	padding: var(--space-3);
+	border: 1px solid var(--border);
+	border-radius: var(--radius-sm);
+	background: var(--surface);
+	color: var(--text);
+	font: inherit;
+	text-align: left;
+	cursor: pointer;
+}
+
+.taskButton[data-selected='true'] {
+	border-color: var(--primary);
+	background: var(--accent-50);
+}
+
+.taskButton strong,
+.taskButton span,
+.taskButton time {
+	max-width: 100%;
+	overflow-wrap: anywhere;
+}
+
+.taskButton strong {
+	display: -webkit-box;
+	overflow: hidden;
+	-webkit-box-orient: vertical;
+	-webkit-line-clamp: 2;
+}
+
+.taskButton span,
+.taskButton time {
+	font-size: var(--text-sm);
+}
+
+.detail {
+	min-width: 0;
+}
+
+.request {
+	white-space: pre-wrap;
+	overflow-wrap: anywhere;
+}
+
+.subsection {
+	padding-top: var(--space-4);
+	border-top: 1px solid var(--border);
+}
+
+.message,
+.activity {
+	display: grid;
+	gap: var(--space-2);
+	padding: var(--space-3);
+	border-radius: var(--radius-sm);
+	background: var(--surface-2);
+}
+
+.message p,
+.activity p {
+	white-space: pre-wrap;
+	overflow-wrap: anywhere;
+}
+
+.message time,
+.activity time {
+	font-size: var(--text-sm);
+}
+
+.actionForm {
+	align-items: flex-start;
+	padding: var(--space-4);
+	border-radius: var(--radius-sm);
+	background: var(--accent-50);
+}
+
+.statusGrid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+	gap: var(--space-4);
+}
+
+.statusGrid a {
+	overflow-wrap: anywhere;
+}
+
+@media (max-width: 900px) {
+	.workspace {
+		grid-template-columns: minmax(0, 1fr);
+	}
+
+	.taskList {
+		max-height: 360px;
+		overflow-y: auto;
+	}
+}
+
+@media (max-width: 720px) {
+	.login,
+	.createForm,
+	.detail {
+		padding: var(--space-4);
+	}
+}

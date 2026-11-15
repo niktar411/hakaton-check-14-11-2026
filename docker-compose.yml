@@ -1,0 +1,185 @@
+name: hackathon
+
+# SERVER 1 — public site, administration API, PostgreSQL, GitLab and the
+# internal relay to SERVER 2. Secrets live in /etc/hackathon/main.env (0600).
+services:
+  postgres:
+    image: postgres:18.1-alpine3.22
+    restart: unless-stopped
+    env_file:
+      - ${MAIN_ENV_FILE:-/etc/hackathon/main.env}
+    volumes:
+      # PostgreSQL 18 moved its volume from /var/lib/postgresql/data to
+      # /var/lib/postgresql (PGDATA=/var/lib/postgresql/18/docker).
+      - postgres-data:/var/lib/postgresql
+    expose: ["5432"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    shm_size: 256m
+    mem_limit: 1g
+    pids_limit: 256
+    cpus: 2
+    stop_grace_period: 1m
+    security_opt: [no-new-privileges:true]
+
+  api:
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+    image: hackathon-api:${RELEASE:-local}
+    restart: unless-stopped
+    env_file:
+      - ${MAIN_ENV_FILE:-/etc/hackathon/main.env}
+    environment:
+      PORTAL_LISTEN: 0.0.0.0:4000
+      STATIC_DIR: /app/static
+      MIHOMO_CONFIG_PATH: /app/infra/mihomo/hackathon.yaml
+      WORKER_URL: http://orchestrator:8080
+      WORKER_TOKEN: ${ORCHESTRATOR_TOKEN:?set ORCHESTRATOR_TOKEN}
+    volumes:
+      - ./AGENTS.md:/app/AGENTS.md:ro
+    expose: ["4000"]
+    depends_on:
+      postgres: {condition: service_healthy}
+      orchestrator: {condition: service_healthy}
+    networks:
+      default:
+        # Fixed address so the SERVER 1 control agent can authorize exactly
+        # this container and nothing else on the Docker bridge.
+        ipv4_address: 172.30.0.5
+    read_only: true
+    tmpfs: ["/tmp:size=64m,mode=1777"]
+    cap_drop: [ALL]
+    mem_limit: 512m
+    pids_limit: 256
+    cpus: 2
+    security_opt: [no-new-privileges:true]
+
+  web:
+    build:
+      context: .
+      dockerfile: client/Dockerfile
+    image: hackathon-web:${RELEASE:-local}
+    restart: unless-stopped
+    env_file:
+      - ${MAIN_ENV_FILE:-/etc/hackathon/main.env}
+    environment:
+      PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:?set PUBLIC_BASE_URL}
+      PLANNER_BASE_URL: ${PLANNER_BASE_URL:?set PLANNER_BASE_URL}
+    ports:
+      - "${PUBLIC_HTTP_BIND:-0.0.0.0}:80:80"
+      - "${PUBLIC_HTTPS_BIND:-0.0.0.0}:443:443"
+    volumes:
+      - ${TLS_CERTIFICATE_FILE:-/etc/hackathon/tls/tls.crt}:/etc/nginx/tls/tls.crt:ro
+      - ${TLS_KEY_FILE:-/etc/hackathon/tls/tls.key}:/etc/nginx/tls/tls.key:ro
+    depends_on:
+      api: {condition: service_healthy}
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1/health || exit 1"]
+      interval: 15s
+      timeout: 3s
+      retries: 5
+    # NET_BIND_SERVICE binds 80/443; SETUID/SETGID let the root master drop to
+    # the unprivileged nginx workers.
+    cap_drop: [ALL]
+    cap_add: [NET_BIND_SERVICE, SETUID, SETGID]
+    mem_limit: 256m
+    pids_limit: 128
+    cpus: 1
+    security_opt: [no-new-privileges:true]
+
+  orchestrator:
+    build:
+      context: .
+      dockerfile: infra/orchestrator/Dockerfile
+    image: hackathon-orchestrator:local
+    restart: unless-stopped
+    env_file:
+      - ${MAIN_ENV_FILE:-/etc/hackathon/main.env}
+    environment:
+      WORKER_URL: http://10.77.0.10:9102
+      WORKER_TOKEN: ${WORKER_TOKEN:?set WORKER_TOKEN}
+      ORCHESTRATOR_TOKEN: ${ORCHESTRATOR_TOKEN:?set ORCHESTRATOR_TOKEN}
+    expose: ["8080"]
+    security_opt: [no-new-privileges:true]
+    read_only: true
+    tmpfs: ["/tmp:size=16m,mode=1777"]
+    cap_drop: [ALL]
+    mem_limit: 128m
+    pids_limit: 128
+    cpus: 1
+
+  gitlab:
+    profiles: ["legacy-gitlab"]
+    image: gitlab/gitlab-ce:18.5.2-ce.0
+    restart: unless-stopped
+    env_file:
+      - ${MAIN_ENV_FILE:-/etc/hackathon/main.env}
+    environment:
+      GITLAB_OMNIBUS_CONFIG: |
+        external_url '${GITLAB_URL:?set GITLAB_URL}'
+        gitlab_rails['gitlab_shell_ssh_port'] = 2222
+        nginx['listen_addresses'] = ['0.0.0.0']
+    ports:
+      - "10.77.0.1:8081:80"
+      - "10.77.0.1:2222:22"
+    volumes:
+      - gitlab-config:/etc/gitlab
+      - gitlab-logs:/var/log/gitlab
+      - gitlab-data:/var/opt/gitlab
+    shm_size: 256m
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "http://127.0.0.1/-/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 20
+      start_period: 5m
+    mem_limit: 6g
+    pids_limit: 4096
+    cpus: 2
+    stop_grace_period: 5m
+
+  gitlab-runner:
+    profiles: ["legacy-gitlab"]
+    build:
+      context: .
+      dockerfile: infra/runner/Dockerfile
+    image: hackathon-gitlab-runner:local
+    restart: unless-stopped
+    env_file:
+      - ${MAIN_ENV_FILE:-/etc/hackathon/main.env}
+    environment:
+      DOCKER_HOST: ssh://gitlab-runner@10.77.0.10
+      RUNNER_DEFAULT_IMAGE: hackathon-worker-coding:local
+    entrypoint: ["/usr/local/bin/hackathon-runner-entrypoint"]
+    volumes:
+      - runner-config:/etc/gitlab-runner
+      - runner-builds:/builds
+      - runner-cache:/cache
+      - ${RUNNER_SSH_PRIVATE_KEY:-/etc/hackathon/runner/id_ed25519}:/root/.ssh/id_ed25519:ro
+      - ${RUNNER_SSH_KNOWN_HOSTS:-/etc/hackathon/runner/known_hosts}:/root/.ssh/known_hosts:ro
+    depends_on:
+      gitlab: {condition: service_started}
+    mem_limit: 1g
+    pids_limit: 512
+    cpus: 2
+    security_opt: [no-new-privileges:true]
+
+networks:
+  default:
+    name: hackathon-main
+    ipam:
+      config:
+        - subnet: 172.30.0.0/24
+
+volumes:
+  postgres-data:
+  gitlab-config:
+  gitlab-logs:
+  gitlab-data:
+  runner-config:
+  runner-builds:
+  runner-cache:
